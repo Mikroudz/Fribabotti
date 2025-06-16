@@ -1,9 +1,8 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
-from datetime import datetime, UTC, date
 from pydantic import computed_field
 from utils.formatting import par_score_format
-from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, text
-from sqlalchemy import ForeignKeyConstraint
+from sqlmodel import Field, SQLModel, Relationship, text
+from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
@@ -23,6 +22,7 @@ class ScoreBase(SQLModel):
 class Score(ScoreBase, table=True):
     __tablename__ = "score"
     __table_args__ = (
+        UniqueConstraint("track_number", "game_session_id"),
         ForeignKeyConstraint(
             ["track_number", "course_id"],
             ["track.track_number", "track.course_id"],

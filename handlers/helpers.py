@@ -33,7 +33,9 @@ def handler_helper(
             update: Update = args[0]
             context: ContextTypes.DEFAULT_TYPE = args[1]
             param = None
-            if context.user_data.get("is_inline") or force_inline:
+            if (
+                context.user_data.get("is_inline") and update.callback_query
+            ) or force_inline:
                 query = update.callback_query
                 if answer_query:
                     await query.answer()
@@ -42,21 +44,27 @@ def handler_helper(
                 # Try getting a param from callback
                 if route and isinstance(route, str) and ":" in route:
                     param = route.split(":")[1]
-                    if isinstance(callback_param_validator, type):
+                    if callback_param_validator:
                         try:
                             param = callback_param_validator(param)
                         except Exception as e:
                             logger.warning(e)
             else:
+                context.user_data["is_inline"] = False
+
                 from_user_id = update.message.from_user.id
 
             if remove_keyboard and context.user_data.get("prompt_message_id"):
-                await context.bot.edit_message_reply_markup(
-                    chat_id=update.effective_chat.id,
-                    reply_markup=None,
-                    message_id=context.user_data.get("prompt_message_id"),
-                )
-                del context.user_data["prompt_message_id"]
+                try:
+                    del context.user_data["prompt_message_id"]
+                    await context.bot.edit_message_reply_markup(
+                        chat_id=update.effective_chat.id,
+                        reply_markup=None,
+                        message_id=context.user_data.get("prompt_message_id"),
+                    )
+                except:
+                    print("failed to remove buttons from msg")
+                    pass
 
             helper_kwargs = {
                 "from_user_id": from_user_id,

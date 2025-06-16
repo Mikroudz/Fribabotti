@@ -10,7 +10,6 @@ from telegram.ext import (
     ConversationHandler,
     CallbackQueryHandler,
 )
-from io import BytesIO
 
 from database import get_session
 from utils.generate_result_card import create_result_card_image
@@ -34,7 +33,7 @@ from models.game_session.crud import (
     create_game_session,
     read_game_session,
     end_game_session,
-    restart_game_session,
+    reopen_game_session,
     read_game_session_course,
 )
 
@@ -96,27 +95,29 @@ async def start_game_menu(
             parse_mode=ParseMode.MARKDOWN_V2,
         )
     else:
-        prompt_message = await update.callback_query.query.edit_message_text(
+        prompt_message = await update.callback_query.edit_message_text(
             text=escape_markdown(ongoing_games_msg, version=2),
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN_V2,
         )
     context.user_data["prompt_message_id"] = prompt_message.message_id
     context.user_data["is_inline"] = True
+    context.user_data["from_command"] = False
 
     return GAME_MAIN_MENU_ROUTE
 
 
-@handler_helper(force_inline=True, remove_keyboard=True, callback_param_validator=int)
+@handler_helper(force_inline=True, callback_param_validator=int)
 async def reply_scorecard(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
 ):
     session_id = cb_param
     with get_session() as s:
-        scores = read_session_username_score_full(s, session_id)
         course = read_game_session_course(s, session_id)
+        scores = read_session_username_score_full(s, session_id, course.id)
+        game_session = read_game_session(s, session_id)
 
-    results_card = create_result_card_image(course, scores)
+    results_card = create_result_card_image(course, scores, game_session)
 
     await context.bot.send_photo(photo=results_card, chat_id=update.effective_chat.id)
     return GAME_MAIN_MENU_ROUTE
@@ -337,12 +338,18 @@ async def new_session_select_user_group(
         ],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-
+    msg = "Choose which group to start the game in\nAll group members can join ongoing games"
+    if len(groups) == 0:
+        msg = "You do not belong to any groups!\nCreate new with /newgroup or join to existing group"
     prompt_message = await update.callback_query.edit_message_text(
-        "Choose which group to start the game in\nAll group members can join ongoing games",
+        msg,
         reply_markup=reply_markup,
     )
+    if len(groups) == 0:
+        return ConversationHandler.END
     context.user_data["prompt_message_id"] = prompt_message.message_id
+    context.user_data["is_inline"] = True
+
     return GAME_MAIN_MENU_ROUTE
 
 
@@ -386,7 +393,8 @@ async def game_session_reopened(
 ):
     session_id = cb_param
     with get_session() as s:
-        restart_game_session(s, session_id)
+        reopen_game_session(s, session_id)
+    context.user_data["from_command"] = False
 
     return await session_selected_actions(update, context)
 
@@ -434,7 +442,7 @@ async def game_sesssion_save_score_text(
     return await game_session_process(update, context)
 
 
-@handler_helper(remove_keyboard=True, force_inline=True, callback_param_validator=int)
+@handler_helper(force_inline=True, callback_param_validator=int)
 async def game_sesssion_save_score(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int, from_user_id
 ):
@@ -488,7 +496,9 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
         # We are at end, don't go to next and prompt to end the game
         current_track_idx = current_track_idx - 1
     context.user_data["current_track_idx"] = current_track_idx
-    context.user_data["current_track_number"] = score_and_track[current_track_idx][1].id
+    context.user_data["current_track_number"] = score_and_track[current_track_idx][
+        1
+    ].track_number
 
     total_score = sum([score.score for score, _ in score_and_track if score])
     current_track = score_and_track[current_track_idx][1]
@@ -513,8 +523,11 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
     if current_track_idx < len(score_and_track) - 1:
         callback = f"move_to_track:{current_track_idx+1}"
         markup_data += "next" + callback
-
         score_menu_buttons.append(InlineKeyboardButton(f"next", callback_data=callback))
+    else:
+        score_menu_buttons.append(
+            InlineKeyboardButton(f"Exit", callback_data=f"exit_game:{game_session_id}")
+        )
     markup_data += "".join([f"submit_score:{i}" for i in range(-1, 4)])
     keyboard = [
         [
@@ -560,6 +573,11 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
     return GAME_SESSION_SELECTED_ROUTE
 
 
+async def game_session_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    context.user_data["from_command"] = False
+    return await session_selected_actions(update, context)
+
+
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Action cancelled.")
     # TODO: delete data from user context
@@ -600,6 +618,7 @@ game_conv_handler = ConversationHandler(
             CallbackQueryHandler(game_sesssion_save_score, pattern="^submit_score.*$"),
             CallbackQueryHandler(game_session_process, pattern="^session_selected.*$"),
             CallbackQueryHandler(game_session_process, pattern="^move_to_track.*$"),
+            CallbackQueryHandler(game_session_done, pattern="^exit_game:.*$"),
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel)],

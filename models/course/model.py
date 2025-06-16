@@ -33,3 +33,9 @@ class Course(CourseBase, table=True):
     game_sessions: List[GameSession] = Relationship(
         back_populates="course",
     )
+
+
+class CourseUpdate(SQLModel):
+    name: str | None = None
+    location: str | None = None
+    deleted: bool | None = None

@@ -30,7 +30,12 @@ def upsert_track(
     if db_course:
 
         try:
-            track = Track(track_number=track_number, par=par, course_id=db_course.id)
+            track = Track(
+                track_number=track_number,
+                par=par,
+                course_id=db_course.id,
+                deleted=False,
+            )
         except ValidationError as e:
             raise e
         stmt = select(Track).where(
@@ -51,9 +56,23 @@ def upsert_track(
 
 def read_tracks(session: Session, course_id: int) -> List[Track]:
     stmt = (
-        select(Track).where(Track.course_id == course_id).order_by(Track.track_number)
+        select(Track)
+        .where(and_(Track.course_id == course_id, Track.deleted == False))
+        .order_by(Track.track_number)
     )
     return session.exec(stmt).all()
+
+
+def read_track(session: Session, track_number: int, course_id: int) -> List[Track]:
+    return session.exec(
+        select(Track).where(
+            and_(
+                Track.track_number == track_number,
+                Track.course_id == course_id,
+                Track.deleted == False,
+            )
+        )
+    ).first()
 
 
 def read_tracks_as_text_list(session: Session, course_id: int) -> str:
@@ -61,7 +80,10 @@ def read_tracks_as_text_list(session: Session, course_id: int) -> str:
     tracks_list = (
         "\nTrack nr, par\n"
         + "\n".join(
-            [f"{track.track_number} {track.par} /del_{track.id}" for track in tracks]
+            [
+                f"{track.track_number} {track.par} /del_{track.track_number}"
+                for track in tracks
+            ]
         )
         if len(tracks) > 0
         else "\nAdd first track to course"
@@ -69,21 +91,8 @@ def read_tracks_as_text_list(session: Session, course_id: int) -> str:
     return tracks_list
 
 
-def delete_track(session: Session, track_id: int):
-    db_track = session.get(Track, track_id)
+def delete_track(session: Session, track_number: int, course_id: int):
+    db_track = read_track(session, track_number, course_id)
     if db_track:
-        session.delete(db_track)
+        setattr(db_track, "deleted", True)
         session.commit()
-
-
-def update_track(
-    session: Session, track_id: int, track_number: int | None, par: int | None
-) -> Track:
-    db_track = session.get(Track, track_id)
-    if db_track:
-        db_track.sqlmodel_update(
-            Track(track_number=track_number, par=par).model_dump(exclude_unset=True)
-        )
-        session.commit()
-        session.refresh(db_track)
-        return db_track

@@ -1,11 +1,13 @@
 from typing import List, Tuple
 from sqlmodel import Session, select, and_
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
 
 from .model import GameSession
 from models.user.model import User
+from models.track.model import Track
+
 from models.course.model import Course
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
@@ -106,7 +108,10 @@ def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSe
 def read_game_session_course(session: Session, session_id: int) -> Course:
     stmt = (
         select(Course)
-        .options(selectinload(Course.tracks))
+        .options(
+            selectinload(Course.tracks),
+            with_loader_criteria(Track, Track.deleted == False),
+        )
         .join(GameSession, Course.id == GameSession.course_id)
         .where(GameSession.id == session_id)
     )
@@ -148,12 +153,13 @@ def end_game_session(session: Session, session_id: int):
         return read_game_session(session, session_id)
 
 
-def restart_game_session(session: Session, session_id: int):
+def reopen_game_session(session: Session, session_id: int):
     db_session = session.get(GameSession, session_id)
     if db_session:
         setattr(db_session, "ended_at", None)
         session.commit()
-        return read_game_session(session, session_id)
+        session.refresh(db_session)
+        return db_session
 
 
 def delete_game_session(session: Session, game_session_id: int):

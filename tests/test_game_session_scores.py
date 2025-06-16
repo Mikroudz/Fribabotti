@@ -24,7 +24,7 @@ from models.user.crud import create_user
 from models.user.model import User
 
 from models.user_group.model import UserGroup
-from models.score.crud import create_score
+from models.score.crud import upsert_score
 from models.score.model import Score
 
 course_location = "hervanta"
@@ -55,7 +55,7 @@ def setup_dummy_data(session: Session):
 
 
 def test_create_end_game_session_success(session: Session, setup_dummy_data):
-    game, course, user, user_group = setup_dummy_data
+    game, course, user, user_group, _ = setup_dummy_data
     create_game_session(session, user.id, course.id, user_group.id)
     db_sessions = session.exec(select(GameSession)).all()
     assert len(db_sessions) == 1
@@ -68,7 +68,7 @@ def test_create_end_game_session_success(session: Session, setup_dummy_data):
 
 
 def test_delete_game_session(session: Session, setup_dummy_data):
-    game, course, user, user_group = setup_dummy_data
+    game, course, user, user_group, _ = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)
     delete_game_session(session, game_session.id)
     db_sessions = session.exec(select(GameSession)).all()
@@ -76,7 +76,7 @@ def test_delete_game_session(session: Session, setup_dummy_data):
 
 
 def test_join_game_session(session: Session, setup_dummy_data):
-    game, course, user, user_group = setup_dummy_data
+    game, course, user, user_group, _ = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)
     user2 = create_user(
         session,
@@ -97,10 +97,28 @@ def test_create_score_success(session: Session, setup_dummy_data):
     game, course, user, user_group, track = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)
 
-    create_score(session, 1, track.id, user.id, game_session.id)
+    upsert_score(session, 1, track.track_number, user.id, game_session.id)
     db_scores = session.exec(select(Score)).all()
     assert len(db_scores) == 1
     assert db_scores[0].score == 1
+
+
+def test_create_score_unique_another_session_success(
+    session: Session, setup_dummy_data
+):
+    game, course, user, user_group, track = setup_dummy_data
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+    game_session2 = create_game_session(session, user.id, course.id, user_group.id)
+
+    upsert_score(session, 1, track.track_number, user.id, game_session.id)
+    upsert_score(session, 2, track.track_number, user.id, game_session2.id)
+    session.refresh(game_session)
+    session.refresh(game_session2)
+
+    db_scores = session.exec(select(Score)).all()
+    assert len(db_scores) == 2
+    assert game_session2.scores[0].score == 2
+    assert game_session.scores[0].score == 1
 
 
 def test_create_score_failure_missing_linked_data(session: Session, setup_dummy_data):
@@ -108,11 +126,23 @@ def test_create_score_failure_missing_linked_data(session: Session, setup_dummy_
     game_session = create_game_session(session, user.id, course.id, user_group.id)
 
     # missing track
-    create_score(session, 1, 123, user.id, game_session.id)
+    upsert_score(session, 1, 123, user.id, game_session.id)
     # missing user
-    create_score(session, 1, track.id, 123, game_session.id)
+    upsert_score(session, 1, track.track_number, 123, game_session.id)
     # missing session
-    create_score(session, 1, track.id, user.id, 123)
+    upsert_score(session, 1, track.track_number, user.id, 123)
 
     db_scores = session.exec(select(Score)).all()
     assert len(db_scores) == 0
+
+
+def test_update_score_success(session: Session, setup_dummy_data):
+    game, course, user, user_group, track = setup_dummy_data
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+
+    upsert_score(session, 1, track.track_number, user.id, game_session.id)
+    upsert_score(session, 2, track.track_number, user.id, game_session.id)
+
+    db_scores = session.exec(select(Score)).all()
+    assert len(db_scores) == 1
+    assert db_scores[0].score == 2

@@ -14,8 +14,14 @@ import re
 from database import get_session
 
 
-from models.user.crud import create_user
-from models.course.crud import read_courses, create_course, read_course
+from models.course.crud import (
+    read_courses,
+    create_course,
+    read_course,
+    update_course,
+    delete_course,
+)
+from models.course.model import CourseUpdate
 
 from models.track.crud import (
     upsert_track,
@@ -28,6 +34,7 @@ from models.game.crud import read_games, create_game
 
 secrets = dotenv_values(".env")
 
+from .helpers import handler_helper
 
 log_level = logging.INFO if secrets.get("DEV_MODE", False) else logging.WARNING
 logging.getLogger("httpx").setLevel(log_level)
@@ -47,45 +54,14 @@ logging.basicConfig(
 ) = range(6)
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    with get_session() as s:
-        create_user(s, update.message.from_user)
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Score tracking bot",
-    )
-
-
-async def create_game_group(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text="Send me receipt as an image and I will add it to database!",
-    )
-
-
-async def get_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = "Courses:\n"
-    with get_session() as s:
-        courses = read_courses(s)
-    for course in courses:
-        for k, v in course:
-            msg += f"{k}: {v}, "
-        msg += "\n"
-    await context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=msg,
-    )
-
-
+@handler_helper(force_inline=True, remove_keyboard=True)
 async def add_game_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
 
-    await query.answer()
     keyboard = [
-        [InlineKeyboardButton(f"Cancel", callback_data=f"cancel")],
+        [InlineKeyboardButton(f"Cancel", callback_data=f"start")],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    prompt_message = await query.edit_message_text(
+    prompt_message = await update.callback_query.edit_message_text(
         text="Write name for new game type", reply_markup=reply_markup
     )
     context.user_data["prompt_message_id"] = prompt_message.message_id
@@ -115,18 +91,14 @@ async def add_game_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         context.user_data["prompt_message_id"] = prompt_message.message_id
         return ADD_GAME_ROUTE
-
+    if context.user_data.get("is_inline"):
+        del context.user_data["is_inline"]
+    if context.user_data.get("prompt_message_id"):
+        del context.user_data["prompt_message_id"]
     return ConversationHandler.END
 
 
-async def delete_game():
-    pass
-
-
-async def edit_game():
-    pass
-
-
+@handler_helper(remove_keyboard=True)
 async def start_edit_courses(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with get_session() as s:
         games = read_games(s)
@@ -139,20 +111,21 @@ async def start_edit_courses(update: Update, context: ContextTypes.DEFAULT_TYPE)
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await update.message.reply_text(
-        text="Select which game to add course", reply_markup=reply_markup
+    prompt_message = await update.effective_chat.send_message(
+        text="Select game to edit or add new", reply_markup=reply_markup
     )
-
+    context.user_data["is_inline"] = True
+    context.user_data["prompt_message_id"] = prompt_message.message_id
     return CHOOSE_COURSE_ACTION_ROUTE
 
 
-async def present_add_edit_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    route = query.data
-    await query.answer()
-
-    game_id = route.split(":")[1]
-
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def present_add_edit_course(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    game_id = cb_param
+    if context.user_data.get("editing_course"):
+        del context.user_data["editing_course"]
     with get_session() as s:
         courses = read_courses(s, game_id)
     keyboard = [
@@ -172,44 +145,100 @@ async def present_add_edit_course(update: Update, context: ContextTypes.DEFAULT_
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    await query.edit_message_text(
+    prompt_message = await update.callback_query.edit_message_text(
         "Choose course to edit or create new", reply_markup=reply_markup
     )
+    context.user_data["prompt_message_id"] = prompt_message.message_id
 
     return CHOOSE_COURSE_ACTION_ROUTE
 
 
-async def add_course_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    route = query.data
-    await query.answer()
-    game_id = route.split(":")[1]
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def add_course_name(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    param_id = cb_param
+    course = context.user_data.get("editing_course")
+
+    if course:
+        callback_data = f"edit_course:{param_id}"
+    else:
+        context.user_data["selected_game"] = param_id
+        callback_data = f"select_game:{param_id}"
+
     keyboard = [
-        [InlineKeyboardButton(f"Back", callback_data=f"select_game:{game_id}")],
+        [InlineKeyboardButton(f"Back", callback_data=callback_data)],
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    context.user_data["selected_game"] = game_id
 
-    prompt_message = await query.edit_message_text(
-        "Send name of the new course", reply_markup=reply_markup
+    msg = (
+        f"Send new name for course {course.get("name")}:"
+        if course and "name" in course
+        else "Send name for the new course:"
+    )
+
+    prompt_message = await update.callback_query.edit_message_text(
+        msg, reply_markup=reply_markup
     )
     context.user_data["prompt_message_id"] = prompt_message.message_id
+    context.user_data["is_inline"] = False
 
     return ADD_COURSE_ROUTE
 
 
-async def process_course_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    course_name = update.message.text
-    game_id = context.user_data.get("selected_game")
+@handler_helper(force_inline=True, callback_param_validator=int, remove_keyboard=True)
+async def edit_course_location(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    course_id = cb_param
+    course = context.user_data.get("editing_course")
     keyboard = [
-        [InlineKeyboardButton(f"Back", callback_data=f"select_game:{game_id}")],
+        [InlineKeyboardButton(f"Cancel", callback_data=f"edit_course:{course_id}")],
     ]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    prompt_msg_id = context.user_data.get("prompt_message_id")
-    await context.bot.edit_message_reply_markup(
-        chat_id=update.effective_chat.id, message_id=prompt_msg_id, reply_markup=None
+
+    prompt_message = await update.callback_query.edit_message_text(
+        f"Send new course location for {course.get("name")}:",
+        reply_markup=reply_markup,
     )
+    context.user_data["prompt_message_id"] = prompt_message.message_id
+    return ADD_COURSE_LOCATION
+
+
+@handler_helper(remove_keyboard=True)
+async def process_edit_course_location(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+):
+    course_location = update.message.text
+    course = context.user_data.get("editing_course")
+
+    with get_session() as s:
+        update_course(s, course.get("id"), CourseUpdate(location=course_location))
+    await update.message.reply_text(
+        f"New course location saved!",
+    )
+
+    return await start_edit_courses(update, context)
+
+
+@handler_helper(remove_keyboard=True)
+async def process_course_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    course_name = update.message.text
+
+    course = context.user_data.get("editing_course")
+
+    if course:
+        callback_data = f"edit_course:{course.get("id")}"
+    else:
+        game_id = context.user_data.get("selected_game")
+        callback_data = f"select_game:{game_id}"
+
+    keyboard = [
+        [InlineKeyboardButton(f"Back", callback_data=callback_data)],
+    ]
+
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
     if len(course_name) > 128 or len(course_name) < 1:
 
@@ -220,29 +249,43 @@ async def process_course_name(update: Update, context: ContextTypes.DEFAULT_TYPE
         context.user_data["prompt_message_id"] = prompt_message.message_id
         return ADD_COURSE_ROUTE
 
-    context.user_data["course_name"] = course_name
-    prompt_message = await update.message.reply_text(
-        f"Send location for course {course_name}",
-        reply_markup=reply_markup,
-    )
-    context.user_data["prompt_message_id"] = prompt_message.message_id
+    if course:
+        with get_session() as s:
+            update_course(s, course.get("id"), CourseUpdate(name=course_name))
+        await update.message.reply_text(
+            f"New course name saved!",
+        )
+        return await start_edit_courses(update, context)
+    else:
+        context.user_data["course_name"] = course_name
+        prompt_message = await update.message.reply_text(
+            f"Send location for course {course_name}",
+            reply_markup=reply_markup,
+        )
+        context.user_data["prompt_message_id"] = prompt_message.message_id
+        return ADD_COURSE_LOCATION
 
-    return ADD_COURSE_LOCATION
+
+@handler_helper(force_inline=True, callback_param_validator=int, remove_keyboard=True)
+async def course_delete(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    course_id = cb_param
+
+    with get_session() as s:
+        pass
+        # delete_course(s, course_id)
+    await update.effective_chat.send_message("Course deletion not implemented")
+    return await start_edit_courses(update, context)
 
 
-async def delete_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    route = query.data
-    await query.answer()
-    game_id = route.split(":")[1]
-
-
-async def edit_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    route = query.data
-    course_id = route.split(":")[1]
-    await query.answer()
-
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def edit_course(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    course_id = cb_param
+    with get_session() as s:
+        course = read_course(s, course_id)
     keyboard = [
         [
             InlineKeyboardButton(
@@ -258,13 +301,18 @@ async def edit_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 f"Delete course", callback_data=f"delete_course:{course_id}"
             ),
         ],
+        [
+            InlineKeyboardButton(
+                f"Back", callback_data=f"select_game:{course.game_id}"
+            ),
+        ],
     ]
-    with get_session() as s:
-        course = read_course(s, course_id)
+
+    context.user_data["editing_course"] = course.model_dump()
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-    prompt_message = await query.edit_message_text(
-        f"Select action for course {course.name}",
+    prompt_message = await update.callback_query.edit_message_text(
+        f"Select action for course {course.name}\nLocation: {course.location}",
         reply_markup=reply_markup,
     )
 
@@ -272,12 +320,11 @@ async def edit_course(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return CHOOSE_COURSE_ACTION_ROUTE
 
 
-async def edit_tracks(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    route = query.data
-    await query.answer()
-
-    course_id = route.split(":")[1]
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def edit_tracks(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    course_id = cb_param
     context.user_data["course_id"] = course_id
 
     with get_session() as s:
@@ -290,22 +337,20 @@ async def edit_tracks(update: Update, context: ContextTypes.DEFAULT_TYPE):
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
 
-    prompt_msg = await query.edit_message_text(
+    prompt_msg = await update.callback_query.edit_message_text(
         track_msg + track_list,
         reply_markup=reply_markup,
     )
     context.user_data["track_prompt_id"] = prompt_msg.message_id
+    context.user_data["is_inline"] = True
+    context.user_data["track_last_msg"] = ""
+
     return ADD_TRACKS
 
 
+@handler_helper(remove_keyboard=True)
 async def process_course_location(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_text = update.message.text
-    prompt_msg_id = context.user_data.get("prompt_message_id")
-    await context.bot.edit_message_reply_markup(
-        chat_id=update.effective_chat.id,
-        message_id=prompt_msg_id,
-        reply_markup=None,
-    )
     if len(message_text) > 128 or len(message_text) < 2:
         keyboard = [
             [InlineKeyboardButton(f"Cancel", callback_data="cancel")],
@@ -316,6 +361,8 @@ async def process_course_location(update: Update, context: ContextTypes.DEFAULT_
         )
         context.user_data["prompt_message_id"] = prompt_message.message_id
         return ADD_COURSE_LOCATION
+    if context.user_data.get("editing_course"):
+        return await process_edit_course_location(update, context)
 
     course_name = context.user_data.get("course_name")
     with get_session() as s:
@@ -333,6 +380,7 @@ async def process_course_location(update: Update, context: ContextTypes.DEFAULT_
         reply_markup=reply_markup,
     )
     context.user_data["track_prompt_id"] = prompt_msg.message_id
+    context.user_data["is_inline"] = True
 
     context.user_data["track_msg"] = track_msg
     return ADD_TRACKS
@@ -350,7 +398,7 @@ async def add_tracks(update: Update, context: ContextTypes.DEFAULT_TYPE):
         track_id = track_raw.split("_")[-1]
         if track_id.isdigit():
             with get_session() as s:
-                delete_track(s, int(track_id))
+                delete_track(s, int(track_id), course_id)
             tracks_have_updated = True
     elif re.match(r"^\d{1,24} \d{1,24}$", track_raw):
         if len(track_raw.split(" ")) == 2:
@@ -372,27 +420,36 @@ async def add_tracks(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [InlineKeyboardButton(f"Done", callback_data="tracks_save")],
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await context.bot.edit_message_text(
-            chat_id=update.effective_chat.id,
-            message_id=track_msg_prompt_id,
-            text=track_msg + tracks_list,
-            reply_markup=reply_markup,
-        )
 
+        if context.user_data.get("track_last_msg") != track_msg + tracks_list:
+            await context.bot.edit_message_text(
+                chat_id=update.effective_chat.id,
+                message_id=track_msg_prompt_id,
+                text=track_msg + tracks_list,
+                reply_markup=reply_markup,
+            )
+            context.user_data["prompt_message_id"] = context.user_data.get(
+                "track_prompt_id"
+            )
+        context.user_data["track_last_msg"] = track_msg + tracks_list
+    context.user_data["is_inline"] = True
     return ADD_TRACKS
 
 
+@handler_helper(remove_keyboard=True)
 async def course_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if context.user_data.get("course_location"):
         del context.user_data["course_location"]
     if context.user_data.get("course_name"):
         del context.user_data["course_name"]
-    track_msg_prompt_id = context.user_data.get("track_prompt_id")
-    await context.bot.edit_message_reply_markup(
-        chat_id=update.effective_chat.id,
-        message_id=track_msg_prompt_id,
-        reply_markup=None,
-    )
+    if context.user_data.get("editing_course"):
+        del context.user_data["editing_course"]
+    if context.user_data.get("is_inline"):
+        del context.user_data["is_inline"]
+    if context.user_data.get("prompt_message_id"):
+        del context.user_data["prompt_message_id"]
+    context.user_data["track_last_msg"] = ""
+
     await update.effective_chat.send_message("Track saved!")
     return ConversationHandler.END
 
@@ -400,6 +457,17 @@ async def course_added(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Action cancelled.")
     # TODO: delete data from user context
+    if context.user_data.get("course_location"):
+        del context.user_data["course_location"]
+    if context.user_data.get("course_name"):
+        del context.user_data["course_name"]
+    if context.user_data.get("editing_course"):
+        del context.user_data["editing_course"]
+    if context.user_data.get("is_inline"):
+        del context.user_data["is_inline"]
+    if context.user_data.get("prompt_message_id"):
+        del context.user_data["prompt_message_id"]
+    context.user_data["track_last_msg"] = ""
 
     return ConversationHandler.END
 
@@ -408,22 +476,35 @@ course_conv_handler = ConversationHandler(
     entry_points=[CommandHandler("coursemenu", start_edit_courses)],
     states={
         CHOOSE_COURSE_ACTION_ROUTE: [
+            CallbackQueryHandler(start_edit_courses, pattern="^start$"),
             CallbackQueryHandler(add_game_name, pattern="^select_game:$"),
             CallbackQueryHandler(
                 present_add_edit_course, pattern="^select_game:" + ".+$"
             ),
             CallbackQueryHandler(edit_course, pattern="^edit_course:" + ".*$"),
-            CallbackQueryHandler(add_course_name, pattern="^create_course:" + ".*$"),
+            CallbackQueryHandler(
+                add_course_name, pattern="^(create_course|edit_course_name):.*$"
+            ),
+            CallbackQueryHandler(
+                edit_course_location, pattern="^edit_course_location:.*$"
+            ),
+            CallbackQueryHandler(course_delete, pattern="^delete_course:" + ".*$"),
             CallbackQueryHandler(edit_tracks, pattern="^edit_tracks:.*$"),
         ],
         ADD_COURSE_ROUTE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, process_course_name)
+            MessageHandler(filters.TEXT & ~filters.COMMAND, process_course_name),
+            CallbackQueryHandler(  # for back button
+                present_add_edit_course, pattern="^select_game:" + ".+$"
+            ),
         ],
         ADD_COURSE_LOCATION: [
             MessageHandler(
                 filters.TEXT & ~filters.COMMAND,
                 process_course_location,
-            )
+            ),
+            CallbackQueryHandler(  # for back button
+                present_add_edit_course, pattern="^select_game:" + ".+$"
+            ),
         ],
         ADD_TRACKS: [
             CallbackQueryHandler(course_added, pattern="^tracks_save$"),
@@ -432,7 +513,8 @@ course_conv_handler = ConversationHandler(
             MessageHandler(filters.TEXT | filters.COMMAND, add_tracks),
         ],
         ADD_GAME_ROUTE: [
-            MessageHandler(filters.TEXT & ~filters.COMMAND, add_game_done)
+            CallbackQueryHandler(start_edit_courses, pattern="^start$"),
+            MessageHandler(filters.TEXT & ~filters.COMMAND, add_game_done),
         ],
     },
     fallbacks=[CommandHandler("cancel", cancel)],

@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 from pydantic import ValidationError
 
-from .model import Course
+from .model import Course, CourseUpdate
 from models.game.model import Game
 
 
@@ -24,18 +24,14 @@ def create_course(
 
 
 def update_course(
-    session: Session, course_id: int, name: str | None, location: str | None
-) -> Course:
+    session: Session, course_id: int, update_data: CourseUpdate
+) -> Course | None:
     db_course = session.get(Course, course_id)
     if db_course:
-        try:
-            course = Course(name=name, location=location)
-        except ValidationError as e:
-            raise e
-        db_course.sqlmodel_update(course.model_dump(exclude_unset=True))
+        db_course.sqlmodel_update(update_data.model_dump(exclude_unset=True))
         session.commit()
-        session.refresh(course)
-        return course
+        session.refresh(db_course)
+        return db_course
 
 
 def delete_course(session: Session, course_id: int):

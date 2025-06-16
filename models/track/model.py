@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class TrackBase(SQLModel):
     par: int = None
+    deleted: bool = False
 
 
 class Track(TrackBase, table=True):
