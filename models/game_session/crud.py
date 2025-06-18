@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sqlmodel import Session, select, and_
+from sqlmodel import Session, select, and_, desc
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
@@ -71,6 +71,7 @@ def read_game_session_user(
                 ),
             )
         )
+        .order_by(desc(GameSession.ended_at))
     )
     return session.exec(stmt).all()
 
@@ -101,6 +102,7 @@ def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSe
         .where(
             and_(UserGroupMembersLink.user_id == user_id, GameSession.ended_at == None)
         )
+        .order_by(desc(GameSession.ended_at))
     )
     return session.exec(stmt).all()
 

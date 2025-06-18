@@ -126,7 +126,8 @@ def read_scores(
     session: Session, session_id: int, user_id: int
 ) -> List[Tuple[Score, Track]]:
     stmt = (
-        select(Score, Track).join(
+        select(Score, Track)
+        .join(
             Score,
             and_(
                 Track.track_number == Score.track_number,
@@ -135,6 +136,8 @@ def read_scores(
             ),
             isouter=True,
         )
+        .join(GameSession, GameSession.id == session_id)
+        .where(and_(Track.deleted == False, Track.course_id == GameSession.course_id))
         # .where(and_(Score.game_session_id == session_id, Score.user_id == user_id))
         .order_by(Track.track_number)
     )

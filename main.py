@@ -26,17 +26,22 @@ log_level = logging.INFO if secrets.get("DEV_MODE", False) else logging.WARNING
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("handlers.helpers").setLevel(
+    logging.DEBUG if secrets.get("DEV_MODE", False) else logging.WARNING
+)
 logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+    format="%(asctime)s [%(levelname)s][%(name)s] %(message)s", level=log_level
 )
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with get_session() as s:
         create_user(s, update.message.from_user)
+
+    msg = "Track scores\nJoin a group or create new /groupmenu\nAdd courses /coursemenu\nStart or join a game /game"
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="Score tracking bot",
+        text=msg,
     )
 
 

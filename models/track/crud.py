@@ -6,22 +6,6 @@ from .model import Track
 from models.course.model import Course
 
 
-def create_track(
-    session: Session, track_number: int, par: int, course_id: int
-) -> Track:
-
-    db_course = session.get(Course, course_id)
-    if db_course:
-        try:
-            track = Track(track_number=track_number, par=par, course=db_course)
-        except ValidationError as e:
-            raise e
-        session.add(track)
-        session.commit()
-        session.refresh(track)
-        return track
-
-
 def upsert_track(
     session: Session, track_number: int, par: int, course_id: int
 ) -> Track:

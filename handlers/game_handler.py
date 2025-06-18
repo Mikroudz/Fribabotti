@@ -37,7 +37,7 @@ from models.game_session.crud import (
     read_game_session_course,
 )
 
-from .helpers import handler_helper
+from .helpers import handler_helper, log_tg_action
 
 from utils.formatting import datetime_to_pretty, par_score_format
 
@@ -46,11 +46,11 @@ GAME_MAIN_MENU_ROUTE, GAME_SESSION_SELECTED_ROUTE = range(2)
 CURRENT_TIMEZONE = "Europe/Helsinki"
 
 
+@log_tg_action()
 @handler_helper()
 async def start_game_menu(
     update: Update, context: ContextTypes.DEFAULT_TYPE, from_user_id: int
 ):
-    print("start")
     is_new_conversation = True
     if context.user_data.get("is_inline"):
         is_new_conversation = False
@@ -107,6 +107,7 @@ async def start_game_menu(
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def reply_scorecard(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
@@ -123,6 +124,7 @@ async def reply_scorecard(
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session_id = None
     # TODO: make this better
@@ -206,6 +208,7 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True)
 async def new_session_select_game(update: Update, context: ContextTypes.DEFAULT_TYPE):
     with get_session() as s:
@@ -234,6 +237,7 @@ async def new_session_select_game(update: Update, context: ContextTypes.DEFAULT_
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def list_old_sessions(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int, from_user_id
@@ -288,6 +292,7 @@ async def list_old_sessions(
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def new_session_select_course(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
@@ -321,6 +326,7 @@ async def new_session_select_course(
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def new_session_select_user_group(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int, from_user_id
@@ -353,6 +359,7 @@ async def new_session_select_user_group(
     return GAME_MAIN_MENU_ROUTE
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int, remove_keyboard=True)
 async def create_new_game_session(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param, from_user_id
@@ -373,6 +380,7 @@ async def create_new_game_session(
     return await selected_game_session(update, context)
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int, remove_keyboard=True)
 async def game_session_end(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
@@ -387,6 +395,7 @@ async def game_session_end(
     return await session_selected_actions(update, context)
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int, remove_keyboard=True)
 async def game_session_reopened(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
@@ -399,7 +408,8 @@ async def game_session_reopened(
     return await session_selected_actions(update, context)
 
 
-@handler_helper(remove_keyboard=True)
+@log_tg_action()
+@handler_helper(remove_keyboard=False)
 async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # do we have saved session
     session_id = context.user_data.get("game_session_id")
@@ -412,6 +422,7 @@ async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TY
         context.user_data["game_session_id"] = session_id
     if context.user_data.get("current_track_num"):
         del context.user_data["current_track_num"]
+    context.user_data["last_msg"] = ""
     # This just handles the input inbetween transitions to keep state clear
     return await game_session_process(update, context)
 
@@ -442,6 +453,7 @@ async def game_sesssion_save_score_text(
     return await game_session_process(update, context)
 
 
+@log_tg_action()
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def game_sesssion_save_score(
     update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int, from_user_id
@@ -456,6 +468,7 @@ async def game_sesssion_save_score(
     return await game_session_process(update, context)
 
 
+@log_tg_action()
 async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_inline_msg = not context.user_data.get("not_inline", False)
     context.user_data["not_inline"] = False
@@ -542,6 +555,11 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
 
     current_msg = markup_data + updated_msg
     prompt_message = None
+    prompt_message_id = None
+    if context.user_data.get("prompt_message_id"):
+        prompt_message_id = context.user_data.get("prompt_message_id")
+        # context.user_data["prompt_message_id"] = prompt_message.message_id
+
     # send new message
     if not is_inline_msg:
         prompt_message = await update.effective_chat.send_message(
@@ -549,7 +567,6 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN_V2,
         )
-        prompt_message_id = context.user_data.get("prompt_message_id")
         # Clean buttons from old msg
         if prompt_message_id:
             await context.bot.edit_message_reply_markup(
@@ -559,6 +576,7 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
             )
 
     else:  # use old message
+        # Check if content has changed
         last_msg = context.user_data.get("last_msg")
 
         if not (last_msg and last_msg == current_msg):
@@ -567,17 +585,18 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
                 reply_markup=reply_markup,
                 parse_mode=ParseMode.MARKDOWN_V2,
             )
-    if prompt_message:
-        context.user_data["prompt_message_id"] = prompt_message.message_id
+    context.user_data["prompt_message_id"] = prompt_message.message_id
     context.user_data["last_msg"] = current_msg
     return GAME_SESSION_SELECTED_ROUTE
 
 
+@log_tg_action()
 async def game_session_done(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["from_command"] = False
     return await session_selected_actions(update, context)
 
 
+@log_tg_action()
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text("Action cancelled.")
     # TODO: delete data from user context

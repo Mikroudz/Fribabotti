@@ -8,7 +8,7 @@ from models.course.crud import create_course, delete_course, update_course
 from models.course.model import Course, CourseUpdate
 from models.game.model import Game
 from models.game.crud import create_game
-from models.track.crud import create_track, upsert_track, delete_track
+from models.track.crud import upsert_track, delete_track
 from models.track.model import Track
 
 

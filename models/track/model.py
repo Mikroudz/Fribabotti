@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, UTC, date
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
 
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, text
 
@@ -21,6 +21,7 @@ class Track(TrackBase, table=True):
             "track_number",
             "course_id",
         ),
+        UniqueConstraint("course_id", "track_number"),
     )
     track_number: int = Field(primary_key=True, nullable=False)
 

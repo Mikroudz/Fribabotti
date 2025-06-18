@@ -1,7 +1,7 @@
 from typing import Callable, Any
 import functools
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import CallbackContext, ContextTypes
+from telegram import Update
+from telegram.ext import ContextTypes
 import logging
 import inspect
 
@@ -83,3 +83,37 @@ def handler_helper(
         return wrapper
 
     return handler_helper_outer_wrapper
+
+
+def log_tg_action(log_context: bool = False):
+    """Log helper for telegram functions. Works only with functions that have "update" and "context" as params
+
+    Args:
+
+    """
+
+    def log_tg_action_outer_wrapper(fn: Callable):
+
+        @functools.wraps(fn)
+        async def wrapper(*args, **kwargs):
+            update: Update = args[0]
+            context: ContextTypes.DEFAULT_TYPE = args[1]
+            user_id = None
+            fnc_msg = ""
+            if update.callback_query:
+                fnc_msg += f"TG callback data {update.callback_query.data}"
+                user_id = update.callback_query.from_user.username
+            else:
+                fnc_msg += f"TG msg {update.message.text}"
+                user_id = update.message.from_user.username
+            msg = f"User {user_id} called {fn.__name__} with "
+            msg += fnc_msg
+            if log_context:
+                msg += f"User context: {context.user_data}"
+            logger.debug(msg)
+
+            return await fn(*args, **kwargs)
+
+        return wrapper
+
+    return log_tg_action_outer_wrapper

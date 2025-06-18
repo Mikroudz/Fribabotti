@@ -9,7 +9,7 @@ from models.course.model import Course
 from models.game.model import Game
 from models.game.crud import create_game
 
-from models.track.crud import create_track
+from models.track.crud import upsert_track, delete_track
 from models.track.model import Track
 
 from models.game_session.crud import (
@@ -21,10 +21,9 @@ from models.game_session.crud import (
 from models.game_session.model import GameSession
 
 from models.user.crud import create_user
-from models.user.model import User
 
 from models.user_group.model import UserGroup
-from models.score.crud import upsert_score
+from models.score.crud import upsert_score, read_scores
 from models.score.model import Score
 
 course_location = "hervanta"
@@ -49,7 +48,7 @@ def setup_dummy_data(session: Session):
     session.commit()
     session.refresh(user_group)
 
-    track = create_track(session, 1, 2, course.id)
+    track = upsert_track(session, 1, 2, course.id)
 
     return game, course, user, user_group, track
 
@@ -146,3 +145,49 @@ def test_update_score_success(session: Session, setup_dummy_data):
     db_scores = session.exec(select(Score)).all()
     assert len(db_scores) == 1
     assert db_scores[0].score == 2
+
+
+def test_read_scores_session(session: Session, setup_dummy_data):
+    game, course, user, user_group, track = setup_dummy_data
+    course2 = create_course(session, "somecourse", "ihasama", game.id)
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+    game_session2 = create_game_session(session, user.id, course2.id, user_group.id)
+
+    for i in range(1, 11):
+        upsert_track(session, i, 3, course.id)
+        upsert_track(session, i, 3, course2.id)
+
+    upsert_score(session, 1, 1, user.id, game_session.id)
+    upsert_score(session, 2, 1, user.id, game_session2.id)
+
+    scores = read_scores(session, game_session.id, user.id)
+    assert len(scores) == 10, "Correct track count is returned"
+    assert (
+        len([score for score, track in scores if score != None]) == 1
+    ), "One score recorded"
+    assert (
+        len(
+            [
+                score
+                for score, track in scores
+                if score
+                and score.score == 1
+                and score.track_number == 1
+                and score.track_number == track.track_number
+            ]
+        )
+        == 1
+    ), "Score has correct track number and score"
+    delete_track(session, 1, course.id)
+    scores = read_scores(session, game_session.id, user.id)
+    assert len(scores) == 9, "Correct track count is returned after deleting track"
+    assert (
+        len([score for score, track in scores if score != None]) == 0
+    ), "Recorded score is not returned if track is deleted"
+    # Add track back
+    upsert_track(session, 1, 3, course.id)
+    scores = read_scores(session, game_session.id, user.id)
+    assert len(scores) == 10, "Correct track count is returned"
+    assert (
+        len([score for score, track in scores if score != None]) == 1
+    ), "One score recorded"
