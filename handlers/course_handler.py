@@ -128,21 +128,26 @@ async def present_add_edit_course(
         del context.user_data["editing_course"]
     with get_session() as s:
         courses = read_courses(s, game_id)
+
+    courses = [courses[i : i + 3] for i in range(0, len(courses), 3)]
+    keyboard_course_select = [
+        [
+            InlineKeyboardButton(
+                f"{course.name}", callback_data=f"edit_course:{course.id}"
+            )
+            for course in course_group
+        ]
+        for course_group in courses
+    ]
     keyboard = [
         [
             InlineKeyboardButton(
                 f"Create new course", callback_data=f"create_course:{game_id}"
             )
         ],
-        [
-            InlineKeyboardButton(
-                f"{course.name}", callback_data=f"edit_course:{course.id}"
-            )
-            for course in courses
-        ],
     ]
     context.user_data["selected_game"] = game_id
-
+    keyboard += keyboard_course_select
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     prompt_message = await update.callback_query.edit_message_text(
@@ -172,7 +177,7 @@ async def add_course_name(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     msg = (
-        f"Send new name for course {course.get("name")}:"
+        f'Send new name for course {course.get("name")}:'
         if course and "name" in course
         else "Send name for the new course:"
     )
@@ -199,7 +204,7 @@ async def edit_course_location(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     prompt_message = await update.callback_query.edit_message_text(
-        f"Send new course location for {course.get("name")}:",
+        f'Send new course location for {course.get("name")}:',
         reply_markup=reply_markup,
     )
     context.user_data["prompt_message_id"] = prompt_message.message_id
@@ -229,14 +234,12 @@ async def process_course_name(update: Update, context: ContextTypes.DEFAULT_TYPE
     course = context.user_data.get("editing_course")
 
     if course:
-        callback_data = f"edit_course:{course.get("id")}"
+        callback_data = f'edit_course:{course.get("id")}'
     else:
         game_id = context.user_data.get("selected_game")
         callback_data = f"select_game:{game_id}"
 
-    keyboard = [
-        [InlineKeyboardButton(f"Back", callback_data=callback_data)],
-    ]
+    keyboard = [[InlineKeyboardButton(f"Back", callback_data=callback_data)]]
 
     reply_markup = InlineKeyboardMarkup(keyboard)
 

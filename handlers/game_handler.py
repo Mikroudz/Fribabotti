@@ -1,4 +1,3 @@
-from dotenv import dotenv_values
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.constants import ParseMode
 from telegram.helpers import escape_markdown
@@ -39,7 +38,7 @@ from models.game_session.crud import (
 
 from .helpers import handler_helper, log_tg_action
 
-from utils.formatting import datetime_to_pretty, par_score_format
+from utils.formatting import par_score_format
 
 GAME_MAIN_MENU_ROUTE, GAME_SESSION_SELECTED_ROUTE = range(2)
 
@@ -178,9 +177,10 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
     session_msg = (
         f"Game Session course *{escape_markdown(game_session.course.name, 2)}*\n"
     )
-    session_msg += f"Started {escape_markdown(datetime_to_pretty(game_session.started_at, CURRENT_TIMEZONE), 2)}\n"
+    session_msg += f"Started {escape_markdown(game_session.started_at_local, 2)}\n"
+
     if game_session.ended_at:
-        session_msg += f"Ended {escape_markdown(datetime_to_pretty(game_session.ended_at, CURRENT_TIMEZONE), 2)}\n"
+        session_msg += f"Ended {escape_markdown(game_session.ended_at_local, 2)}\n"
 
     prompt_msg = None
     if len(scores_total) > 0:
@@ -254,7 +254,7 @@ async def list_old_sessions(
     session_msg = f"Ended sessions\n{len(game_sessions)} found\n\n"
     session_msg += "\n".join(
         [
-            f"{session.course.name} {datetime_to_pretty(session.ended_at, CURRENT_TIMEZONE)} /gs_{session.id}"
+            f"{session.course.name} {session.ended_at_local} /gs_{session.id}"
             for session in game_sessions[
                 (page_id) * show_items_on_page : (page_id) * show_items_on_page
                 + show_items_on_page
@@ -301,15 +301,17 @@ async def new_session_select_course(
 
     with get_session() as s:
         courses = read_courses(s, game_id)
-    keyboard = [
+    courses = [courses[i : i + 3] for i in range(0, len(courses), 3)]
+    keyboard_course_select = [
         [
             InlineKeyboardButton(
-                f"{course.name}", callback_data=f"select_course:{course.id}"
+                f"{course.name}", callback_data=f"edit_course:{course.id}"
             )
-            for course in courses
-        ],
+            for course in course_group
+        ]
+        for course_group in courses
     ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard_course_select)
     msg = (
         "Choose course from below for new game session"
         if len(courses) > 0
@@ -390,7 +392,7 @@ async def game_session_end(
         game_session = end_game_session(s, session_id)
     if game_session:
         await update.effective_chat.send_message(
-            f"Session ended {datetime_to_pretty(game_session.ended_at, CURRENT_TIMEZONE)}"
+            f"Session ended {game_session.ended_at_local}"
         )
     return await session_selected_actions(update, context)
 

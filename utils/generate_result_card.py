@@ -10,7 +10,7 @@ from models.track.model import Track
 from models.game_session.model import GameSession
 from io import BytesIO
 
-from utils.formatting import par_score_format, datetime_to_pretty
+from utils.formatting import par_score_format
 
 CURRENT_TIMEZONE = "Europe/Helsinki"
 
@@ -75,7 +75,7 @@ def create_result_card_image(
     fig.set_size_inches(table_size[0], table_size[1])
 
     plt.title(
-        f"{course.name} {datetime_to_pretty(game_session.started_at, CURRENT_TIMEZONE)} - {datetime_to_pretty(game_session.ended_at, CURRENT_TIMEZONE)}"
+        f"{course.name} {game_session.started_at_local} - {game_session.ended_at_local}"
     )
     ax.axis("off")
     ax.axis("tight")

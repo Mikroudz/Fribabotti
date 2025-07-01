@@ -4,12 +4,14 @@ import random
 import string
 
 
-def datetime_to_pretty(date: datetime, timezone: str = "UTC") -> str:
+def datetime_to_pretty(
+    date: datetime, timezone: str = "UTC", pretty_print=True
+) -> str | datetime:
     if not date:
         return ""
     target_timez = ZoneInfo(timezone)
     converted = date.astimezone(target_timez)
-    return converted.strftime("%Y-%m-%d %H:%M:%S")
+    return converted.strftime("%Y-%m-%d %H:%M:%S") if pretty_print else converted
 
 
 def par_score_format(val: int) -> str:
