@@ -224,7 +224,7 @@ async def new_session_select_game(update: Update, context: ContextTypes.DEFAULT_
     msg = (
         "Which game you are playing?"
         if len(games) > 0
-        else "No game types saved. Create first with /edit_course command"
+        else "No game types saved. Create first with /coursemenu command"
     )
     if context.user_data.get("is_inline"):
         await update.callback_query.edit_message_text(
@@ -305,7 +305,7 @@ async def new_session_select_course(
     keyboard_course_select = [
         [
             InlineKeyboardButton(
-                f"{course.name}", callback_data=f"edit_course:{course.id}"
+                f"{course.name}", callback_data=f"select_course:{course.id}"
             )
             for course in course_group
         ]
@@ -315,7 +315,7 @@ async def new_session_select_course(
     msg = (
         "Choose course from below for new game session"
         if len(courses) > 0
-        else "No courses are saved. Add first one with /edit_course"
+        else "No courses are saved. Add first one with /coursemenu"
     )
 
     await update.callback_query.edit_message_text(
