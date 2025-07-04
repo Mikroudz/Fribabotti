@@ -19,6 +19,10 @@ mkdir -p "$RELEASE_DIR"
 cp -R "$GITHUB_WORKSPACE"/* "$RELEASE_DIR"
 cd "$RELEASE_DIR"
 
+if [ ! -e "$VENV_PATH/pyvenv.cfg" ]; then
+	python3 -m venv $VENV_PATH
+fi
+
 # --- 2. Create .env file from GitHub Secrets ---
 # The secrets are passed as environment variables by the workflow file
 echo "--> Creating .env file from secrets"
