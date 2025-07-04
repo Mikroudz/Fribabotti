@@ -2,7 +2,7 @@
 set -e
 
 
-PROJECT_DIR="/home/gh-actions-runner-user/fribabotti"
+PROJECT_DIR="/home/gh-action-runner-user/fribabotti"
 RELEASES_DIR="$PROJECT_DIR/releases"
 SHARED_DIR="$PROJECT_DIR/shared"
 VENV_PATH="$SHARED_DIR/venv"
