@@ -9,19 +9,20 @@ jobs:
     deploy:
         # This job MUST run on your self-hosted server
         runs-on: [self-hosted]
-
+        environment:
+            name: kiisu-deploy
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
             - name: Execute Deployment Script
               # Here we pass the GitHub Secrets as environment variables to the script
               env:
-                  DB_HOST: ${{ secrets.DB_HOST }}
+                  DB_HOST: ${{ vars.DB_HOST }}
                   DB_USER: ${{ secrets.DB_USER }}
                   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-                  DB_TYPE: ${{ secrets.DB_TYPE }}
-                  DB_DATABASE_NAME: ${{ secrets.DB_DATABASE_NAME }}
-                  DEV_MODE: ${{ secrets.DEV_MODE }}
+                  DB_TYPE: ${{ vars.DB_TYPE }}
+                  DB_DATABASE_NAME: ${{ vars.DB_DATABASE_NAME }}
+                  DEV_MODE: ${{ vars.DEV_MODE }}
                   BOT_SECRET: ${{ secrets.BOT_SECRET }}
               run: |
                   chmod +x ./deploy.sh
