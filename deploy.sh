@@ -31,7 +31,7 @@ echo "DB_TYPE=${DB_TYPE}" >> .env
 echo "DB_HOST=${DB_HOST}" >> .env
 echo "DB_USER=${DB_USER}" >> .env
 echo "DB_PASSWORD=${DB_PASSWORD}" >> .env
-echo "DB_DATABASE_NAME=${DB_DATABASE_NAME}" >> .env
+echo "DB_DATABASE=${DB_DATABASE}" >> .env
 echo "DEV_MODE=${DEV_MODE}" >> .env
 echo "BOT_SECRET=${BOT_SECRET}" >> .env
 
