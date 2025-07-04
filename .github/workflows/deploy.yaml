@@ -8,20 +8,21 @@ on:
 jobs:
     deploy:
         # This job MUST run on your self-hosted server
-        runs-on: [self-hosted, linux, prod-deploy] # Use the labels you configured
+        runs-on: [self-hosted]
 
         steps:
             - name: Checkout code
               uses: actions/checkout@v4
-            - name: get repository name
-              run: echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
             - name: Execute Deployment Script
               # Here we pass the GitHub Secrets as environment variables to the script
               env:
                   DB_HOST: ${{ secrets.DB_HOST }}
                   DB_USER: ${{ secrets.DB_USER }}
                   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-                  API_KEY: ${{ secrets.API_KEY }}
+                  DB_TYPE: ${{ secrets.DB_TYPE }}
+                  DB_DATABASE_NAME: ${{ secrets.DB_DATABASE_NAME }}
+                  DEV_MODE: ${{ secrets.DEV_MODE }}
+                  BOT_SECRET: ${{ secrets.BOT_SECRET }}
               run: |
                   chmod +x ./deploy.sh
                   ./deploy.sh
