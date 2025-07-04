@@ -21,7 +21,7 @@ jobs:
                   DB_USER: ${{ secrets.DB_USER }}
                   DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
                   DB_TYPE: ${{ vars.DB_TYPE }}
-                  DB_DATABASE_NAME: ${{ vars.DB_DATABASE_NAME }}
+                  DB_DATABASE_NAME: ${{ vars.DB_DATABASE }}
                   DEV_MODE: ${{ vars.DEV_MODE }}
                   BOT_SECRET: ${{ secrets.BOT_SECRET }}
               run: |
