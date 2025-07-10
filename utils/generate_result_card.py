@@ -75,7 +75,7 @@ def create_result_card_image(
     fig.set_size_inches(table_size[0], table_size[1])
 
     plt.title(
-        f"{course.name} {game_session.started_at_local} - {game_session.ended_at_local}"
+        f"{course.name} {game_session.started_at_local()} - {game_session.ended_at_local()}"
     )
     ax.axis("off")
     ax.axis("tight")

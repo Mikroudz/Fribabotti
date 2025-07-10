@@ -4,13 +4,17 @@ import random
 import string
 
 
+def convert_to_timezone(value: datetime, tz: str) -> datetime:
+    target_timez = ZoneInfo(tz)
+    return value.astimezone(target_timez)
+
+
 def datetime_to_pretty(
     date: datetime, timezone: str = "UTC", pretty_print=True
 ) -> str | datetime:
     if not date:
         return ""
-    target_timez = ZoneInfo(timezone)
-    converted = date.astimezone(target_timez)
+    converted = convert_to_timezone(date, timezone)
     return converted.strftime("%Y-%m-%d %H:%M:%S") if pretty_print else converted
 
 

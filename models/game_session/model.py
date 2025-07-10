@@ -1,8 +1,9 @@
 from typing import Optional, List, TYPE_CHECKING
+import sqlalchemy.types as types
 from datetime import datetime, UTC
 from pydantic import computed_field, field_validator, field_serializer
-from utils.formatting import datetime_to_pretty
-from sqlmodel import Field, SQLModel, Relationship, text
+from utils.formatting import datetime_to_pretty, convert_to_timezone
+from sqlmodel import Field, SQLModel, Relationship, text, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
 
 if TYPE_CHECKING:
@@ -23,14 +24,10 @@ def strip_timezone(value):
 
 class GameSessionBase(SQLModel):
 
-    @computed_field
-    @property
     def started_at_local(self, timezone=None, pretty_print=True) -> datetime | str:
         tz = CURRENT_TIMEZONE if timezone == None else timezone
         return datetime_to_pretty(strip_timezone(self.started_at), tz, pretty_print)
 
-    @computed_field
-    @property
     def ended_at_local(self, timezone=None, pretty_print=True) -> datetime | str:
         tz = CURRENT_TIMEZONE if timezone == None else timezone
         return datetime_to_pretty(strip_timezone(self.ended_at), tz, pretty_print)
@@ -55,10 +52,9 @@ class GameSession(GameSessionBase, table=True):
         sa_column_kwargs={
             "server_default": text("CURRENT_TIMESTAMP"),
         },
+        sa_type=DateTime(timezone=False),
     )
-    ended_at: Optional[datetime] = Field(
-        default=None,
-    )
+    ended_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=False))
     course_id: Optional[int] = Field(
         default=None, foreign_key="course.id", nullable=False
     )

@@ -177,10 +177,10 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
     session_msg = (
         f"Game Session course *{escape_markdown(game_session.course.name, 2)}*\n"
     )
-    session_msg += f"Started {escape_markdown(game_session.started_at_local, 2)}\n"
+    session_msg += f"Started {escape_markdown(game_session.started_at_local(), 2)}\n"
 
     if game_session.ended_at:
-        session_msg += f"Ended {escape_markdown(game_session.ended_at_local, 2)}\n"
+        session_msg += f"Ended {escape_markdown(game_session.ended_at_local(), 2)}\n"
 
     prompt_msg = None
     if len(scores_total) > 0:
@@ -254,7 +254,7 @@ async def list_old_sessions(
     session_msg = f"Ended sessions\n{len(game_sessions)} found\n\n"
     session_msg += "\n".join(
         [
-            f"{session.course.name} {session.ended_at_local} /gs_{session.id}"
+            f"{session.course.name} {session.ended_at_local()} /gs_{session.id}"
             for session in game_sessions[
                 (page_id) * show_items_on_page : (page_id) * show_items_on_page
                 + show_items_on_page
@@ -392,7 +392,7 @@ async def game_session_end(
         game_session = end_game_session(s, session_id)
     if game_session:
         await update.effective_chat.send_message(
-            f"Session ended {game_session.ended_at_local}"
+            f"Session ended {game_session.ended_at_local()}"
         )
     return await session_selected_actions(update, context)
 

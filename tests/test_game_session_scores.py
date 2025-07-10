@@ -63,7 +63,10 @@ def test_create_end_game_session_success(session: Session, setup_dummy_data):
     end_game_session(session, db_sessions[0].id)
     db_sessions = session.exec(select(GameSession)).all()
     assert len(db_sessions) == 1
-    assert db_sessions[0].ended_at != None
+    assert db_sessions[0].ended_at > db_sessions[0].started_at
+    assert db_sessions[0].ended_at_local("Europe/Helsinki", False) > db_sessions[
+        0
+    ].started_at_local("Europe/Helsinki", False)
 
 
 def test_delete_game_session(session: Session, setup_dummy_data):
