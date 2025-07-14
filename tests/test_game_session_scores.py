@@ -1,28 +1,28 @@
 import pytest
 from sqlmodel import select, Session
-from pydantic import ValidationError
-from telegram import Chat
-from datetime import datetime, timedelta
 
-from models.course.crud import create_course, delete_course
-from models.course.model import Course
-from models.game.model import Game
+
+from models.course.crud import create_course
+
 from models.game.crud import create_game
 
 from models.track.crud import upsert_track, delete_track
-from models.track.model import Track
 
 from models.game_session.crud import (
     create_game_session,
     end_game_session,
     delete_game_session,
     join_game_session,
+    read_game_session_user_groups,
+    read_game_session_user,
 )
 from models.game_session.model import GameSession
 
 from models.user.crud import create_user
 
 from models.user_group.model import UserGroup
+from models.user_group.crud import invite_join_group
+
 from models.score.crud import upsert_score, read_scores
 from models.score.model import Score
 
@@ -93,6 +93,29 @@ def test_join_game_session(session: Session, setup_dummy_data):
     db_sessions = session.exec(select(GameSession)).all()
     assert len(db_sessions) == 1
     assert len(db_sessions[0].participants) == 2
+
+
+def test_get_game_session_same_group_not_joined(session: Session, setup_dummy_data):
+    game, course, user, user_group, _ = setup_dummy_data
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+    user2 = create_user(
+        session,
+        type(
+            "User",
+            (object,),
+            {"first_name": "tsti", "username": "asd", "id": 2},
+        )(),
+    )
+
+    db_sessions = read_game_session_user_groups(session, user2.id)
+    assert (
+        len(db_sessions) == 0
+    ), "User does not see sessions from groups he is not joined"
+    invite_join_group(session, user_group.invite_code, user2.id)
+    db_sessions = read_game_session_user_groups(session, user2.id)
+    assert len(db_sessions) == 1, "After joining group session is visible"
+    db_active_sessions = read_game_session_user(session, user2.id)
+    assert len(db_active_sessions) == 0, "Session not returned as active"
 
 
 def test_create_score_success(session: Session, setup_dummy_data):

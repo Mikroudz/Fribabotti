@@ -422,8 +422,10 @@ async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TY
         route = query.data
         session_id = route.split(":")[1]
         context.user_data["game_session_id"] = session_id
-    if context.user_data.get("current_track_num"):
+    if context.user_data.get("current_track_num", None) != None:
         del context.user_data["current_track_num"]
+    if context.user_data.get("current_track_idx", None) != None:
+        del context.user_data["current_track_idx"]
     context.user_data["last_msg"] = ""
     # This just handles the input inbetween transitions to keep state clear
     return await game_session_process(update, context)
