@@ -45,7 +45,7 @@ def test_update_user_group_success(session: Session, setup_dummy_data):
     user = setup_dummy_data
     g = create_group(session, "test", True, user.id)
     old_invite = g.invite_code
-    edit_group(session, "a", g.id, False, True)
+    edit_group(session, group_id=g.id, reset_invite=True, data=UserGroup(name="a"))
     group = session.get(UserGroup, g.id)
     assert group.name == "a"
     assert old_invite != group.invite_code
@@ -57,7 +57,8 @@ def test_update_user_group_dont_change_invite_success(
     user = setup_dummy_data
     g = create_group(session, "test", True, user.id)
     old_invite = g.invite_code
-    edit_group(session, "a", g.id, False, False)
+    edit_group(session, group_id=g.id, reset_invite=False, data=UserGroup(name="a"))
+
     group = session.get(UserGroup, g.id)
     assert group.name == "a"
     assert old_invite == group.invite_code

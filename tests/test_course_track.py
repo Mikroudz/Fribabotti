@@ -72,12 +72,12 @@ def test_delete_course_cascade_success(session: Session):
     loc = "hervanta"
     name = "hervannan frisbeegolf"
     course = create_course(session, name, loc, game.id)
-    create_track(session, 1, 2, course.id)
+    upsert_track(session, 1, 2, course.id)
 
     delete_course(session, course.id)
 
     db_tracks = session.exec(select(Track)).all()
-    assert len(db_tracks) == 0
+    assert len(db_tracks) == 0, "Cascade removes tracks"
     db_courses = session.exec(select(Course)).all()
     assert len(db_courses) == 0
 
@@ -121,5 +121,5 @@ def test_delete_track_success(session: Session):
     course = create_course(session, name, loc, game.id)
     upsert_track(session, 1, 2, course.id)
     delete_track(session, 1, course.id)
-    db_tracks = session.exec(select(Track)).all()
+    db_tracks = session.exec(select(Track).where(Track.deleted == False)).all()
     assert len(db_tracks) == 0

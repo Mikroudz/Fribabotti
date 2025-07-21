@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sqlmodel import Session, select, and_, desc
+from sqlmodel import Session, select, and_, asc, desc
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
@@ -71,7 +71,7 @@ def read_game_session_user(
                 ),
             )
         )
-        .order_by(desc(GameSession.ended_at))
+        .order_by(desc(GameSession.started_at))
     )
     return session.exec(stmt).all()
 
@@ -91,18 +91,23 @@ def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSe
     stmt = (
         select(GameSession)
         .options(selectinload(GameSession.course))
-        .join(
-            UserGroup,
-            UserGroup.id == GameSession.user_group_id,
-        )
-        .join(
-            UserGroupMembersLink,
-            UserGroup.id == UserGroupMembersLink.user_id,
+        .join(UserGroup, GameSession.user_group_id == UserGroup.id)
+        .join(UserGroupMembersLink, UserGroup.id == UserGroupMembersLink.user_group_id)
+        .outerjoin(
+            SessionParticipantsLink,
+            and_(
+                GameSession.id == SessionParticipantsLink.game_session_id,
+                SessionParticipantsLink.user_id == user_id,
+            ),
         )
         .where(
-            and_(UserGroupMembersLink.user_id == user_id, GameSession.ended_at == None)
+            and_(
+                UserGroupMembersLink.user_id == user_id,
+                GameSession.ended_at.is_(None),
+                SessionParticipantsLink.user_id.is_(None),
+            )
         )
-        .order_by(desc(GameSession.ended_at))
+        .order_by(desc(GameSession.started_at))
     )
     return session.exec(stmt).all()
 
@@ -120,7 +125,7 @@ def read_game_session_course(session: Session, session_id: int) -> Course:
     return session.exec(stmt).first()
 
 
-def read_game_session(session: Session, session_id: int) -> GameSession:
+def read_game_session(session: Session, session_id: int) -> GameSession | None:
     """Read game session
 
     Args:
@@ -134,9 +139,7 @@ def read_game_session(session: Session, session_id: int) -> GameSession:
     stmt = (
         select(GameSession)
         .options(
-            selectinload(
-                GameSession.participants,
-            ),
+            selectinload(GameSession.participants),
             selectinload(GameSession.course),
             selectinload(GameSession.user_group),
             selectinload(GameSession.scores),
@@ -171,7 +174,15 @@ def delete_game_session(session: Session, game_session_id: int):
         session.commit()
 
 
-def join_game_session(session: Session, user_id: int, session_id: int):
+def join_game_session(session: Session, user_id: int, session_id: int) -> None:
+    db_check_if_user_in_session = session.exec(
+        select(SessionParticipantsLink)
+        .where(SessionParticipantsLink.user_id == user_id)
+        .where(SessionParticipantsLink.game_session_id == session_id)
+    ).first()
+    if db_check_if_user_in_session is not None:
+        return
+
     db_user = session.get(User, user_id)
     db_session = session.get(Course, session_id)
 

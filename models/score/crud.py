@@ -6,6 +6,8 @@ from .model import Score
 from models.course.model import Course
 from models.track.model import Track
 from models.user.model import User
+from models.links.session_participants_link import SessionParticipantsLink
+
 from models.game_session.model import GameSession
 import logging
 
@@ -87,10 +89,22 @@ def update_score(session: Session, score_id: int, score: int) -> Score:
 
 
 def read_users_scores(session: Session, session_id: int) -> List[Tuple[int, User]]:
+    session_scores_sq = (
+        select(Score.user_id, Score.score)
+        .join(GameSession, Score.game_session_id == GameSession.id)
+        .where(GameSession.id == session_id)
+        .subquery()
+    )
+
     stmt = (
-        select(func.sum(Score.score).label("score_sum"), User)
-        .join(User, Score.user_id == User.id)
-        .where(Score.game_session_id == session_id)
+        select(
+            User,
+            func.coalesce(func.sum(session_scores_sq.c.score), 0).label("score_sum"),
+        )
+        .join(User, SessionParticipantsLink.user_id == User.id)
+        .select_from(SessionParticipantsLink)
+        .outerjoin(session_scores_sq, User.id == session_scores_sq.c.user_id)
+        .where(SessionParticipantsLink.game_session_id == session_id)
         .group_by(User.id)
         .order_by(desc("score_sum"))
     )

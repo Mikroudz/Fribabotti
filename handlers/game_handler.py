@@ -34,6 +34,7 @@ from models.game_session.crud import (
     end_game_session,
     reopen_game_session,
     read_game_session_course,
+    join_game_session,
 )
 
 from .helpers import handler_helper, log_tg_action
@@ -61,13 +62,18 @@ async def start_game_menu(
         len(user_active_games) > 0 or len(user_groups_active_games) > 0
     )
 
-    keyboard = [
+    user_session_active_games_keyboard = [
         [
             InlineKeyboardButton(
-                game.course.name, callback_data=f"session_selected:{game.id}"
+                f"{game.course.name} {game.started_at_local(None, False).strftime("%Y-%m-%d")}",
+                callback_data=f"session_selected:{game.id}",
             )
-            for game in user_active_games
-        ],
+        ]
+        for game in user_active_games
+    ]
+
+    keyboard = [
+        *user_session_active_games_keyboard,
         [
             InlineKeyboardButton("New Game Session", callback_data=f"new_session:"),
             InlineKeyboardButton("Old Games", callback_data=f"old_sessions:0"),
@@ -77,13 +83,16 @@ async def start_game_menu(
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     ongoing_games_msg = (
-        "Ongoing games in your groups:\n"
+        "Ongoing games in your groups"
         if user_has_active_games
         else "No game session active. Start a new one!"
     )
+    ongoing_games_msg += (
+        "\nPress /gs_* to join a game\n" if len(user_groups_active_games) > 0 else ""
+    )
     ongoing_games_msg += "\n".join(
         [
-            f"{session.course.name} {session.started_at}"
+            f"{session.course.name} {session.started_at} /gs_{session.id}"
             for session in user_groups_active_games
         ]
     )
@@ -127,26 +136,35 @@ async def reply_scorecard(
 async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session_id = None
     # TODO: make this better
-    if not context.user_data.get("from_command"):
+    if not update.message:
+        # Maybe might need to use from_command as forcing this path?
+        context.user_data["from_command"] = False
         query = update.callback_query
         await query.answer()
         route = query.data
         session_id = route.split(":")[1]
     else:
         # This fnc is called only when message starts with "/gs_"
+        context.user_data["from_command"] = True
         cmd = update.message.text
         session_id = cmd.split("_")[1]
         if not session_id.isdigit():
             return GAME_MAIN_MENU_ROUTE
+
+    with get_session() as s:
+        game_session = read_game_session(s, session_id)
+        scores_total = read_users_scores(s, session_id)
+    # Escape if user gave incorrect ID
+    if game_session is None:
+        return GAME_MAIN_MENU_ROUTE
+
+    # Remove keypad only if we have a session to show
     if context.user_data.get("prompt_message_id"):
         await context.bot.edit_message_reply_markup(
             chat_id=update.effective_chat.id,
             reply_markup=None,
             message_id=context.user_data.get("prompt_message_id"),
         )
-    with get_session() as s:
-        game_session = read_game_session(s, session_id)
-        scores_total = read_users_scores(s, session_id)
 
     add_scores_button = None
     if game_session.ended_at:
@@ -177,15 +195,16 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
     session_msg = (
         f"Game Session course *{escape_markdown(game_session.course.name, 2)}*\n"
     )
-    session_msg += f"Started {escape_markdown(game_session.started_at_local(), 2)}\n"
+    session_msg += f"Group *{escape_markdown(game_session.user_group.name, 2)}*\n"
 
+    session_msg += f"Started {escape_markdown(game_session.started_at_local(), 2)}\n"
     if game_session.ended_at:
         session_msg += f"Ended {escape_markdown(game_session.ended_at_local(), 2)}\n"
 
     prompt_msg = None
     if len(scores_total) > 0:
         scores_msg = "\nCurrent stats:\n"
-        for score, user in scores_total:
+        for user, score in scores_total:
             scores_msg += f"{user.username} {par_score_format(score)}\n"
 
         session_msg += escape_markdown(scores_msg, 2)
@@ -415,9 +434,9 @@ async def game_session_reopened(
 async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # do we have saved session
     session_id = context.user_data.get("game_session_id")
+    query = update.callback_query
     if not session_id:
         # most probably we came from callback so add the session
-        query = update.callback_query
         await query.answer()
         route = query.data
         session_id = route.split(":")[1]
@@ -427,6 +446,10 @@ async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TY
     if context.user_data.get("current_track_idx", None) != None:
         del context.user_data["current_track_idx"]
     context.user_data["last_msg"] = ""
+    user_id = query.from_user.id
+    # Check if user has joined the session
+    with get_session() as s:
+        join_game_session(s, session_id, user_id)
     # This just handles the input inbetween transitions to keep state clear
     return await game_session_process(update, context)
 
