@@ -65,7 +65,7 @@ async def start_game_menu(
     user_session_active_games_keyboard = [
         [
             InlineKeyboardButton(
-                f"{game.course.name} {game.started_at_local(None, False).strftime("%Y-%m-%d")}",
+                f"{game.course.name} {game.started_at_local(None, False).strftime('%Y-%m-%d')}",
                 callback_data=f"session_selected:{game.id}",
             )
         ]
