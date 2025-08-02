@@ -173,6 +173,49 @@ def test_read_game_session_all_user_with_scores(session: Session, setup_dummy_da
     ], "User 2 has no scores"
 
 
+def test_read_game_session_multple_users_scores_update(session: Session, setup_dummy_data):
+    game, course, user, user_group, _ = setup_dummy_data
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+    user2 = create_user(
+        session,
+        type(
+            "User",
+            (object,),
+            {"first_name": "tsti", "username": "asd", "id": 2},
+        )(),
+    )
+
+    # Add user2 to session
+    join_game_session(session, user2.id, game_session.id)
+
+    # Add some tracks for scores
+    upsert_track(session, 1, 3, course.id)
+    upsert_track(session, 2, 3, course.id)
+    # add scores for user 1
+    upsert_score(session, 1, 1, user.id, game_session.id)
+    upsert_score(session, 2, 1, user2.id, game_session.id)
+
+
+    db_scores = read_users_scores(session, game_session.id)
+    assert [score for (user, score) in db_scores if user.id == 1] == [
+        1
+    ], "User 1 shall have 1 as score"
+    assert [score for (user, score) in db_scores if user.id == 2] == [
+        2
+    ], "User 2 has 2 as score"
+
+    # Update score
+    upsert_score(session, 2, 1, user.id, game_session.id)
+    upsert_score(session, 1, 1, user2.id, game_session.id)
+
+    db_scores = read_users_scores(session, game_session.id)
+    assert [score for (user, score) in db_scores if user.id == 2] == [
+        1
+    ], "User 1 shall have 2 as score"
+    assert [score for (user, score) in db_scores if user.id == 1] == [
+        2
+    ], "User 2 has 1 as score"
+
 def test_get_game_session_same_group_not_joined(session: Session, setup_dummy_data):
     game, course, user, user_group, _ = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)

@@ -23,6 +23,7 @@ def upsert_score(
             and_(
                 Score.track_number == track_number,
                 Score.game_session_id == game_session_id,
+                Score.user_id == user_id
             )
         )
     ).first()
