@@ -12,6 +12,9 @@ from models.course.model import Course
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
 from models.links.user_group_members_link import UserGroupMembersLink
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def create_game_session(
@@ -180,7 +183,7 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
         .where(SessionParticipantsLink.user_id == user_id)
         .where(SessionParticipantsLink.game_session_id == session_id)
     ).first()
-    print(f"session id: {session_id} user id {user_id}")
+    logger.debug(f"session id: {session_id} user id {user_id}")
     if db_check_if_user_in_session is not None:
         return
     db_user = session.get(User, user_id)
