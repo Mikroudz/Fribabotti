@@ -29,6 +29,11 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("handlers.helpers").setLevel(
     logging.DEBUG if secrets.get("DEV_MODE", False) else logging.WARNING
 )
+logging.getLogger("models.game_session.crud").setLevel(
+    logging.DEBUG if secrets.get("DEV_MODE", False) else logging.WARNING
+)
+
+
 logging.basicConfig(
     format="%(asctime)s [%(levelname)s][%(name)s] %(message)s", level=log_level
 )
