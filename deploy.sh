@@ -43,10 +43,10 @@ pip install -r requirements.txt
 deactivate
 
 # --- 4. Run Alembic Migrations (if any) ---
-#echo "--> Running database migrations"
-#source "$VENV_PATH/bin/activate"
-#alembic upgrade head
-#deactivate
+echo "--> Running database migrations"
+source "$VENV_PATH/bin/activate"
+alembic upgrade head
+deactivate
 
 # --- 5. Atomically Switch Symlink ---
 echo "--> Activating new release by updating the 'current' symlink"
