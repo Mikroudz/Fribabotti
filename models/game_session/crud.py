@@ -188,8 +188,11 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
         return
     db_user = session.get(User, user_id)
     db_session = session.get(GameSession, session_id)
+    logger.debug(f"Adding user to participants")
 
     if db_user and db_session:
+        logger.debug(f"User is added to participants")
+
         participant = SessionParticipantsLink(
             game_session_id=session_id, user_id=user_id
         )
