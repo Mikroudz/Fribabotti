@@ -180,6 +180,7 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
         .where(SessionParticipantsLink.user_id == user_id)
         .where(SessionParticipantsLink.game_session_id == session_id)
     ).first()
+    print(f"session id: {session_id} user id {user_id}")
     if db_check_if_user_in_session is not None:
         return
     db_user = session.get(User, user_id)
