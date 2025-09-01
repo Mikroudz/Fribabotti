@@ -182,9 +182,8 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
     ).first()
     if db_check_if_user_in_session is not None:
         return
-
     db_user = session.get(User, user_id)
-    db_session = session.get(Course, session_id)
+    db_session = session.get(GameSession, session_id)
 
     if db_user and db_session:
         participant = SessionParticipantsLink(

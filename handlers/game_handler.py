@@ -612,7 +612,8 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
                 reply_markup=reply_markup,
                 parse_mode=ParseMode.MARKDOWN_V2,
             )
-    context.user_data["prompt_message_id"] = prompt_message.message_id
+    if "message_id" in prompt_message:
+        context.user_data["prompt_message_id"] = prompt_message.message_id
     context.user_data["last_msg"] = current_msg
     return GAME_SESSION_SELECTED_ROUTE
 
