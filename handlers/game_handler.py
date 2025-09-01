@@ -247,7 +247,7 @@ async def new_session_select_game(update: Update, context: ContextTypes.DEFAULT_
     )
     if context.user_data.get("is_inline"):
         await update.callback_query.edit_message_text(
-            text=msg,
+            text=escape_markdown(msg, version=2),
             reply_markup=reply_markup,
             parse_mode=ParseMode.MARKDOWN_V2,
         )
@@ -449,7 +449,7 @@ async def selected_game_session(update: Update, context: ContextTypes.DEFAULT_TY
     user_id = query.from_user.id
     # Check if user has joined the session
     with get_session() as s:
-        join_game_session(s, session_id, user_id)
+        join_game_session(s, session_id=session_id, user_id=user_id)
     # This just handles the input inbetween transitions to keep state clear
     return await game_session_process(update, context)
 

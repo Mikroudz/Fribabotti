@@ -180,20 +180,17 @@ def delete_game_session(session: Session, game_session_id: int):
 def join_game_session(session: Session, user_id: int, session_id: int) -> None:
     db_check_if_user_in_session = session.exec(
         select(SessionParticipantsLink)
-        .where(and_(SessionParticipantsLink.user_id == user_id, SessionParticipantsLink.game_session_id == session_id))
+        .where(and_(SessionParticipantsLink.user_id == int(user_id), SessionParticipantsLink.game_session_id == int(session_id)))
     ).first()
-    logger.debug(f"session id: {session_id} user id {user_id}")
+
     if db_check_if_user_in_session != None:
         return
     db_user = session.get(User, user_id)
-    db_session = session.get(GameSession, session_id)
-    logger.debug(f"Adding user to participants")
+    db_session = session.get(GameSession, int(session_id))
 
     if db_user and db_session:
-        logger.debug(f"User is added to participants")
-
         participant = SessionParticipantsLink(
-            game_session_id=session_id, user_id=user_id
+            game_session_id=int(session_id), user_id=user_id
         )
         session.add(participant)
         session.commit()
