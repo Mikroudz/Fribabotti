@@ -21,6 +21,7 @@ from models.score.crud import (
     upsert_score,
     read_users_scores,
     read_session_username_score_full,
+    read_course_best_user_scores,
 )
 from models.game.crud import read_games
 
@@ -517,10 +518,14 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
         from_user_id = update.message.from_user.id
 
     game_session_id = context.user_data.get("game_session_id")
-
+    course_top_scores = {}
     # TODO: if another user ends the game, what should we do?
     with get_session() as s:
         score_and_track = read_scores(s, game_session_id, from_user_id)
+        tops = read_course_best_user_scores(
+            s, user_id=from_user_id, session_id=game_session_id
+        )
+        course_top_scores = dict({key: [sc, tm] for key, sc, tm in tops})
 
     current_track_idx = context.user_data.get("current_track_idx")
 
@@ -550,9 +555,14 @@ async def game_session_process(update: Update, context: ContextTypes.DEFAULT_TYP
         if current_track_score
         else ""
     )
+    updated_msg += "\n\n"
     updated_msg += (
-        f"\n\nCourse total: {escape_markdown(par_score_format(total_score), 2)}\n"
+        f"Course total: {escape_markdown(par_score_format(total_score), 2)}\n"
     )
+
+    if current_track.track_number in course_top_scores:
+        track_best = course_top_scores[current_track.track_number]
+        updated_msg += f"Personal Best: {escape_markdown(par_score_format(track_best[0]), 2)}, {escape_markdown(track_best[1].strftime('%Y-%m-%d'), 2)}\n"
 
     markup_data = ""
     score_menu_buttons = []

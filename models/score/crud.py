@@ -3,10 +3,10 @@ from sqlmodel import Session, select, not_, and_, exists, func, desc, asc
 from pydantic import ValidationError
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from .model import Score
-from models.course.model import Course
 from models.track.model import Track
 from models.user.model import User
 from models.links.session_participants_link import SessionParticipantsLink
+from datetime import datetime
 
 from models.game_session.model import GameSession
 import logging
@@ -23,7 +23,7 @@ def upsert_score(
             and_(
                 Score.track_number == track_number,
                 Score.game_session_id == game_session_id,
-                Score.user_id == user_id
+                Score.user_id == user_id,
             )
         )
     ).first()
@@ -156,4 +156,50 @@ def read_scores(
         # .where(and_(Score.game_session_id == session_id, Score.user_id == user_id))
         .order_by(Track.track_number)
     )
+    return session.exec(stmt).all()
+
+
+def read_course_best_user_scores(
+    session: Session,
+    user_id: int,
+    course_id: int | None = None,
+    session_id: int | None = None,
+) -> List[Tuple[int, int, datetime]] | List:
+
+    if session_id is not None:
+        game_session = session.get(GameSession, session_id)
+        if not game_session:
+            return []
+        course_id = game_session.course_id
+
+    if course_id is None:
+        return []
+
+    s_stmt = (
+        select(
+            Score.track_number,
+            Score.score,
+            GameSession.started_at,
+            func.row_number()
+            .over(
+                partition_by=Score.track_number,
+                order_by=[Score.score.asc(), GameSession.started_at.desc()],
+            )
+            .label("rn"),
+        )
+        .join(GameSession, Score.game_session_id == GameSession.id)
+        .where(and_(Score.user_id == user_id, Score.course_id == course_id))
+        .subquery()
+    )
+
+    stmt = (
+        select(
+            s_stmt.c.track_number,
+            s_stmt.c.score,
+            s_stmt.c.started_at,
+        )
+        .where(s_stmt.c.rn == 1)
+        .order_by(s_stmt.c.track_number)
+    )
+
     return session.exec(stmt).all()

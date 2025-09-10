@@ -23,7 +23,12 @@ from models.user.crud import create_user
 from models.user_group.model import UserGroup
 from models.user_group.crud import invite_join_group
 
-from models.score.crud import upsert_score, read_scores, read_users_scores
+from models.score.crud import (
+    upsert_score,
+    read_scores,
+    read_users_scores,
+    read_course_best_user_scores,
+)
 from models.score.model import Score
 
 from models.links.session_participants_link import SessionParticipantsLink
@@ -173,7 +178,9 @@ def test_read_game_session_all_user_with_scores(session: Session, setup_dummy_da
     ], "User 2 has no scores"
 
 
-def test_read_game_session_multple_users_scores_update(session: Session, setup_dummy_data):
+def test_read_game_session_multple_users_scores_update(
+    session: Session, setup_dummy_data
+):
     game, course, user, user_group, _ = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)
     user2 = create_user(
@@ -195,7 +202,6 @@ def test_read_game_session_multple_users_scores_update(session: Session, setup_d
     upsert_score(session, 1, 1, user.id, game_session.id)
     upsert_score(session, 2, 1, user2.id, game_session.id)
 
-
     db_scores = read_users_scores(session, game_session.id)
     assert [score for (user, score) in db_scores if user.id == 1] == [
         1
@@ -215,6 +221,7 @@ def test_read_game_session_multple_users_scores_update(session: Session, setup_d
     assert [score for (user, score) in db_scores if user.id == 1] == [
         2
     ], "User 2 has 1 as score"
+
 
 def test_get_game_session_same_group_not_joined(session: Session, setup_dummy_data):
     game, course, user, user_group, _ = setup_dummy_data
@@ -401,3 +408,66 @@ def test_read_scores_session(session: Session, setup_dummy_data):
     assert (
         len([score for score, track in scores if score != None]) == 1
     ), "One score recorded"
+
+
+def test_read_user_top_scores(session: Session, setup_dummy_data):
+    game, course, user, user_group, track = setup_dummy_data
+    course2 = create_course(session, "somecourse", "ihasama", game.id)
+
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+    game_session_1 = create_game_session(session, user.id, course.id, user_group.id)
+
+    game_session2 = create_game_session(session, user.id, course2.id, user_group.id)
+
+    user2 = create_user(
+        session,
+        type(
+            "User",
+            (object,),
+            {"first_name": "tsti", "username": "asd", "id": 3},
+        )(),
+    )
+    invite_join_group(session, user_group.invite_code, user2.id)
+    join_game_session(session, user2.id, game_session.id)
+
+    for i in range(1, 11):
+        upsert_track(session, i, 3, course.id)
+        upsert_track(session, i, 3, course2.id)
+
+    upsert_score(session, 3, 1, user.id, game_session.id)
+
+    upsert_score(session, 4, 1, user.id, game_session_1.id)
+    upsert_score(session, 4, 2, user.id, game_session_1.id)
+
+    upsert_score(session, 4, 2, user.id, game_session.id)
+
+    upsert_score(session, 2, 2, user.id, game_session2.id)
+
+    upsert_score(session, 1, 1, user2.id, game_session.id)
+    upsert_score(session, 2, 1, user2.id, game_session2.id)
+
+    def check_top_score(scores):
+        assert scores[0][0] == 1 and scores[0][1] == 3, "first is track 1 with score 3"
+        assert scores[1][0] == 2 and scores[1][1] == 4, "second is track 2 with score 4"
+        assert len(scores) == 2, "Two top scores are returned "
+
+    check_top_score(
+        read_course_best_user_scores(session, user_id=user.id, course_id=course.id)
+    )
+    check_top_score(
+        read_course_best_user_scores(
+            session, user_id=user.id, session_id=game_session.id
+        )
+    )
+
+
+def test_read_user_top_scores_no_scores_saved_for_course(
+    session: Session, setup_dummy_data
+):
+    game, course, user, user_group, track = setup_dummy_data
+
+    best_scores = read_course_best_user_scores(
+        session, user_id=user.id, course_id=course.id
+    )
+
+    assert len(best_scores) == 0, "Return empty, no scores saved"
