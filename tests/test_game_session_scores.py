@@ -28,6 +28,7 @@ from models.score.crud import (
     read_scores,
     read_users_scores,
     read_course_best_user_scores,
+    read_course_user_top_scores,
 )
 from models.score.model import Score
 
@@ -58,6 +59,8 @@ def setup_dummy_data(session: Session):
     session.refresh(user_group)
 
     track = upsert_track(session, 1, 2, course.id)
+    upsert_track(session, 2, 2, course.id)
+    upsert_track(session, 3, 2, course.id)
 
     return game, course, user, user_group, track
 
@@ -226,12 +229,13 @@ def test_read_game_session_multple_users_scores_update(
 def test_get_game_session_same_group_not_joined(session: Session, setup_dummy_data):
     game, course, user, user_group, _ = setup_dummy_data
     game_session = create_game_session(session, user.id, course.id, user_group.id)
+
     user2 = create_user(
         session,
         type(
             "User",
             (object,),
-            {"first_name": "tsti", "username": "asd", "id": 3},
+            {"first_name": "tsti", "username": "asd", "id": 53463464},
         )(),
     )
 
@@ -245,7 +249,86 @@ def test_get_game_session_same_group_not_joined(session: Session, setup_dummy_da
     db_games = read_game_session_user_groups(session, user2.id)
     assert len(db_games) == 1, "After joining group session is visible"
     db_active_sessions = read_game_session_user(session, user2.id)
-    assert len(db_active_sessions) == 0, "Session not returned as active"
+    assert (
+        len(db_active_sessions) == 0
+    ), "Session not returned as user is not part of it"
+
+    join_game_session(session, user2.id, game_session.id)
+
+    db_all_games_user = read_game_session_user(session, user2.id, active=True)
+    assert len(db_all_games_user) == 1, "User joined active session"
+    end_game_session(session, game_session.id)
+    db_user_ended_games = read_game_session_user(session, user2.id, active=False)
+    db_user_active_games = read_game_session_user(session, user2.id, active=True)
+
+    assert (
+        len(db_user_ended_games) == 1 and len(db_user_active_games) == 0
+    ), "Session is closed"
+
+
+def test_get_course_game_sessions_for_user(session: Session, setup_dummy_data):
+    game, course, user, user_group, _ = setup_dummy_data
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+
+    user2 = create_user(
+        session,
+        type(
+            "User",
+            (object,),
+            {"first_name": "tsti", "username": "asd", "id": 53463464},
+        )(),
+    )
+    game_session2 = create_game_session(session, user2.id, course.id, user_group.id)
+    course2 = create_course(session, "somecourse", "ihasama", game.id)
+    game_session3 = create_game_session(session, user2.id, course2.id, user_group.id)
+    join_game_session(session, user2.id, game_session.id)
+    end_game_session(session, game_session.id)
+
+    db_all_games_user = read_game_session_user(
+        session, user2.id, active=None, course_id=course.id
+    )
+    assert (
+        len(db_all_games_user) == 2
+    ), "Returns 2 games for course with one active and second ended state"
+
+
+def test_get_course_top_scores_for_user(session: Session, setup_dummy_data):
+    game, course, user, user_group, _ = setup_dummy_data
+    course2 = create_course(session, "somecourse", "ihasama", game.id)
+    user2 = create_user(
+        session,
+        type(
+            "User",
+            (object,),
+            {"first_name": "tsti", "username": "asd", "id": 53463464},
+        )(),
+    )
+    # Other courses not included
+    game_session2 = create_game_session(session, user.id, course2.id, user_group.id)
+    upsert_score(session, 1, 1, user.id, game_session2.id)
+    # Only scores for user are returned
+    game_session = create_game_session(session, user.id, course.id, user_group.id)
+
+    upsert_score(session, 2, 1, user.id, game_session.id)
+    upsert_score(session, 0, 2, user.id, game_session.id)
+
+    invite_join_group(session, user_group.invite_code, user2.id)
+
+    join_game_session(session, user2.id, game_session.id)
+    upsert_score(session, 1, 1, user2.id, game_session.id)
+    # more sessions
+
+    game_session3 = create_game_session(session, user.id, course.id, user_group.id)
+    upsert_score(session, 4, 1, user.id, game_session3.id)
+    upsert_score(session, 2, 2, user.id, game_session3.id)
+
+    course_scores = read_course_user_top_scores(session, user.id, course.id)
+    assert all(
+        [sc[1] == 2 for sc in course_scores if sc[0] == game_session.id]
+    ), "First session has score of 2"
+    assert all(
+        [sc[1] == 6 for sc in course_scores if sc[0] == game_session3.id]
+    ), "Second session has score of 6"
 
 
 def test_read_game_session_user_joined_session(session: Session, setup_dummy_data):

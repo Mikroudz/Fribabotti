@@ -114,6 +114,25 @@ def read_users_scores(session: Session, session_id: int) -> List[Tuple[int, User
     return scores
 
 
+def read_course_user_top_scores(
+    session: Session, user_id: int, course_id: int
+) -> List[Tuple[int, int]]:
+
+    stmt = (
+        select(
+            Score.game_session_id,
+            func.coalesce(func.sum(Score.score), 0).label("score_sum"),
+        )
+        .join(GameSession, Score.game_session_id == GameSession.id)
+        .where(and_(Score.user_id == user_id, GameSession.course_id == course_id))
+        .group_by(Score.game_session_id)
+        .order_by(asc("score_sum"))
+    )
+
+    scores = session.exec(stmt).all()
+    return scores
+
+
 def read_session_username_score_full(
     session: Session, session_id: int, course_id: int
 ) -> List[Tuple[str, Score]]:

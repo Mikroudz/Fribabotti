@@ -1,6 +1,7 @@
 from dotenv import dotenv_values
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.helpers import escape_markdown
 from telegram.ext import (
     ContextTypes,
     CommandHandler,
@@ -13,13 +14,13 @@ import re
 
 from database import get_session
 
+from utils.formatting import par_score_format
 
 from models.course.crud import (
     read_courses,
     create_course,
     read_course,
     update_course,
-    delete_course,
 )
 from models.course.model import CourseUpdate
 
@@ -31,6 +32,9 @@ from models.track.crud import (
 
 from models.game.crud import read_games, create_game
 
+from models.game_session.crud import read_game_session_user
+
+from models.score.crud import read_course_user_top_scores
 
 secrets = dotenv_values(".env")
 
@@ -284,11 +288,21 @@ async def course_delete(
 
 @handler_helper(force_inline=True, callback_param_validator=int)
 async def edit_course(
-    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int, from_user_id: int
 ):
+
     course_id = cb_param
+    course_gamesessions = []
+    course_session_top_scores = []
     with get_session() as s:
         course = read_course(s, course_id)
+        course_gamesessions = read_game_session_user(
+            s, user_id=from_user_id, active=None, course_id=course_id
+        )
+        course_session_top_scores = read_course_user_top_scores(
+            s, user_id=from_user_id, course_id=course_id
+        )
+
     keyboard = [
         [
             InlineKeyboardButton(
@@ -314,8 +328,25 @@ async def edit_course(
     context.user_data["editing_course"] = course.model_dump()
 
     reply_markup = InlineKeyboardMarkup(keyboard)
+    course_info_text = (
+        f"Select action for course {course.name}\nLocation: {course.location}"
+    )
+
+    if len(course_gamesessions) > 0:
+        course_info_text += "\n\Your top 5 total scores:\n"
+        games_display = []
+        for top_score in course_session_top_scores[0:4]:
+
+            session_data = next(
+                (game for game in course_gamesessions if game.id == top_score[0]), None
+            )
+            games_display.append(
+                f"{session_data.started_at_local(None, False).strftime('%Y-%m-%d')} Score: {par_score_format(top_score[1])} id: {session_data.id}",
+            )
+        course_info_text += "\n".join(games_display)
+
     prompt_message = await update.callback_query.edit_message_text(
-        f"Select action for course {course.name}\nLocation: {course.location}",
+        course_info_text,
         reply_markup=reply_markup,
     )
 

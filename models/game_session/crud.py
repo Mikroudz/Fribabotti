@@ -43,14 +43,18 @@ def create_game_session(
 
 
 def read_game_session_user(
-    session: Session, user_id: int, active: bool = True
+    session: Session,
+    user_id: int,
+    active: bool | None = True,
+    course_id: int | None = None,
+    limit: int | None = None,
 ) -> List[GameSession]:
     """Read game sessions where user is participating
 
     Args:
       session: Active DB session
       user_id: ID which user's sessions to search
-      active: Returns active or ended game sessions
+      active(True|False|None): Returns active or ended game sessions. If passed None, returns active and ended sessions.
 
     Returns:
         List of GameSessions with Courses loaded (eg. GameSession.course)
@@ -62,20 +66,22 @@ def read_game_session_user(
         .options(selectinload(GameSession.course))
         .join(
             SessionParticipantsLink,
-            GameSession.user_group_id == SessionParticipantsLink.game_session_id,
+            GameSession.id == SessionParticipantsLink.game_session_id,
         )
-        .where(
-            and_(
-                SessionParticipantsLink.user_id == user_id,
-                (
-                    GameSession.ended_at == None
-                    if active
-                    else GameSession.ended_at != None
-                ),
-            )
-        )
-        .order_by(desc(GameSession.started_at))
+        .where(SessionParticipantsLink.user_id == user_id)
     )
+
+    if active is not None:
+        if active:
+            stmt = stmt.where(GameSession.ended_at.is_(None))
+        else:
+            stmt = stmt.where(GameSession.ended_at.is_not(None))
+    if course_id is not None:
+        stmt = stmt.where(GameSession.course_id == course_id)
+    stmt = stmt.order_by(desc(GameSession.started_at))
+    if limit is not None:
+        stmt = stmt.limit(limit)
+
     return session.exec(stmt).all()
 
 
@@ -179,8 +185,12 @@ def delete_game_session(session: Session, game_session_id: int):
 
 def join_game_session(session: Session, user_id: int, session_id: int) -> None:
     db_check_if_user_in_session = session.exec(
-        select(SessionParticipantsLink)
-        .where(and_(SessionParticipantsLink.user_id == int(user_id), SessionParticipantsLink.game_session_id == int(session_id)))
+        select(SessionParticipantsLink).where(
+            and_(
+                SessionParticipantsLink.user_id == int(user_id),
+                SessionParticipantsLink.game_session_id == int(session_id),
+            )
+        )
     ).first()
 
     if db_check_if_user_in_session != None:
