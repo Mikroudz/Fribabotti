@@ -209,13 +209,19 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
 def read_user_session_time(
     session: Session, user_id: int, from_time: datetime
 ) -> tuple[int, int]:
+
+    db_type = session.bind.dialect.name
+    if db_type == "sqlite":
+        end_sec = func.unixepoch(GameSession.ended_at)
+        start_sec = func.unixepoch(GameSession.started_at)
+    else:
+        end_sec = GameSession.ended_at
+        start_sec = GameSession.started_at
+
     stmt = (
         select(
             func.count(GameSession.id),
-            func.sum(
-                func.unixepoch(GameSession.ended_at)
-                - func.unixepoch(GameSession.started_at)
-            ),
+            func.sum(end_sec - start_sec),
         )
         .join(
             SessionParticipantsLink,
@@ -225,4 +231,7 @@ def read_user_session_time(
         .where(GameSession.started_at > from_time)
     )
 
-    return session.exec(stmt).first()
+    count, total_timedelta = session.exec(stmt).first()
+    if isinstance(total_timedelta, datetime):
+        total_timedelta = total_timedelta.total_seconds()
+    return count, total_timedelta
