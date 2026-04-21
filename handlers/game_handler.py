@@ -212,6 +212,14 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
     session_msg += f"Started {escape_markdown(game_session.started_at_local(), 2)}\n"
     if game_session.ended_at:
         session_msg += f"Ended {escape_markdown(game_session.ended_at_local(), 2)}\n"
+        time_diff = (
+            game_session.ended_at_local(None, False)
+            - game_session.started_at_local(None, False)
+        ).total_seconds()
+        minutes, sec = divmod(time_diff, 60)
+        hours, minutes = divmod(minutes, 60)
+
+        session_msg += f"Playtime: {int(hours)}h {int(minutes)}min\n"
 
     prompt_msg = None
     if len(scores_total) > 0:
