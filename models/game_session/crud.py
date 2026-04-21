@@ -216,8 +216,10 @@ def read_user_session_time(
         start_sec = func.unixepoch(GameSession.started_at)
         time_diff = end_sec - start_sec
 
-    elif db_type in ["mysql", "postgresql"]:
-        time_diff = func.extract("EPOCH", GameSession.ended_at - GameSession.started_at)
+    elif db_type in ["mysql", "mariadb"]:
+        time_diff = func.unix_timestamp(GameSession.ended_at) - func.unix_timestamp(
+            GameSession.started_at
+        )
 
     stmt = (
         select(
