@@ -214,14 +214,15 @@ def read_user_session_time(
     if db_type == "sqlite":
         end_sec = func.unixepoch(GameSession.ended_at)
         start_sec = func.unixepoch(GameSession.started_at)
-    else:
-        end_sec = GameSession.ended_at
-        start_sec = GameSession.started_at
+        time_diff = end_sec - start_sec
+
+    elif db_type in ["mysql", "postgresql"]:
+        time_diff = func.extract("EPOCH", GameSession.ended_at - GameSession.started_at)
 
     stmt = (
         select(
             func.count(GameSession.id),
-            func.sum(end_sec - start_sec),
+            func.sum(time_diff),
         )
         .join(
             SessionParticipantsLink,
