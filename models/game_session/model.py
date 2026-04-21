@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING
 import sqlalchemy.types as types
-from datetime import datetime, UTC
+from datetime import datetime, UTC, timezone
 from pydantic import computed_field, field_validator, field_serializer
 from utils.formatting import datetime_to_pretty, convert_to_timezone
 from sqlmodel import Field, SQLModel, Relationship, text, DateTime
@@ -33,6 +33,10 @@ class GameSessionBase(SQLModel):
         return datetime_to_pretty(strip_timezone(self.ended_at), tz, pretty_print)
 
 
+def utc_now_naive() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+
 class GameSession(GameSessionBase, table=True):
     __tablename__ = "game_session"
 
@@ -48,13 +52,11 @@ class GameSession(GameSessionBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
     started_at: Optional[datetime] = Field(
-        default=None,
-        sa_column_kwargs={
-            "server_default": text("CURRENT_TIMESTAMP"),
-        },
+        default_factory=utc_now_naive,
         sa_type=DateTime(timezone=False),
     )
     ended_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=False))
+
     course_id: Optional[int] = Field(
         default=None, foreign_key="course.id", nullable=False
     )

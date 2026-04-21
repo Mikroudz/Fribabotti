@@ -9,6 +9,7 @@ from telegram.ext import (
     ConversationHandler,
     CallbackQueryHandler,
 )
+from datetime import datetime, timedelta
 
 from database import get_session
 from utils.generate_result_card import create_result_card_image
@@ -36,6 +37,7 @@ from models.game_session.crud import (
     reopen_game_session,
     read_game_session_course,
     join_game_session,
+    read_user_session_time,
 )
 
 from .helpers import handler_helper, log_tg_action
@@ -59,6 +61,10 @@ async def start_game_menu(
     with get_session() as s:
         user_active_games = read_game_session_user(s, from_user_id, active=True)
         user_groups_active_games = read_game_session_user_groups(s, from_user_id)
+        user_game_count, user_time_played_sec = read_user_session_time(
+            s, from_user_id, datetime.now() - timedelta(days=14)
+        )
+
     user_has_active_games = (
         len(user_active_games) > 0 or len(user_groups_active_games) > 0
     )
@@ -96,6 +102,11 @@ async def start_game_menu(
             f"{session.course.name} {session.started_at} /gs_{session.id}"
             for session in user_groups_active_games
         ]
+    )
+    minutes, sec = divmod(user_time_played_sec, 60)
+    hours, minutes = divmod(minutes, 60)
+    ongoing_games_msg += (
+        f"\nTime played last two weeks: {hours}h {minutes}min\nGames: {user_game_count}"
     )
     if is_new_conversation:
         prompt_message = await update.message.reply_text(

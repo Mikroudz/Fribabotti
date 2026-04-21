@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sqlmodel import Session, select, and_, asc, desc
+from sqlmodel import Session, select, and_, asc, desc, func
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
@@ -204,3 +204,25 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
         )
         session.add(participant)
         session.commit()
+
+
+def read_user_session_time(
+    session: Session, user_id: int, from_time: datetime
+) -> tuple[int, int]:
+    stmt = (
+        select(
+            func.count(GameSession.id),
+            func.sum(
+                func.unixepoch(GameSession.ended_at)
+                - func.unixepoch(GameSession.started_at)
+            ),
+        )
+        .join(
+            SessionParticipantsLink,
+            GameSession.id == SessionParticipantsLink.game_session_id,
+        )
+        .where(SessionParticipantsLink.user_id == user_id)
+        .where(GameSession.started_at > from_time)
+    )
+
+    return session.exec(stmt).first()
