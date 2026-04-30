@@ -19,11 +19,10 @@ class ScoreBase(SQLModel):
         return par_score_format(self.score)
 
 
-
 class Score(ScoreBase, table=True):
     __tablename__ = "score"
     __table_args__ = (
-        UniqueConstraint("user_id","track_number", "game_session_id"),
+        UniqueConstraint("user_id", "track_number", "game_session_id"),
         ForeignKeyConstraint(
             ["track_number", "course_id"],
             ["track.track_number", "track.course_id"],

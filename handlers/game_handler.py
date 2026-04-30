@@ -76,7 +76,7 @@ async def start_game_menu(
                 callback_data=f"session_selected:{game.id}",
             )
         ]
-        for game in user_active_games
+        for game, _ in user_active_games
     ]
 
     keyboard = [
@@ -290,11 +290,11 @@ async def list_old_sessions(
     with get_session() as s:
         game_sessions = read_game_session_user(s, from_user_id, active=False)
 
-    session_msg = f"Ended sessions\n{len(game_sessions)} found\n\n"
+    session_msg = f"Old sessions\n{len(game_sessions)} found\n\n"
     session_msg += "\n".join(
         [
-            f"{session.course.name} {session.ended_at_local()} /gs_{session.id}"
-            for session in game_sessions[
+            f"{session.course.name} {session.ended_at_local()} {par_score_format(score)} /gs_{session.id}"
+            for session, score in game_sessions[
                 (page_id) * show_items_on_page : (page_id) * show_items_on_page
                 + show_items_on_page
             ]

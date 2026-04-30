@@ -9,6 +9,8 @@ from models.user.model import User
 from models.track.model import Track
 
 from models.course.model import Course
+from models.score.model import Score
+
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
 from models.links.user_group_members_link import UserGroupMembersLink
@@ -48,7 +50,7 @@ def read_game_session_user(
     active: bool | None = True,
     course_id: int | None = None,
     limit: int | None = None,
-) -> List[GameSession]:
+) -> List[Tuple[GameSession, int]]:
     """Read game sessions where user is participating
 
     Args:
@@ -60,13 +62,21 @@ def read_game_session_user(
         List of GameSessions with Courses loaded (eg. GameSession.course)
 
     """
-
+    subq = (
+        select(Score.game_session_id, func.sum(Score.score).label("score"))
+        .group_by(Score.game_session_id)
+        .subquery()
+    )
     stmt = (
-        select(GameSession)
+        select(GameSession, subq.c.score)
         .options(selectinload(GameSession.course))
         .join(
             SessionParticipantsLink,
             GameSession.id == SessionParticipantsLink.game_session_id,
+        )
+        .join(
+            subq,
+            GameSession.id == subq.c.game_session_id,
         )
         .where(SessionParticipantsLink.user_id == user_id)
     )
@@ -81,8 +91,10 @@ def read_game_session_user(
     stmt = stmt.order_by(desc(GameSession.started_at))
     if limit is not None:
         stmt = stmt.limit(limit)
-
-    return session.exec(stmt).all()
+    ret = session.exec(stmt).all()
+    if ret == None or ret == [(None, None)]:
+        return []
+    return ret
 
 
 def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSession]:

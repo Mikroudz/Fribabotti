@@ -296,7 +296,7 @@ async def edit_course(
     course_session_top_scores = []
     with get_session() as s:
         course = read_course(s, course_id)
-        course_gamesessions = read_game_session_user(
+        course_gamesessions, _ = read_game_session_user(
             s, user_id=from_user_id, active=None, course_id=course_id
         )
         course_session_top_scores = read_course_user_top_scores(
