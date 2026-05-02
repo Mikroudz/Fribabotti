@@ -54,8 +54,8 @@ async def game_session_update(
     *,
     request: Request,
     session: Session = Depends(get_session),
-    game_session_id: int,
     data: UpdateGameSession,
+    session_id: int,
 ):
     # TODO: add timestamp from watch: if requests come in incorrect order we can deduce if we should update database values
-    return update_game_session(session, game_session_id, 145763747, data)
+    return update_game_session(session, session_id, 145763747, data)
