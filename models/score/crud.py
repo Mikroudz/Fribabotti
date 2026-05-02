@@ -6,6 +6,7 @@ from .model import Score
 from models.track.model import Track
 from models.user.model import User
 from models.links.session_participants_link import SessionParticipantsLink
+from models.game_session.model import UpdateGameSession
 from datetime import datetime
 
 from models.game_session.model import GameSession
@@ -73,6 +74,60 @@ def upsert_score(
         return score
 
 
+def update_game_session(
+    session: Session, game_session_id: int, user_id: int, throws: UpdateGameSession
+) -> dict:
+
+    stmt = select(Score).where(
+        Score.game_session_id == game_session_id, Score.user_id == user_id
+    )
+    existing_scores = session.exec(stmt).all()
+    score_dict = {score.track_number: score for score in existing_scores}
+
+    course_id = None
+    if existing_scores:
+        course_id = existing_scores[0].course_id
+    else:
+        stmt = select(GameSession.course_id).where(GameSession.id == game_session_id)
+        course_id = session.exec(stmt).first()
+
+    stmt = select(Track).where(course_id == Track.course_id)
+    tracks = session.exec(stmt).all()
+
+    par_dict = {track.track_number: track.par for track in tracks}
+    print(throws)
+    print(existing_scores)
+    for index, throw_list in enumerate(throws.throws):
+        track_number = index + 1
+        calculated_score = len(throw_list) - par_dict[track_number]
+
+        # Optional: If the list is empty, you might want to save None instead of 0
+        # so it doesn't mess up averages. Uncomment the line below if so:
+        # calculated_score = calculated_score if calculated_score > 0 else None
+
+        # 5. Check if the score exists in the database
+        if track_number in score_dict:
+            # Update existing score if it has changed
+            db_score = score_dict[track_number]
+            if db_score.score != calculated_score:
+                db_score.score = calculated_score
+                session.add(db_score)
+        else:
+            # Insert a newly played track
+            # (Only happens if scores aren't pre-generated when the game starts)
+            if calculated_score > 0:  # Optionally only create if they actually threw
+                new_score = Score(
+                    score=calculated_score,
+                    track_number=track_number,
+                    course_id=course_id,  # Requires course_id to satisfy your ForeignKey
+                    user_id=user_id,
+                    game_session_id=game_session_id,
+                )
+                session.add(new_score)
+    session.commit()
+    return {"status": "ok"}
+
+
 def delete_score(session: Session, score_id: int):
     db_score = session.get(Score, score_id)
     if db_score:
@@ -134,7 +189,7 @@ def read_course_user_top_scores(
 
 
 def read_session_username_score_full(
-    session: Session, session_id: int, course_id: int
+    session: Session, session_id: int
 ) -> List[Tuple[str, Score]]:
     stmt = (
         select(User.username, Score)

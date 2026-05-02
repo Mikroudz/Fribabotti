@@ -135,7 +135,7 @@ async def reply_scorecard(
     session_id = cb_param
     with get_session() as s:
         course = read_game_session_course(s, session_id)
-        scores = read_session_username_score_full(s, session_id, course.id)
+        scores = read_session_username_score_full(s, session_id)
         game_session = read_game_session(s, session_id)
 
     results_card = create_result_card_image(course, scores, game_session)

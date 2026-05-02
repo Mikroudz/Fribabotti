@@ -7,6 +7,12 @@ from telegram.ext import (
     CommandHandler,
 )
 
+import asyncio
+import uvicorn
+from fastapi import FastAPI
+
+import api
+
 from database import create_db_and_tables, get_session
 
 from models.user.crud import create_user
@@ -50,8 +56,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-if __name__ == "__main__":
-    create_db_and_tables()
+async def run_bot():
     application = ApplicationBuilder().token(secrets["BOT_SECRET"]).build()
 
     start_handler = CommandHandler("start", start)
@@ -65,4 +70,29 @@ if __name__ == "__main__":
     application.add_handler(new_group_conv_handler)
     application.add_handler(game_conv_handler)
 
-    application.run_polling()
+    await application.initialize()
+    await application.start()
+    await application.updater.start_polling()
+    try:
+        while True:
+            await asyncio.sleep(3600)
+    except asyncio.CancelledError:
+        await application.updater.stop()
+        await application.stop()
+        await application.shutdown()
+
+
+app = FastAPI()
+app.include_router(api.router)
+
+
+async def main():
+    create_db_and_tables()
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, loop="asyncio")
+    server = uvicorn.Server(config)
+
+    await asyncio.gather(server.serve(), run_bot())
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

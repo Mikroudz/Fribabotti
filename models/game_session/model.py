@@ -1,4 +1,5 @@
 from typing import Optional, List, TYPE_CHECKING
+from pydantic import BaseModel
 import sqlalchemy.types as types
 from datetime import datetime, UTC, timezone
 from pydantic import computed_field, field_validator, field_serializer
@@ -73,3 +74,22 @@ class GameSession(GameSessionBase, table=True):
         sa_relationship_kwargs={"cascade": "all,delete,delete-orphan"},
         back_populates="game_session",
     )
+
+
+class ThrowRead(SQLModel):
+    throws: List[float] = []
+    par: int = 0
+
+
+# Returns only scores for current user who requested the data
+class GameSessionRead(SQLModel):
+    holes: List[ThrowRead] = []
+
+
+class GameSessionShort(SQLModel):
+    id: int
+    name: str = ""
+
+
+class UpdateGameSession(SQLModel):
+    throws: List[List[float]] = []
