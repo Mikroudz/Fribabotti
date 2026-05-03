@@ -38,6 +38,7 @@ from models.game_session.crud import (
     read_game_session_course,
     join_game_session,
     read_user_session_time,
+    delete_game_session,
 )
 
 from .helpers import handler_helper, log_tg_action
@@ -145,6 +146,51 @@ async def reply_scorecard(
 
 
 @log_tg_action()
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def game_session_delete_prompt(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    session_id = cb_param
+
+    reply_markup = InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "Delete", callback_data=f"delete_game:{session_id}"
+                ),
+                InlineKeyboardButton(
+                    "Cancel", callback_data=f"session_selected:{session_id}"
+                ),
+            ]
+        ]
+    )
+
+    await update.callback_query.edit_message_text(
+        text=escape_markdown("Delete session?", version=2),
+        reply_markup=reply_markup,
+        parse_mode=ParseMode.MARKDOWN_V2,
+    )
+
+    return GAME_MAIN_MENU_ROUTE
+
+
+@log_tg_action()
+@handler_helper(force_inline=True, callback_param_validator=int)
+async def game_session_delete(
+    update: Update, context: ContextTypes.DEFAULT_TYPE, cb_param: int
+):
+    # TODO: check if user is actually in this session
+    with get_session() as s:
+        delete_game_session(s, cb_param)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=escape_markdown("Session deleted", version=2),
+        parse_mode=ParseMode.MARKDOWN_V2,
+    )
+    return await start_game_menu(update, context)
+
+
+@log_tg_action()
 async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
     session_id = None
     # TODO: make this better
@@ -185,7 +231,7 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
         )
     else:
         add_scores_button = InlineKeyboardButton(
-            "Add scores", callback_data=f"add_score:{session_id}"
+            "Edit scores", callback_data=f"add_score:{session_id}"
         )
         end_open_session = InlineKeyboardButton(
             "End session", callback_data=f"end_session:{session_id}"
@@ -195,7 +241,10 @@ async def session_selected_actions(update: Update, context: ContextTypes.DEFAULT
         [
             InlineKeyboardButton(
                 "Get Scores", callback_data=f"get_scorecard:{session_id}"
-            )
+            ),
+            InlineKeyboardButton(
+                "Delete Game", callback_data=f"prompt_delete_game:{session_id}"
+            ),
         ],
         [InlineKeyboardButton("Back", callback_data=f"start"), end_open_session],
     ]
@@ -684,6 +733,10 @@ game_conv_handler = ConversationHandler(
             CallbackQueryHandler(selected_game_session, pattern="^add_score:.*$"),
             CallbackQueryHandler(game_session_reopened, pattern="^open_session:.*$"),
             CallbackQueryHandler(game_session_end, pattern="^end_session:.*$"),
+            CallbackQueryHandler(
+                game_session_delete_prompt, pattern="^prompt_delete_game.*$"
+            ),
+            CallbackQueryHandler(game_session_delete, pattern="^delete_game.*$"),
             CallbackQueryHandler(list_old_sessions, pattern="^old_sessions:.*$"),
             CallbackQueryHandler(reply_scorecard, pattern="^get_scorecard:.*$"),
         ],
