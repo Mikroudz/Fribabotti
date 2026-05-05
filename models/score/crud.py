@@ -95,8 +95,6 @@ def update_game_session(
     tracks = session.exec(stmt).all()
 
     par_dict = {track.track_number: track.par for track in tracks}
-    print(throws)
-    print(existing_scores)
     for index, throw_list in enumerate(throws.throws):
         track_number = index + 1
         calculated_score = len(throw_list) - par_dict[track_number]
@@ -115,15 +113,14 @@ def update_game_session(
         else:
             # Insert a newly played track
             # (Only happens if scores aren't pre-generated when the game starts)
-            if calculated_score > 0:  # Optionally only create if they actually threw
-                new_score = Score(
-                    score=calculated_score,
-                    track_number=track_number,
-                    course_id=course_id,  # Requires course_id to satisfy your ForeignKey
-                    user_id=user_id,
-                    game_session_id=game_session_id,
-                )
-                session.add(new_score)
+            new_score = Score(
+                score=calculated_score,
+                track_number=track_number,
+                course_id=course_id,  # Requires course_id to satisfy your ForeignKey
+                user_id=user_id,
+                game_session_id=game_session_id,
+            )
+            session.add(new_score)
     session.commit()
     return {"status": "ok"}
 

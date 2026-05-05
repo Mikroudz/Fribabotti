@@ -74,7 +74,7 @@ def read_game_session_user(
             SessionParticipantsLink,
             GameSession.id == SessionParticipantsLink.game_session_id,
         )
-        .join(
+        .outerjoin(
             subq,
             GameSession.id == subq.c.game_session_id,
         )
