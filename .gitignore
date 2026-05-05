@@ -5,3 +5,8 @@
 database.db
 .vscode
 **/*.zip
+garmin/fribabotti/bin
+
+**.mir
+fribabotti/bin
+developer_key

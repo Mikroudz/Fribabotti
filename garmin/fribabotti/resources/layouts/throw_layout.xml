@@ -1,0 +1,7 @@
+<layout id="ThrowLayout" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
+    <drawable id="TrackTracker" class="TracKTrackerDrawable" />
+	<drawable id="ThrowTracker" class="ThrowTrackerDrawable" />
+	
+	<drawable id="HoldProgress" class="ButtonHoldProgressDrawable" />
+    <label id="TimeLabel" x="center" y="214" font="Graphics.FONT_TINY" justification="Graphics.TEXT_JUSTIFY_CENTER" color="Graphics.COLOR_WHITE" />
+</layout>
