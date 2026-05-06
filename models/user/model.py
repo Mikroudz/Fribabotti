@@ -6,11 +6,11 @@ from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func
 from ..links.user_group_members_link import UserGroupMembersLink
 from ..links.session_participants_link import SessionParticipantsLink
 
-
 if TYPE_CHECKING:
     from ..user_group.model import UserGroup
     from ..game_session.model import GameSession
     from ..score.model import Score
+    from ..device_sessions.model import DeviceSession
 
 
 class UserBase(SQLModel):
@@ -32,3 +32,5 @@ class User(UserBase, table=True):
         link_model=SessionParticipantsLink,
     )
     scores: List["Score"] = Relationship(back_populates="user")
+
+    device_sessions: List["DeviceSession"] = Relationship(back_populates="user")

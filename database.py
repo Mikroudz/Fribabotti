@@ -15,10 +15,10 @@ from models.game.model import Game
 from models.links.session_participants_link import SessionParticipantsLink
 from models.links.user_group_chat_link import UserGroupChatLink
 from models.links.user_group_members_link import UserGroupMembersLink
+from models.device_sessions.model import DeviceSession
 
 
 from dotenv import dotenv_values
-
 
 secrets = dotenv_values(".env")
 

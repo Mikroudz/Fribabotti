@@ -26,6 +26,8 @@ from handlers.group_handler import (
     join_group_invite,
 )
 
+from handlers.register_device_handler import register_device_conv_handler
+
 secrets = dotenv_values(".env")
 
 log_level = logging.INFO if secrets.get("DEV_MODE", False) else logging.WARNING
@@ -69,6 +71,7 @@ async def run_bot():
     application.add_handler(edit_group_conv_handler)
     application.add_handler(new_group_conv_handler)
     application.add_handler(game_conv_handler)
+    application.add_handler(register_device_conv_handler)
 
     await application.initialize()
     await application.start()
@@ -84,6 +87,7 @@ async def run_bot():
 
 app = FastAPI()
 app.include_router(api.router)
+app.include_router(api.router_auth)
 
 
 async def main():

@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Body, Request
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import APIKeyHeader
 from sqlmodel import Session
 from typing import Annotated, Union
 from database import get_session
@@ -13,15 +13,33 @@ from models.game_session.model import (
 from models.score.crud import read_scores, update_game_session
 from models.game_session.crud import read_game_session_user
 
+from models.device_sessions.model import RegisterDeviceData, ReadDeviceSession
+from models.device_sessions.crud import (
+    read_device_sessions_user,
+    register_device_session_by_dev_id,
+    get_user_id_from_device,
+)
+
 router = APIRouter(prefix="/game", tags=["game"])
+
+device_token_header = APIKeyHeader(name="X-Device-Token", auto_error=True)
+
+
+def get_user_id_device(
+    token: str = Depends(device_token_header), session: Session = Depends(get_session)
+) -> int:
+    return get_user_id_from_device(session, token)
 
 
 @router.get("/{game_session_id}", response_model=GameSessionRead)
 async def game_session_read(
-    *, request: Request, session: Session = Depends(get_session), game_session_id: int
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    game_session_id: int,
+    user_id: int = Depends(get_user_id_device),
 ):
-    # TODO: get user id for the device session
-    scores = read_scores(session, game_session_id, 145763747)
+    scores = read_scores(session, game_session_id, user_id)
     out = GameSessionRead()
 
     for score, track in scores:
@@ -32,10 +50,12 @@ async def game_session_read(
 
 @router.get("/", response_model=list[GameSessionShort])
 async def game_session_list(
-    *, request: Request, session: Session = Depends(get_session)
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    user_id: int = Depends(get_user_id_device),
 ):
-    # TODO: get user id for the device session
-    user_active_games = read_game_session_user(session, 145763747, active=True)
+    user_active_games = read_game_session_user(session, user_id, active=True)
     out = list()
 
     for game, _ in user_active_games:
@@ -56,6 +76,21 @@ async def game_session_update(
     session: Session = Depends(get_session),
     data: UpdateGameSession,
     session_id: int,
+    user_id: int = Depends(get_user_id_device),
 ):
     # TODO: add timestamp from watch: if requests come in incorrect order we can deduce if we should update database values
-    return update_game_session(session, session_id, 145763747, data)
+    return update_game_session(session, session_id, user_id, data)
+
+
+router_auth = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router_auth.post("/", response_model=ReadDeviceSession)
+async def register_device(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    data: RegisterDeviceData,
+):
+    ret = register_device_session_by_dev_id(session, data.device_id)
+    return ReadDeviceSession(key=ret.id, username=ret.user.username)
