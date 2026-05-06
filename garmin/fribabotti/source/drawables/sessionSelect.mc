@@ -18,6 +18,7 @@ class SelectSessionDrawable extends WatchUi.Drawable {
 	function setSelectables(data as Array<Dictionary>){
 		_selectables = data;
 		_selectables.add({"id" => "refresh", "name" => "Refresh"});
+		_selectables.add({"id" => "settings", "name" => "Settings"});
 	}
 
 	function goUp(){

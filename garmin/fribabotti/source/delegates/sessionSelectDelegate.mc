@@ -36,6 +36,13 @@ class sessionSelectDelegate extends WatchUi.BehaviorDelegate {
             if(_sessions_fetcher.state != STATE_PENDING){
                 _sessions_fetcher.makeRequest();
             }
+        
+        } else if (session_id.equals("settings")) {
+            var menu = new WatchUi.Menu2({:title=>"Settings"});
+            menu.addItem(new WatchUi.ToggleMenuItem("Vibrations", "Enable vibrations", "vibrations", sharedData.getUseVibrations(), null));
+            menu.addItem(new WatchUi.ToggleMenuItem("Register device to bot", "Enable to start registeration process", "register_device", false, null));
+            
+            WatchUi.pushView(menu, new SettingsMenuDelegate(menu), WatchUi.SLIDE_UP);
         } else {
             sharedData.setCurrentSessionId(session_id);
             // start fetching session and show progress bar

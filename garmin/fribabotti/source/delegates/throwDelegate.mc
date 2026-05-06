@@ -138,6 +138,7 @@ class throwDelegate extends WatchUi.InputDelegate {
 	}
 
 	function vibrate(pattern as Vibepattern){
+		if(!sharedData.getUseVibrations()){ return; }
 		if (Attention has :vibrate) {
 			// 3. Trigger the vibration
 			Attention.vibrate(vibeData[pattern]);
