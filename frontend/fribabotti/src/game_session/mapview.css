@@ -1,0 +1,38 @@
+.custom-number-icon {
+  background-color: white;
+  border-radius: 50% 50% 50% 0; /* Rounds the top and sides */
+  transform: rotate(-45deg); /* Rotates the square to make the corner point down */
+  border: 2px solid white;
+  box-shadow: 0 0 5px rgba(0,0,0,0.3);
+
+
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: blue;
+}
+
+.custom-number-icon.selected{
+	border-color: blue;
+
+}
+
+
+/* TODO: maybe make these into custom components with useMap control*/
+.leaflet-control-layers-toggle {
+ 
+  background-color: #1b211b;
+  border-radius: 7px;
+}
+
+.leaflet-control-layers {
+	margin-bottom: 56px !important;
+  border-radius: 7px;
+}
+
+.leaflet-control-zoom-in, .leaflet-control-zoom-out{
+	background-color: #1b211b !important;
+	color: white !important;
+}

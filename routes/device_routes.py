@@ -13,10 +13,7 @@ from models.game_session.model import (
 from models.score.crud import read_scores, update_game_session
 from models.game_session.crud import read_game_session_user
 
-from models.device_sessions.model import RegisterDeviceData, ReadDeviceSession
 from models.device_sessions.crud import (
-    read_device_sessions_user,
-    register_device_session_by_dev_id,
     get_user_id_from_device,
 )
 
@@ -80,17 +77,3 @@ async def game_session_update(
 ):
     # TODO: add timestamp from watch: if requests come in incorrect order we can deduce if we should update database values
     return update_game_session(session, session_id, user_id, data)
-
-
-router_auth = APIRouter(prefix="/auth", tags=["auth"])
-
-
-@router_auth.post("/", response_model=ReadDeviceSession)
-async def register_device(
-    *,
-    request: Request,
-    session: Session = Depends(get_session),
-    data: RegisterDeviceData,
-):
-    ret = register_device_session_by_dev_id(session, data.device_id)
-    return ReadDeviceSession(key=ret.id, username=ret.user.username)

@@ -104,6 +104,7 @@ async def start_game_menu(
             for session in user_groups_active_games
         ]
     )
+    user_time_played_sec = 0 if user_time_played_sec == None else user_time_played_sec
     minutes, sec = divmod(user_time_played_sec, 60)
     hours, minutes = divmod(minutes, 60)
     ongoing_games_msg += (

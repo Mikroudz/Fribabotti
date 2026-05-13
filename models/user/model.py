@@ -1,4 +1,4 @@
-from typing import Optional, List, TYPE_CHECKING, Dict, Any
+from typing import Optional, List, TYPE_CHECKING, Dict, Any, Literal
 from datetime import datetime, UTC, date
 
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func
@@ -14,9 +14,12 @@ if TYPE_CHECKING:
 
 
 class UserBase(SQLModel):
-
     first_name: str | None = ""
     username: str | None = ""
+    last_name: Optional[str] | None = ""
+    photo_url: Optional[str | None] = None
+    auth_date: datetime | None = None
+    hash: str | None = ""
 
 
 class User(UserBase, table=True):
@@ -34,3 +37,36 @@ class User(UserBase, table=True):
     scores: List["Score"] = Relationship(back_populates="user")
 
     device_sessions: List["DeviceSession"] = Relationship(back_populates="user")
+
+
+class UserRead(UserBase):
+    id: int
+
+
+class UserCreateNestedUser(SQLModel):
+    id: int
+    username: str
+    first_name: str
+    last_name: str
+
+
+class UserBaseOptionalUsername(UserBase):
+    username: str | None = ""
+
+
+class UserCreate(UserBaseOptionalUsername):
+    id: Optional[int] | None
+
+
+class UserCreateTgAuth(UserBaseOptionalUsername):
+    type: Literal["TGAUTH"]
+    id: Optional[int] | None
+
+
+class UserCreateTgWebApp(SQLModel):
+    type: Literal["TGWEBAPP"]
+    query_id: str | None
+    user: str | None  # This holds JSON
+    auth_date: datetime
+    hash: str
+    signature: str

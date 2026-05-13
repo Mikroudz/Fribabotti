@@ -27,6 +27,7 @@ class DeviceSession(DeviceSessionBase, table=True):
     created_at: Optional[datetime] = Field(
         default_factory=utc_now_naive, sa_type=DateTime(timezone=False)
     )
+    # TODO: save some sort of device specific specific id?
 
 
 class RegisterDeviceData(SQLModel):

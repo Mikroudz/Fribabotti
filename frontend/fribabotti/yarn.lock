@@ -529,6 +529,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/lexend@npm:^5.2.11":
+  version: 5.2.11
+  resolution: "@fontsource-variable/lexend@npm:5.2.11"
+  checksum: 10c0/820688c298747a0161e871b1c3f5a0504dd11c59e08c9d93a37b69f49de4f27004e08325a92c81d2751175b2a40de07227d610427d3a12cbac2786dcb2063823
+  languageName: node
+  linkType: hard
+
 "@isaacs/fs-minipass@npm:^4.0.0":
   version: 4.0.1
   resolution: "@isaacs/fs-minipass@npm:4.0.1"
@@ -586,6 +593,22 @@ __metadata:
   version: 9.0.1
   resolution: "@mui/core-downloads-tracker@npm:9.0.1"
   checksum: 10c0/38c23c1cfd84e56526154f131edbb17c1b83c308c289041811a7a8ee98ce0282b517a0a04c3c919d9ccd785f71f498762ec0aacbda4d766d865e469b31e7899a
+  languageName: node
+  linkType: hard
+
+"@mui/icons-material@npm:^9.0.1":
+  version: 9.0.1
+  resolution: "@mui/icons-material@npm:9.0.1"
+  dependencies:
+    "@babel/runtime": "npm:^7.29.2"
+  peerDependencies:
+    "@mui/material": ^9.0.1
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/b638b21107ec11df731393baf215adad3c1bd0ed6fbffc73d8ae7c0c1888e8f0a89c8edcd1158cff072df6de49c39c20d6d9d11337263a61afb2e78770ab57b4
   languageName: node
   linkType: hard
 
@@ -787,6 +810,17 @@ __metadata:
   version: 2.11.8
   resolution: "@popperjs/core@npm:2.11.8"
   checksum: 10c0/4681e682abc006d25eb380d0cf3efc7557043f53b6aea7a5057d0d1e7df849a00e281cd8ea79c902a35a414d7919621fc2ba293ecec05f413598e0b23d5a1e63
+  languageName: node
+  linkType: hard
+
+"@react-leaflet/core@npm:^3.0.0-rc.2":
+  version: 3.0.0
+  resolution: "@react-leaflet/core@npm:3.0.0"
+  peerDependencies:
+    leaflet: ^1.9.0
+    react: ^19.0.0
+    react-dom: ^19.0.0
+  checksum: 10c0/1e20f92ea99d378121d7ba57b9571ca3a67a86247729d8cd5726ded26105fcbffbbdf727da34b2ad5976438979819a38c93b94389313abb3ff80ca81632609a6
   languageName: node
   linkType: hard
 
@@ -1330,21 +1364,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/react-router-ssr-query@npm:latest":
-  version: 1.166.12
-  resolution: "@tanstack/react-router-ssr-query@npm:1.166.12"
-  dependencies:
-    "@tanstack/router-ssr-query-core": "npm:1.168.0"
-  peerDependencies:
-    "@tanstack/query-core": ">=5.90.0"
-    "@tanstack/react-query": ">=5.90.0"
-    "@tanstack/react-router": ">=1.127.0"
-    react: ">=18.0.0 || >=19.0.0"
-    react-dom: ">=18.0.0 || >=19.0.0"
-  checksum: 10c0/751c3f7ae9621f662cd4ef7823035bf3cea8e9901e0d3896b87421ae202ac4925b555650c8ce35151e790b1f5f5b8af1e2a2d8ce4c9ba0696780ab8598b14f64
-  languageName: node
-  linkType: hard
-
 "@tanstack/react-router@npm:1.169.2, @tanstack/react-router@npm:latest":
   version: 1.169.2
   resolution: "@tanstack/react-router@npm:1.169.2"
@@ -1545,16 +1564,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@tanstack/router-ssr-query-core@npm:1.168.0":
-  version: 1.168.0
-  resolution: "@tanstack/router-ssr-query-core@npm:1.168.0"
-  peerDependencies:
-    "@tanstack/query-core": ">=5.90.0"
-    "@tanstack/router-core": ">=1.127.0"
-  checksum: 10c0/4b7e28b312a958da23cc17c6e985e276660b0925589a9387f3cf3555a1ab00fb11777a5256e3122ec0bea29c00bbb3539f6f2251c2069af6db6b08e7475846fe
-  languageName: node
-  linkType: hard
-
 "@tanstack/router-utils@npm:1.161.8":
   version: 1.161.8
   resolution: "@tanstack/router-utils@npm:1.161.8"
@@ -1706,6 +1715,91 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tma.js/bridge@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "@tma.js/bridge@npm:2.3.0"
+  dependencies:
+    "@tma.js/signals": "npm:^1.0.1"
+    "@tma.js/toolkit": "npm:^1.0.4"
+    "@tma.js/transformers": "npm:^1.1.3"
+    "@tma.js/types": "npm:^1.0.2"
+    better-promises: "npm:^1.0.0"
+    error-kid: "npm:^2.0.0"
+    fp-ts: "npm:^2.16.11"
+    mitt: "npm:^3.0.1"
+    valibot: "npm:^1.1.0"
+  checksum: 10c0/077d39bfd025b51cceaa2820d961eec4e8c2087731fbbb78ef0d44b9d6e856460c4eb244c2df21b2a11dcd1262f037e5061fc6fd31a65bfc602da67183c80d79
+  languageName: node
+  linkType: hard
+
+"@tma.js/sdk-react@npm:^3.0.19":
+  version: 3.0.19
+  resolution: "@tma.js/sdk-react@npm:3.0.19"
+  dependencies:
+    "@tma.js/sdk": "npm:^3.2.0"
+  peerDependencies:
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/6e9492cda7a230a17c29c8bd17d192b90ce792c8adbc04fa5509a0d62157e3b434150d3aac97d3e6fe9cde71d147273883daf64beae05d21ef7bb2b43e06d93c
+  languageName: node
+  linkType: hard
+
+"@tma.js/sdk@npm:^3.2.0":
+  version: 3.2.0
+  resolution: "@tma.js/sdk@npm:3.2.0"
+  dependencies:
+    "@tma.js/bridge": "npm:^2.3.0"
+    "@tma.js/signals": "npm:^1.0.1"
+    "@tma.js/toolkit": "npm:^1.0.4"
+    "@tma.js/transformers": "npm:^1.1.3"
+    "@tma.js/types": "npm:^1.0.2"
+    better-promises: "npm:^1.0.0"
+    error-kid: "npm:^2.0.0"
+    fp-ts: "npm:^2.16.11"
+    valibot: "npm:^1.1.0"
+  checksum: 10c0/584e7abe04bed08c2267f568ffec53ef7e294b90c8df6acad5845ea7a7d0909aa9bead9d738a3f2559802be4d9e041fc23da702340b3559aba1087386d65893a
+  languageName: node
+  linkType: hard
+
+"@tma.js/signals@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "@tma.js/signals@npm:1.0.1"
+  checksum: 10c0/523f70288439e24cb1d8aeadff9854f0c77563ddd5d50cd2a17a0832b9e35ce2a9c7b904d58a68a86dfa36207c424f318fc9845aa0ac6653fea5b1f76b4a5f3a
+  languageName: node
+  linkType: hard
+
+"@tma.js/toolkit@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@tma.js/toolkit@npm:1.0.4"
+  dependencies:
+    better-promises: "npm:^1.0.0"
+    fp-ts: "npm:^2.16.11"
+  checksum: 10c0/a327feb1fd0becd6f257bf923b647f3c58aab7a074fe678252865a71b62314075f615b15363c28786ccfad5a69926a1c4d97fe35d7841cfde9ac91af0da705f4
+  languageName: node
+  linkType: hard
+
+"@tma.js/transformers@npm:^1.1.3":
+  version: 1.1.3
+  resolution: "@tma.js/transformers@npm:1.1.3"
+  dependencies:
+    "@tma.js/toolkit": "npm:^1.0.4"
+    "@tma.js/types": "npm:^1.0.2"
+    fp-ts: "npm:^2.16.11"
+    valibot: "npm:^1.1.0"
+  checksum: 10c0/0e39d9e1ae53f691c430091ed8427f013299b18a9b4861bba6051642d0a7a8e6efdd53f786fbe6467ecb63a0b5b4c0ed5acd54448f6169229a56f6a2cf75ad6b
+  languageName: node
+  linkType: hard
+
+"@tma.js/types@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "@tma.js/types@npm:1.0.2"
+  checksum: 10c0/445ae52f20b931f316606344ad09d874d67d652028fdfe469c8b5dc57929ca0a9a31b9bb0474eb29f4bbdaa6596be66250379b38f3ae6e31ec3eabb2ad217694
+  languageName: node
+  linkType: hard
+
 "@tybys/wasm-util@npm:^0.10.1":
   version: 0.10.2
   resolution: "@tybys/wasm-util@npm:0.10.2"
@@ -1743,6 +1837,22 @@ __metadata:
   version: 1.0.9
   resolution: "@types/estree@npm:1.0.9"
   checksum: 10c0/3ad3286ca2988cd550dafb8f2ad599c8474868e954fa601a36655bdfefd8039f7c714b8c1c7f2ae219ffbd58bd4660e66fa7479a0120fc02d4777057d4865387
+  languageName: node
+  linkType: hard
+
+"@types/geojson@npm:*":
+  version: 7946.0.16
+  resolution: "@types/geojson@npm:7946.0.16"
+  checksum: 10c0/1ff24a288bd5860b766b073ead337d31d73bdc715e5b50a2cee5cb0af57a1ed02cc04ef295f5fa68dc40fe3e4f104dd31282b2b818a5ba3231bc1001ba084e3c
+  languageName: node
+  linkType: hard
+
+"@types/leaflet@npm:^1":
+  version: 1.9.21
+  resolution: "@types/leaflet@npm:1.9.21"
+  dependencies:
+    "@types/geojson": "npm:*"
+  checksum: 10c0/96a86bdeff7bf56104242e97536f39005a53dd857853aa0c5de127ce2c72f3f36638f2a5b8d23e2e825a2bfe32113be731ab26634a3143413b891299c29621ce
   languageName: node
   linkType: hard
 
@@ -1793,6 +1903,15 @@ __metadata:
   dependencies:
     csstype: "npm:^3.2.2"
   checksum: 10c0/7d25bf41b57719452d86d2ac0570b659210402707313a36ee612666bf11275a1c69824f8c3ee1fdca077ccfe15452f6da8f1224529b917050eb2d861e52b59b7
+  languageName: node
+  linkType: hard
+
+"@vitejs/plugin-basic-ssl@npm:^2.3.0":
+  version: 2.3.0
+  resolution: "@vitejs/plugin-basic-ssl@npm:2.3.0"
+  peerDependencies:
+    vite: ^6.0.0 || ^7.0.0 || ^8.0.0
+  checksum: 10c0/754ebe29a61ac694e665477187f425b7c3b41e30af8d392613250bf65f9b2741e7f5a6ec00a3f88f1a14bfda96e93c6b5e0f75e86357737bc4e92c8dc455c1c0
   languageName: node
   linkType: hard
 
@@ -1993,6 +2112,15 @@ __metadata:
   bin:
     baseline-browser-mapping: dist/cli.cjs
   checksum: 10c0/9471b802b7f7f18c1e5c089a78bd94283c7b032b4c8c489427f51d8ad49ae5c53544b6c64580540064687bdeee62737bfd47fdbf8179cce42e4dddd91958af24
+  languageName: node
+  linkType: hard
+
+"better-promises@npm:^1.0.0":
+  version: 1.0.0
+  resolution: "better-promises@npm:1.0.0"
+  dependencies:
+    error-kid: "npm:^1.0.1"
+  checksum: 10c0/868d71bf3a4e11558396817922d338abb3c5240fb048953589a4e08e4673a22151b6e397a28ed989f4a7e40ada18339c2940bad1012d124bfd948983ddef98b7
   languageName: node
   linkType: hard
 
@@ -2412,6 +2540,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"error-kid@npm:^1.0.1":
+  version: 1.1.0
+  resolution: "error-kid@npm:1.1.0"
+  checksum: 10c0/555beed7c2d9482f78d757afe30a312656cdb157403b29325ea6f62cc7b819d805d4e2ac7b42123d654de9e815141d0eb632681d9b2a22993ec4bd44e10180fd
+  languageName: node
+  linkType: hard
+
+"error-kid@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "error-kid@npm:2.0.0"
+  checksum: 10c0/8d419795d5256f70beb239eeb4c15ae7de2dfebcc5e6c62136031db9e764c103678eaa60b9251287dfd8f8f07288134e3b1d094d1fb1ec368e865059aa3ee3e6
+  languageName: node
+  linkType: hard
+
 "es-errors@npm:^1.3.0":
   version: 1.3.0
   resolution: "es-errors@npm:1.3.0"
@@ -2505,12 +2647,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fp-ts@npm:^2.16.11":
+  version: 2.16.11
+  resolution: "fp-ts@npm:2.16.11"
+  checksum: 10c0/9a263a577964adbb754221c48449a64a6962c91fa6af136e73b043ee70ee41c7b856fe1e6cc21fb4f0264dd9a75c53bd381b1bb486b6caa99a71f33d1bb24c2a
+  languageName: node
+  linkType: hard
+
 "fribabotti@workspace:.":
   version: 0.0.0-use.local
   resolution: "fribabotti@workspace:."
   dependencies:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.1"
+    "@fontsource-variable/lexend": "npm:^5.2.11"
+    "@mui/icons-material": "npm:^9.0.1"
     "@mui/material": "npm:^9.0.1"
     "@tailwindcss/typography": "npm:^0.5.16"
     "@tailwindcss/vite": "npm:^4.1.18"
@@ -2520,19 +2671,23 @@ __metadata:
     "@tanstack/react-query-devtools": "npm:latest"
     "@tanstack/react-router": "npm:latest"
     "@tanstack/react-router-devtools": "npm:latest"
-    "@tanstack/react-router-ssr-query": "npm:latest"
     "@tanstack/react-start": "npm:latest"
     "@tanstack/router-plugin": "npm:^1.132.0"
     "@testing-library/dom": "npm:^10.4.1"
     "@testing-library/react": "npm:^16.3.0"
+    "@tma.js/sdk-react": "npm:^3.0.19"
+    "@types/leaflet": "npm:^1"
     "@types/node": "npm:^22.10.2"
     "@types/react": "npm:^19.2.0"
     "@types/react-dom": "npm:^19.2.0"
+    "@vitejs/plugin-basic-ssl": "npm:^2.3.0"
     "@vitejs/plugin-react": "npm:^6.0.1"
     jsdom: "npm:^28.1.0"
+    leaflet: "npm:^1.9.4"
     lucide-react: "npm:^0.545.0"
-    react: "npm:^19.2.0"
-    react-dom: "npm:^19.2.0"
+    react: "npm:19.0.0-rc.1"
+    react-dom: "npm:19.0.0-rc.1"
+    react-leaflet: "npm:5.0.0-rc.2"
     tailwindcss: "npm:^4.1.18"
     typescript: "npm:^6.0.2"
     vite: "npm:^8.0.0"
@@ -2858,6 +3013,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"leaflet@npm:^1.9.4":
+  version: 1.9.4
+  resolution: "leaflet@npm:1.9.4"
+  checksum: 10c0/f639441dbb7eb9ae3fcd29ffd7d3508f6c6106892441634b0232fafb9ffb1588b05a8244ec7085de2c98b5ed703894df246898477836cfd0ce5b96d4717b5ca1
+  languageName: node
+  linkType: hard
+
 "lightningcss-android-arm64@npm:1.32.0":
   version: 1.32.0
   resolution: "lightningcss-android-arm64@npm:1.32.0"
@@ -3059,6 +3221,13 @@ __metadata:
   dependencies:
     minipass: "npm:^7.1.2"
   checksum: 10c0/5aad75ab0090b8266069c9aabe582c021ae53eb33c6c691054a13a45db3b4f91a7fb1bd79151e6b4e9e9a86727b522527c0a06ec7d45206b745d54cd3097bcec
+  languageName: node
+  linkType: hard
+
+"mitt@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "mitt@npm:3.0.1"
+  checksum: 10c0/3ab4fdecf3be8c5255536faa07064d05caa3dd332bd318ff02e04621f7b3069ca1de9106cfe8e7ced675abfc2bec2ce4c4ef321c4a1bb1fb29df8ae090741913
   languageName: node
   linkType: hard
 
@@ -3312,14 +3481,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^19.2.0":
-  version: 19.2.6
-  resolution: "react-dom@npm:19.2.6"
+"react-dom@npm:19.0.0-rc.1":
+  version: 19.0.0-rc.1
+  resolution: "react-dom@npm:19.0.0-rc.1"
   dependencies:
-    scheduler: "npm:^0.27.0"
+    scheduler: "npm:0.25.0-rc.1"
   peerDependencies:
-    react: ^19.2.6
-  checksum: 10c0/dbf2aef67857c03a612bc9316a4562e5066f43fa04bf28f7f0734963fc1350da2c9f8eb973930655453281079f30cc8222bab383dbec4b5097084e2c081e3334
+    react: 19.0.0-rc.1
+  checksum: 10c0/26fba423f41c8b3c7a47278ea490146506333175028e111e49eb39310110b6bda956cc772c77412abc8a7f28244eea80ebade15ec5b4382d79e2ac1b39bd2d0c
   languageName: node
   linkType: hard
 
@@ -3344,6 +3513,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"react-leaflet@npm:5.0.0-rc.2":
+  version: 5.0.0-rc.2
+  resolution: "react-leaflet@npm:5.0.0-rc.2"
+  dependencies:
+    "@react-leaflet/core": "npm:^3.0.0-rc.2"
+  peerDependencies:
+    leaflet: ^1.9.0
+    react: ^19.0.0
+    react-dom: ^19.0.0
+  checksum: 10c0/76c782b03f1f227ea6ec68951324e345aa871ceb5f866798a8a8e7200ee369239faece3165126b75b4e1296505280dac879c508e15ddcd81bba372ffe67d7974
+  languageName: node
+  linkType: hard
+
 "react-transition-group@npm:^4.4.5":
   version: 4.4.5
   resolution: "react-transition-group@npm:4.4.5"
@@ -3359,10 +3541,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.2.0":
-  version: 19.2.6
-  resolution: "react@npm:19.2.6"
-  checksum: 10c0/66afde33b9a9ee87b1e1cae39d8e7e040d1262e719524fd70660c4d4ce79929c532ac19fc3df5a911edaf02768fdf2c49de4ede1ba99bc6aad72796e0e26e798
+"react@npm:19.0.0-rc.1":
+  version: 19.0.0-rc.1
+  resolution: "react@npm:19.0.0-rc.1"
+  checksum: 10c0/8f453ee0ff05ec4b11701cf4240fb0039217e73f576d2a9b871a91e34ff17d66e16294ebd0fc72c237918a3a997cc42f0328c860bc0a2cfa18e6a41f49a1c871
   languageName: node
   linkType: hard
 
@@ -3498,10 +3680,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"scheduler@npm:^0.27.0":
-  version: 0.27.0
-  resolution: "scheduler@npm:0.27.0"
-  checksum: 10c0/4f03048cb05a3c8fddc45813052251eca00688f413a3cee236d984a161da28db28ba71bd11e7a3dd02f7af84ab28d39fb311431d3b3772fed557945beb00c452
+"scheduler@npm:0.25.0-rc.1":
+  version: 0.25.0-rc.1
+  resolution: "scheduler@npm:0.25.0-rc.1"
+  checksum: 10c0/dd4549eeb54cf3019c04257c622c4bbee12ef99dc547c4a96e1d5da8985ae44534111275ebcc4fea84b0d1299197b69071f912928adc5da4cab1e8168d09a44d
   languageName: node
   linkType: hard
 
@@ -3825,6 +4007,18 @@ __metadata:
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 10c0/41a5bdd214df2f6c3ecf8622745e4a366c4adced864bc3c833739791aeeeb1838119af7daed4ba36428114b5c67dcda034a79c882e97e43c03e66a4dd7389942
+  languageName: node
+  linkType: hard
+
+"valibot@npm:^1.1.0":
+  version: 1.4.0
+  resolution: "valibot@npm:1.4.0"
+  peerDependencies:
+    typescript: ">=5"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/9eb9f02c1a4d685e0a76c312ae898b0012c2bdea24f75968c133fcf6019cde80c4d1d7e41f52e9a1189dde76a923baee05506fb412a0811d8d482d597bcfb4b9
   languageName: node
   linkType: hard
 

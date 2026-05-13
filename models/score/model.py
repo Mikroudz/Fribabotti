@@ -3,6 +3,7 @@ from pydantic import computed_field
 from utils.formatting import par_score_format
 from sqlmodel import Field, SQLModel, Relationship, text
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
+from pydantic_extra_types.coordinate import Coordinate
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
@@ -42,3 +43,24 @@ class Score(ScoreBase, table=True):
         default=None, nullable=False, foreign_key="game_session.id"
     )
     game_session: Optional["GameSession"] = Relationship(back_populates="scores")
+
+
+class ThrowReadLong(SQLModel):
+    start_pos: Coordinate | None = None
+    end_pos: Coordinate | None = None
+    throw_number: int
+    distance: float = 0.0
+    disc: str = ""  # TODO: add table for discs and relation here
+
+
+class HoleReadLong(SQLModel):
+    # TODO: each throw
+    track_number: int
+    par: int
+    throws: List[ThrowReadLong]
+
+
+class CourseScore(SQLModel):
+    user_id: int
+    course_id: int
+    course: List[HoleReadLong]

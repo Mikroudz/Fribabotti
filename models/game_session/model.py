@@ -7,11 +7,15 @@ from utils.formatting import datetime_to_pretty, convert_to_timezone
 from sqlmodel import Field, SQLModel, Relationship, text, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
 
+from ..score.model import ThrowReadLong, CourseScore
+from ..user_group.model import UserGroupReadShort
+from ..course.model import CourseRead
+
 if TYPE_CHECKING:
     from ..score.model import Score
 
     from ..course.model import Course
-    from ..user_group.model import UserGroup
+    from ..user_group.model import UserGroup, UserGroupReadShort
     from ..user.model import User
 
 CURRENT_TIMEZONE = "Europe/Helsinki"
@@ -86,6 +90,23 @@ class GameSessionRead(SQLModel):
     holes: List[ThrowRead] = []
 
 
+class GameSessionReadShort(GameSessionBase):
+    id: int
+    course_id: int
+    course: CourseRead
+    started_at: datetime
+    ended_at: datetime | None = None
+
+
+class GameSessionReadLong(GameSessionBase):
+    id: int
+    course_id: int
+    user_group_id: int
+    user_group: UserGroupReadShort
+    user_score: CourseScore
+    # should we return scores for all users or only current here?
+
+
 class GameSessionShort(SQLModel):
     id: int
     name: str = ""
@@ -93,3 +114,8 @@ class GameSessionShort(SQLModel):
 
 class UpdateGameSession(SQLModel):
     throws: List[List[float]] = []
+
+
+class GameSessionCreate(SQLModel):
+    course_id: int
+    user_group_id: int

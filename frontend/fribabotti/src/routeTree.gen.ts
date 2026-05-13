@@ -10,33 +10,78 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as GamesessionGameSessionIdMapRouteImport } from './routes/gamesession_/$gameSessionId/map'
+import { Route as GamesessionGameSessionIdGamesessionRouteImport } from './routes/gamesession_/$gameSessionId/gamesession'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesessionGameSessionIdMapRoute =
+  GamesessionGameSessionIdMapRouteImport.update({
+    id: '/gamesession_/$gameSessionId/map',
+    path: '/gamesession/$gameSessionId/map',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GamesessionGameSessionIdGamesessionRoute =
+  GamesessionGameSessionIdGamesessionRouteImport.update({
+    id: '/gamesession_/$gameSessionId/gamesession',
+    path: '/gamesession/$gameSessionId/gamesession',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth/': typeof AuthIndexRoute
+  '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/gamesession/$gameSessionId/map': typeof GamesessionGameSessionIdMapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthIndexRoute
+  '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/gamesession/$gameSessionId/map': typeof GamesessionGameSessionIdMapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth/': typeof AuthIndexRoute
+  '/gamesession_/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/gamesession_/$gameSessionId/map': typeof GamesessionGameSessionIdMapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/auth/'
+    | '/gamesession/$gameSessionId/gamesession'
+    | '/gamesession/$gameSessionId/map'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/auth'
+    | '/gamesession/$gameSessionId/gamesession'
+    | '/gamesession/$gameSessionId/map'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth/'
+    | '/gamesession_/$gameSessionId/gamesession'
+    | '/gamesession_/$gameSessionId/map'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+  GamesessionGameSessionIdGamesessionRoute: typeof GamesessionGameSessionIdGamesessionRoute
+  GamesessionGameSessionIdMapRoute: typeof GamesessionGameSessionIdMapRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,21 +93,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth/'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gamesession_/$gameSessionId/map': {
+      id: '/gamesession_/$gameSessionId/map'
+      path: '/gamesession/$gameSessionId/map'
+      fullPath: '/gamesession/$gameSessionId/map'
+      preLoaderRoute: typeof GamesessionGameSessionIdMapRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gamesession_/$gameSessionId/gamesession': {
+      id: '/gamesession_/$gameSessionId/gamesession'
+      path: '/gamesession/$gameSessionId/gamesession'
+      fullPath: '/gamesession/$gameSessionId/gamesession'
+      preLoaderRoute: typeof GamesessionGameSessionIdGamesessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthIndexRoute: AuthIndexRoute,
+  GamesessionGameSessionIdGamesessionRoute:
+    GamesessionGameSessionIdGamesessionRoute,
+  GamesessionGameSessionIdMapRoute: GamesessionGameSessionIdMapRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.jsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

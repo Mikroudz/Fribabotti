@@ -11,7 +11,9 @@ import asyncio
 import uvicorn
 from fastapi import FastAPI
 
-import api
+from utils.env_settings import get_settings
+
+from routes import auth, device_routes, games
 
 from database import create_db_and_tables, get_session
 
@@ -59,7 +61,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def run_bot():
-    application = ApplicationBuilder().token(secrets["BOT_SECRET"]).build()
+    application = ApplicationBuilder().token(get_settings().telegram_bot_secret).build()
 
     start_handler = CommandHandler("start", start)
     join_group_invite_handler = CommandHandler("joingroup", join_group_invite)
@@ -86,13 +88,14 @@ async def run_bot():
 
 
 app = FastAPI()
-app.include_router(api.router)
-app.include_router(api.router_auth)
+app.include_router(device_routes.router)
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(games.router, prefix="/api/v1")
 
 
 async def main():
     create_db_and_tables()
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, loop="asyncio")
+    config = uvicorn.Config(app, host="0.0.0.0", port=8000, loop="asyncio", reload=True)
     server = uvicorn.Server(config)
 
     await asyncio.gather(server.serve(), run_bot())

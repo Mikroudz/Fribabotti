@@ -1,14 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { GameSessionList } from "../game_session/GameSessionList";
 
 export const Route = createFileRoute("/")({ component: Home });
 
 function Home() {
-    return (
-        <div className="p-8">
-            <h1 className="text-4xl font-bold">Welcome to TanStack Start</h1>
-            <p className="mt-4 text-lg">
-                Edit <code>src/routes/index.tsx</code> to get started.
-            </p>
-        </div>
-    );
+    // Make everything a component
+    // where we could construct like main view from smaller components easily
+    // like sessions, top scores, other fun things
+
+    return <GameSessionList />;
 }

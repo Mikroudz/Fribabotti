@@ -99,6 +99,7 @@ class throwView extends WatchUi.View {
     // state of this View here. This includes freeing resources from
     // memory.
     function onHide() as Void {
+        stopGps();
     }
 
 }

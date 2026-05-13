@@ -43,3 +43,8 @@ class UpdateUserGroup(SQLModel):
     name: str | None = None
     deleted: bool | None = None
     notify_groups: bool | None = None
+
+
+class UserGroupReadShort(SQLModel):
+    name: str = ""
+    id: int

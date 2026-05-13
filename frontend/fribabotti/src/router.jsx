@@ -1,9 +1,9 @@
 import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
-import { QueryClient } from "@tanstack/react-query";
-import { setupRouterSsrQueryIntegration } from "@tanstack/react-router-ssr-query";
-import TanstackQueryProvider, { getContext } from "./integrations/tanstack-query/root-provider";
+import { getContext } from "./integrations/tanstack-query/root-provider";
+import { useTokens } from "./auth/UseTokens";
+import { createAuthManager } from "./auth/authManager";
 
 export function getRouter() {
     const context = getContext();
@@ -16,7 +16,12 @@ export function getRouter() {
         defaultPreloadStaleTime: 0,
     });
 
-    setupRouterSsrQueryIntegration({ router, queryClient: context.queryClient });
+    const authManager = createAuthManager({
+        queryClient: context.queryClient,
+        router: router,
+    });
+
+    context.authHandlerRef.current = authManager.onAuthError;
 
     return router;
 }

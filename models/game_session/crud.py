@@ -4,12 +4,12 @@ from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
 
-from .model import GameSession
+from .model import GameSession, GameSessionReadLong
 from models.user.model import User
 from models.track.model import Track
 
 from models.course.model import Course
-from models.score.model import Score
+from models.score.model import Score, CourseScore, HoleReadLong, ThrowReadLong
 
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
@@ -95,6 +95,55 @@ def read_game_session_user(
     if ret == None or ret == [(None, None)]:
         return []
     return ret
+
+
+def read_game_session_long(
+    session: Session, user_id: int, game_session_id: int
+) -> GameSessionReadLong | None:
+    stmt = (
+        select(GameSession)
+        .options(
+            selectinload(GameSession.course),
+            selectinload(GameSession.scores).and_(Score.user_id == user_id),
+            selectinload(GameSession.user_group),
+            selectinload(Course.tracks),
+        )
+        .join(
+            SessionParticipantsLink,
+            GameSession.id == SessionParticipantsLink.game_session_id,
+        )
+        .where(
+            and_(
+                SessionParticipantsLink.user_id == user_id,
+                GameSession.id == game_session_id,
+            )
+        )
+    )
+    res = session.exec(stmt).first()
+    if res == None:
+        return None
+
+    scores = CourseScore(user_id=user_id)
+
+    for track in res.course.tracks:
+        track_num = track.track_number
+        find_score = [score for score in res.scores if score.track_number == track_num]
+        throws = []
+        if len(find_score) > 0:
+            for throwidx in range(find_score[0].score):
+                throws.append(ThrowReadLong(throw_number=throwidx + 1))
+        scores.course.append(
+            HoleReadLong(par=track.par, track_number=track_num, throws=throws)
+        )
+
+    game = GameSessionReadLong(
+        id=game_session_id,
+        course_id=res.course_id,
+        user_group_id=res.user_group_id,
+        user_group=res.user_group,
+        user_score=scores,
+    )
+    return game
 
 
 def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSession]:

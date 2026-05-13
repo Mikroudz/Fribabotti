@@ -4,10 +4,10 @@ from datetime import datetime, UTC, date
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, String
 from pydantic import ConfigDict
 from models.track.model import Track
-from models.game_session.model import GameSession
 
 if TYPE_CHECKING:
     from models.game.model import Game
+    from models.game_session.model import GameSession
 
 
 class CourseBase(SQLModel):
@@ -30,7 +30,7 @@ class Course(CourseBase, table=True):
             #      "foreign_keys": "[track.track_number, track.course_id]",
         },
     )
-    game_sessions: List[GameSession] = Relationship(
+    game_sessions: List["GameSession"] = Relationship(
         back_populates="course",
     )
 
@@ -39,3 +39,7 @@ class CourseUpdate(SQLModel):
     name: str | None = None
     location: str | None = None
     deleted: bool | None = None
+
+
+class CourseRead(CourseBase):
+    id: int

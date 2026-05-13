@@ -60,11 +60,18 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 			// error case
 			_register_query.makeRequest(_registeration_num);
 		} else if (data.hasKey("key") && data["key"] != ""){
+			System.println("Registeration successfull");
+			System.println("key: " + data["key"] + " username: " + data["username"]);
 			stopDeviceRegisteration();
 			sharedData.setAuthToken(data["key"]);
-			var menuItem = _menu.findItemById("register_device");
-			menuItem.setLabel("Registered to user " + data["username"]);
-			menuItem.setSubLabel("");
+			var menuIdx = _menu.findItemById("register_device");
+			if(menuIdx != -1){
+				var menuItem = _menu.getItem(menuIdx);
+				menuItem.setLabel("Registered to user " + data["username"]);
+				menuItem.setSubLabel("");
+				WatchUi.requestUpdate();
+			}
+			
 		}
 	}
 
