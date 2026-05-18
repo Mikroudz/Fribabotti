@@ -1,4 +1,4 @@
-import { Box, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Box, List, ListItemText, Typography } from "@mui/material";
 import { useGameSessions } from "../hooks/GameSessionHooks";
 import { dateTimeNice } from "../utils/helpers";
 import { StyledListItem, StyledListItemButton } from "#/components/List";
@@ -9,7 +9,7 @@ import { Route as GameSessionRoute } from "#/routes/gamesession_/$gameSessionId/
 export function GameSessionList() {
     const { data: gameSessions, status } = useGameSessions();
     return (
-        <List dense>
+        <List dense sx={{ m: 1 }}>
             {gameSessions?.map((val) => (
                 <StyledListItem
                     key={val.id}

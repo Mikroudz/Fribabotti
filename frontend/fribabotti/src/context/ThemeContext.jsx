@@ -16,6 +16,21 @@ const primaryShades = {
     0: "#000000",
 };
 
+const secondaryShades = {
+    1000: "#FFFFFF",
+    950: "#FFEDE3",
+    900: "#FFDCC3",
+    800: "#FFB77D",
+    700: "#FF8E13",
+    600: "#DA7700",
+    500: "#B56200",
+    400: "#904D00",
+    300: "#6E3900",
+    200: "#4D2600",
+    100: "#2F1500",
+    0: "#000000",
+};
+
 const themeOptions = {
     palette: {
         type: "dark",
@@ -25,6 +40,7 @@ const themeOptions = {
         },
         secondary: {
             main: "#FF8C00",
+            ...secondaryShades,
         },
         background: {
             default: "#0f150f",

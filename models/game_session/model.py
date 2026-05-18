@@ -101,9 +101,12 @@ class GameSessionReadShort(GameSessionBase):
 class GameSessionReadLong(GameSessionBase):
     id: int
     course_id: int
+    course: CourseRead
     user_group_id: int
     user_group: UserGroupReadShort
     user_score: CourseScore
+    started_at: datetime
+    ended_at: datetime | None = None
     # should we return scores for all users or only current here?
 
 

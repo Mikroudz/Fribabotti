@@ -13,7 +13,7 @@ from fastapi import FastAPI
 
 from utils.env_settings import get_settings
 
-from routes import auth, device_routes, games
+from routes import auth, device_routes, games, score
 
 from database import create_db_and_tables, get_session
 
@@ -91,6 +91,7 @@ app = FastAPI()
 app.include_router(device_routes.router)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(games.router, prefix="/api/v1")
+app.include_router(score.router, prefix="/api/v1")
 
 
 async def main():

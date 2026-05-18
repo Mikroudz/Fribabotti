@@ -28,7 +28,7 @@ router = APIRouter(
 )
 
 
-@router.get("{game_session_id}", response_model=GameSessionReadLong)
+@router.get("/{game_session_id}", response_model=GameSessionReadLong)
 async def game_session_read(
     *,
     request: Request,

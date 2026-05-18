@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from .model import GameSession, GameSessionReadLong
 from models.user.model import User
+from models.user.crud import read_user
 from models.track.model import Track
 
 from models.course.model import Course
@@ -103,10 +104,9 @@ def read_game_session_long(
     stmt = (
         select(GameSession)
         .options(
-            selectinload(GameSession.course),
-            selectinload(GameSession.scores).and_(Score.user_id == user_id),
+            selectinload(GameSession.course).selectinload(Course.tracks),
+            selectinload(GameSession.scores).selectinload(Score.throws),
             selectinload(GameSession.user_group),
-            selectinload(Course.tracks),
         )
         .join(
             SessionParticipantsLink,
@@ -122,26 +122,40 @@ def read_game_session_long(
     res = session.exec(stmt).first()
     if res == None:
         return None
+    # TODO: actually get scores for all users if requested idk
+    user = read_user(session, user_id)
 
-    scores = CourseScore(user_id=user_id)
+    scores = CourseScore(user_id=user_id, **user.model_dump())
+    track_total_par = 0
+    score_total = 0
 
     for track in res.course.tracks:
         track_num = track.track_number
         find_score = [score for score in res.scores if score.track_number == track_num]
         throws = []
+        score = 0
+        track_total_par += track.par
         if len(find_score) > 0:
-            for throwidx in range(find_score[0].score):
-                throws.append(ThrowReadLong(throw_number=throwidx + 1))
-        scores.course.append(
-            HoleReadLong(par=track.par, track_number=track_num, throws=throws)
+            score = find_score[0].score
+            score_total += score
+            for throw in find_score[0].throws:
+                throws.append(throw)
+        scores.scores.append(
+            HoleReadLong(
+                par=track.par, track_number=track_num, throws=throws, score=score
+            )
         )
-
+    scores.par = track_total_par
+    scores.total_score = score_total
     game = GameSessionReadLong(
         id=game_session_id,
         course_id=res.course_id,
+        course=res.course,
         user_group_id=res.user_group_id,
         user_group=res.user_group,
         user_score=scores,
+        started_at=res.started_at,
+        ended_at=res.ended_at,
     )
     return game
 

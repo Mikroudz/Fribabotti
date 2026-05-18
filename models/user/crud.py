@@ -46,10 +46,14 @@ def telegram_login(session: Session, data: TgWebAppAuthData | UserCreateTgAuth) 
     if valid_user.username == "" or valid_user.username == None:
         valid_user.username = " ".join([valid_user.first_name, valid_user.last_name])
     if db_user:
-        user_data = db_user.model_dump(exclude_unset=True)
+        user_data = valid_user.model_dump(exclude_unset=True)
         db_user.sqlmodel_update(user_data)
     else:
         db_user = User(**valid_user.model_dump())
     session.add(db_user)
     session.commit()
     return db_user
+
+
+def read_user(session: Session, user_id: int) -> User | None:
+    return session.get(User, user_id)

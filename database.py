@@ -17,6 +17,7 @@ from models.links.user_group_chat_link import UserGroupChatLink
 from models.links.user_group_members_link import UserGroupMembersLink
 from models.device_sessions.model import DeviceSession
 from models.auth.model import SessionToken
+from models.throw.model import Throw
 
 
 from dotenv import dotenv_values

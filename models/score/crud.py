@@ -2,7 +2,7 @@ from typing import List, Tuple
 from sqlmodel import Session, select, not_, and_, exists, func, desc, asc
 from pydantic import ValidationError
 from sqlalchemy.orm import selectinload, with_loader_criteria
-from .model import Score
+from .model import Score, ScoreRead
 from models.track.model import Track
 from models.user.model import User
 from models.links.session_participants_link import SessionParticipantsLink
@@ -228,6 +228,20 @@ def read_scores(
         .order_by(Track.track_number)
     )
     return session.exec(stmt).all()
+
+
+# ...with par
+def read_score(session: Session, score_id: int) -> ScoreRead | None:
+    stmt = (
+        select(Score, Track.par)
+        .join(Score.track)
+        .options(selectinload(Score.throws))
+        .where(Score.id == score_id)
+    )
+    score, par = session.exec(stmt).first()
+    if score == None:
+        return None
+    return ScoreRead(par=par, throws=score.throws, **score.model_dump())
 
 
 def read_course_best_user_scores(

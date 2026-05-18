@@ -1,7 +1,11 @@
 import { PrettyPar } from "#/components/PrettyPar";
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
+import { Fragment } from "react/jsx-runtime";
 
 const chunkArray = (arr, size) => {
+    if (!Array.isArray(arr)) {
+        return [];
+    }
     const chunks = [];
     for (let i = 0; i < arr.length; i += size) {
         chunks.push(arr.slice(i, i + size));
@@ -9,47 +13,16 @@ const chunkArray = (arr, size) => {
     return chunks;
 };
 
-export function ScoreCard() {
-    const data = [
-        { track_number: 1, par: 3, throws: [1, 3, 5] },
-        { track_number: 2, par: 3, throws: [1, 3, 5] },
-        { track_number: 3, par: 3, throws: [1, 3, 5] },
-        { track_number: 4, par: 3, throws: [1, 3, 5] },
-        { track_number: 5, par: 3, throws: [1, 3, 5] },
-        { track_number: 6, par: 3, throws: [1, 3, 5] },
-        { track_number: 7, par: 3, throws: [1, 3, 5] },
-        { track_number: 8, par: 3, throws: [1, 3, 5] },
-        { track_number: 9, par: 3, throws: [1, 3, 5] },
-        { track_number: 10, par: 3, throws: [1, 3, 5] },
-        { track_number: 11, par: 3, throws: [1, 3, 5] },
-    ];
-    const userScore = [
-        {
-            user: "mikroudz",
-            scores: [
-                { track_number: 1, throws: [1, 3, 5] },
-                { track_number: 2, throws: [1, 3, 5] },
-                { track_number: 3, throws: [1, 3, 5] },
-                { track_number: 4, throws: [1, 3, 5] },
-                { track_number: 5, throws: [1, 3, 5] },
-                { track_number: 6, throws: [1, 3, 5] },
-                { track_number: 7, throws: [1, 3, 5] },
-                { track_number: 8, throws: [1, 3, 5] },
-                { track_number: 9, throws: [1, 3, 5] },
-                { track_number: 10, throws: [1, 3, 5] },
-                { track_number: 11, throws: [1, 3, 5] },
-            ],
-        },
-    ];
-
-    const chunked = chunkArray(data, 8);
+export function ScoreCard({ data }) {
+    const chunked = chunkArray(data?.user_score.scores, 8);
+    // Todo: handle scores from many users
+    const user_scores = data?.user_score ? [data?.user_score] : [];
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, ml: 0.5, mr: 0.5 }}>
             {chunked.map((chunk, chunkIndex) => (
-                <>
+                <Fragment key={chunkIndex}>
                     <Box
-                        key={chunkIndex}
                         sx={{
                             display: "grid",
                             gridTemplateColumns: "2fr repeat(8, minmax(0, 1fr))",
@@ -115,9 +88,9 @@ export function ScoreCard() {
                                 </Box>
                             ))}
                         </Box>
-                        {userScore.map((user) => (
+                        {user_scores.map((user) => (
                             <Box
-                                key={user.user}
+                                key={user.username}
                                 sx={{
                                     gridColumn: "1 / -1",
                                     display: "grid",
@@ -125,15 +98,20 @@ export function ScoreCard() {
                                     alignItems: "center",
                                 }}
                             >
-                                <Typography sx={{ fontSize: "14px", fontWeight: "bold" }}>
-                                    {user.user}
+                                <Typography
+                                    sx={{
+                                        fontSize: "14px",
+                                        fontWeight: "bold",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    {user.username}
                                 </Typography>
 
                                 {chunk.map((val) => {
                                     const scoreData = user.scores.find(
                                         (s) => s.track_number === val.track_number,
                                     );
-                                    const throwsCount = scoreData ? scoreData.throws.length : "-";
 
                                     return (
                                         <Box
@@ -142,8 +120,9 @@ export function ScoreCard() {
                                         >
                                             <PrettyPar
                                                 sx={{ fontWeight: "bold" }}
-                                                score={throwsCount}
+                                                score={scoreData?.score}
                                                 par={val.par}
+                                                coloredContainer={true}
                                             ></PrettyPar>
                                         </Box>
                                     );
@@ -151,7 +130,7 @@ export function ScoreCard() {
                             </Box>
                         ))}
                     </Box>
-                </>
+                </Fragment>
             ))}
         </Box>
     );

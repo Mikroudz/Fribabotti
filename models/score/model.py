@@ -4,11 +4,14 @@ from utils.formatting import par_score_format
 from sqlmodel import Field, SQLModel, Relationship, text
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 from pydantic_extra_types.coordinate import Coordinate
+from models.throw.model import ThrowReadLong
+from models.course.model import CourseRead
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
     from models.track.model import Track
     from models.user.model import User
+    from models.throw.model import Throw
 
 
 class ScoreBase(SQLModel):
@@ -44,23 +47,34 @@ class Score(ScoreBase, table=True):
     )
     game_session: Optional["GameSession"] = Relationship(back_populates="scores")
 
-
-class ThrowReadLong(SQLModel):
-    start_pos: Coordinate | None = None
-    end_pos: Coordinate | None = None
-    throw_number: int
-    distance: float = 0.0
-    disc: str = ""  # TODO: add table for discs and relation here
+    throws: List["Throw"] = Relationship(back_populates="score")
 
 
 class HoleReadLong(SQLModel):
-    # TODO: each throw
     track_number: int
     par: int
+    score: int | None = None
     throws: List[ThrowReadLong]
+
+
+class ScoreRead(SQLModel):
+    track_number: int
+    par: int
+    score: int | None = None
+    throws: List[ThrowReadLong] = []
 
 
 class CourseScore(SQLModel):
     user_id: int
-    course_id: int
-    course: List[HoleReadLong]
+    username: str = ""
+    photo_url: str | None = None
+    total_score: int = 0
+    par: int = 0
+    scores: List[HoleReadLong] = []
+
+
+class UpdateScore(SQLModel):
+    user_id: int
+    game_session_id: int
+    track_number: int
+    score: int

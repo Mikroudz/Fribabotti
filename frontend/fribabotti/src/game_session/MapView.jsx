@@ -1,22 +1,5 @@
-import {
-    Box,
-    Button,
-    ClickAwayListener,
-    IconButton,
-    MenuItem,
-    Select,
-    styled,
-    Typography,
-} from "@mui/material";
-import {
-    MapContainer,
-    TileLayer,
-    useMap,
-    Marker,
-    Popup,
-    Polyline,
-    LayersControl,
-} from "react-leaflet";
+import { Box, Button, MenuItem, Select, styled, Typography } from "@mui/material";
+import { MapContainer, TileLayer, useMap, Marker, Polyline, LayersControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./mapview.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -26,6 +9,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import RoomIcon from "@mui/icons-material/Room";
 import { getShortDistance } from "#/utils/helpers";
 import { getPositionAsync } from "#/hooks/usePosition";
+import { GameScoreDrawer } from "./GameScoreDrawer";
+import { GAME_SESSION_KEY, useGameSession, useSelectedHole } from "#/hooks/GameSessionHooks";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createThrow } from "#/utils/api";
+import { useParams } from "@tanstack/react-router";
 
 const createNumberedIcon = (number, selected) => {
     return L.divIcon({
@@ -57,32 +45,35 @@ const StyledContentBox = styled(Box)(({ theme }) => ({
     padding: theme.spacing(1),
 }));
 
-function SelectHole() {
-    const [hole, setHole] = useState(1);
+function SelectHole({ data }) {
     const [selectOpen, setSelectOpen] = useState(false);
-
-    const data = [
-        { track_number: 1, par: 3, throws: [1, 3, 5] },
-        { track_number: 2, par: 3, throws: [1, 3, 5] },
-        { track_number: 3, par: 3, throws: [1, 3, 5] },
-        { track_number: 4, par: 3, throws: [1, 3, 5] },
-        { track_number: 5, par: 3, throws: [1, 3, 5] },
-        { track_number: 6, par: 3, throws: [1, 3, 5] },
-        { track_number: 7, par: 3, throws: [1, 3, 5] },
-        { track_number: 8, par: 3, throws: [1, 3, 5] },
-        { track_number: 9, par: 3, throws: [1, 3, 5] },
-        { track_number: 10, par: 3, throws: [1, 3, 5] },
-        { track_number: 11, par: 3, throws: [1, 3, 5] },
-    ];
+    const [hole, setHole] = useState("");
+    const queryClient = useQueryClient();
+    const selectedHole = useSelectedHole();
 
     const handleClose = () => {
-        console.log("closing");
         setSelectOpen(false);
     };
     const handleOpen = () => {
-        console.log("opening");
         setSelectOpen(true);
     };
+
+    useEffect(() => {
+        // TODO: clean hole selection if we change session
+        // initially select first hole if nothing is set
+    }, [data]);
+
+    useEffect(() => {
+        if (
+            Array.isArray(data?.scores) &&
+            (selectedHole.track_number === "" ||
+                selectedHole.track_number === undefined ||
+                data?.scores?.findIndex((val) => val.track_number === selectedHole.track_number) !==
+                    -1)
+        ) {
+            handleSelectHole({ target: { value: data?.scores?.[0].track_number } });
+        }
+    }, [data]);
 
     const handleBoxClick = (e) => {
         // e.currentTarget is the StyledContentBox.
@@ -92,9 +83,20 @@ function SelectHole() {
         if (!e.currentTarget.contains(e.target)) {
             return; // It's a portal event, ignore it!
         }
-
         setSelectOpen(true);
     };
+
+    const handleSelectHole = (e) => {
+        setHole(e.target.value);
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], { track_number: e.target.value });
+    };
+
+    const hole_idx = data?.scores?.findIndex(
+        (val) => val.track_number === selectedHole.track_number,
+    );
+    const current_hole_par =
+        hole_idx !== undefined && hole_idx !== -1 ? data.scores[hole_idx].par : 0;
+
     return (
         <StyledContentBox
             onClick={handleBoxClick}
@@ -104,7 +106,7 @@ function SelectHole() {
                 left: 0,
                 zIndex: 1000,
                 ml: 1,
-                mb: 8,
+                mb: 12,
                 pr: 1.5,
                 pl: 1.5,
             }}
@@ -116,7 +118,7 @@ function SelectHole() {
                     open={selectOpen}
                     onOpen={handleOpen}
                     onClose={handleClose}
-                    onChange={(e) => setHole(e.target.value)}
+                    onChange={handleSelectHole}
                     renderValue={(val) => (
                         <Typography sx={{ color: "text.secondary" }}>{`Hole ${val}`}</Typography>
                     )}
@@ -136,30 +138,35 @@ function SelectHole() {
                         },
                     }}
                 >
-                    {data.map((val) => (
+                    {data?.scores.map((val) => (
                         <MenuItem
+                            selected={hole === val.track_number}
                             key={val.track_number}
                             value={val.track_number}
+                            sx={{
+                                "&.Mui-selected": {
+                                    bgcolor: "primary.400",
+                                },
+                            }}
                         >{`Hole ${val.track_number}`}</MenuItem>
                     ))}
                 </Select>
 
-                <Typography variant="h6">Par 3</Typography>
+                <Typography variant="h6">{`Par ${current_hole_par}`}</Typography>
             </Box>
         </StyledContentBox>
     );
 }
 
+function calculateThrowDistance(t) {
+    if (t?.start_lat && t?.start_lng && t?.end_lat && t?.end_lng) {
+        return getShortDistance(t.start_lat, t.start_lng, t.end_lat, t.end_lng);
+    }
+    return 0;
+}
+
 function ThrowInfo({ currentThrow }) {
-    const distance =
-        currentThrow?.start_pos && currentThrow?.end_pos
-            ? getShortDistance(
-                  currentThrow?.start_pos.latitude,
-                  currentThrow?.start_pos.longitude,
-                  currentThrow?.end_pos.latitude,
-                  currentThrow?.end_pos.longitude,
-              )
-            : 0;
+    const distance = calculateThrowDistance(currentThrow);
 
     return (
         <StyledContentBox
@@ -181,20 +188,106 @@ function ThrowInfo({ currentThrow }) {
     );
 }
 
-function GameControls({ throws, currentThrow }) {
+const testPos = [65.045512, 25.427889];
+
+function useMutateThrow() {
+    const queryClient = useQueryClient();
+    const params = useParams({ strict: false });
+    const { gameSessionId } = params;
+
+    const { mutate } = useMutation({
+        mutationFn: createThrow,
+        onSuccess: (data) => {
+            queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (oldSession) => {
+                return oldSession
+                    ? {
+                          ...oldSession,
+                          user_score: {
+                              ...oldSession?.user_score,
+                              scores: oldSession?.user_score?.scores?.map((score) =>
+                                  score.track_number === data.track_number
+                                      ? { ...score, ...data }
+                                      : score,
+                              ),
+                          },
+                      }
+                    : {};
+            });
+        },
+    });
+    return mutate;
+}
+
+function GameControls({ scoreData }) {
+    const queryClient = useQueryClient();
+    const params = useParams({ strict: false });
+    const { gameSessionId } = params;
+    const mutate = useMutateThrow();
+
     const handleNewThrow = () => {
         // TODO: prompt user to allow location if we dont get it
-        getPositionAsync({ enableHighAccuracy: true }).then((data) => console.log(data));
+        //getPositionAsync({ enableHighAccuracy: true }).then((data) => console.log(data));
+
+        const randomOffset = Math.random() * 0.005;
+        const randomOffset2 = Math.random() * 0.005;
+        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE"]);
+        mutate({
+            data: {
+                track_number: selectedTrack.track_number,
+                game_session_id: gameSessionId,
+                start_lat: testPos[0] + randomOffset,
+                start_lng: testPos[1] + randomOffset2,
+            },
+        });
     };
+
+    const handleNextHole = () => {
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => {
+            let next_track_num = 1;
+            if (Array.isArray(scoreData?.scores)) {
+                const track_num_idx = scoreData?.scores.findIndex(
+                    (val) => val.track_number === prev.track_number,
+                );
+                next_track_num = prev.track_number;
+                if (scoreData?.scores.length > track_num_idx + 1) {
+                    next_track_num = scoreData?.scores[track_num_idx + 1].track_number;
+                }
+            }
+
+            return { ...prev, track_number: next_track_num };
+        });
+    };
+
+    const handleDeleteThrow = () => {
+        // deletes last throw. Should we actually delete selected throw?
+        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE"]);
+        const holeScore = scoreData?.scores.find(
+            (val) => val.track_number === selectedTrack.track_number,
+        );
+        if (!holeScore) {
+            return;
+        }
+
+        const throw_id = holeScore?.throws
+            .sort((a, b) => a.throw_number - b.throw_number)
+            .at(-1)?.id;
+        if (throw_id) {
+            mutate({
+                data: {
+                    id: throw_id,
+                },
+                method: "DELETE",
+            });
+        }
+    };
+
     return (
         <>
-            <ThrowInfo currentThrow={currentThrow} />
-            <SelectHole />
             <Box
                 sx={{
                     width: "100%",
                     position: "absolute",
-                    bottom: 0,
+                    bottom: 36,
                     left: 0,
                     zIndex: 1000,
                     p: 1,
@@ -212,6 +305,7 @@ function GameControls({ throws, currentThrow }) {
                         pl: 0.5,
                         minWidth: "48px",
                     }}
+                    onClick={handleDeleteThrow}
                 >
                     <DeleteIcon />
                 </Button>
@@ -235,6 +329,7 @@ function GameControls({ throws, currentThrow }) {
                         pl: 1.5,
                         minWidth: "64px",
                     }}
+                    onClick={handleNextHole}
                 >
                     Next
                     <NavigateNextIcon />
@@ -244,22 +339,7 @@ function GameControls({ throws, currentThrow }) {
     );
 }
 
-const data = {
-    throws: [
-        {
-            start_pos: { latitude: 65.044602, longitude: 25.428256 },
-            end_pos: { latitude: 65.046602, longitude: 25.429256 },
-            throw_number: 1,
-        },
-        {
-            start_pos: { latitude: 65.046602, longitude: 25.429256 },
-            end_pos: { latitude: 65.044602, longitude: 25.426256 },
-            throw_number: 2,
-        },
-    ],
-};
-
-function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDragEnd }) {
+function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDragEnd, markerIdx }) {
     const markerRef = useRef(null);
     const [dragPosition, setDragPosition] = useState(position);
 
@@ -270,14 +350,14 @@ function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDrag
                 if (marker != null) {
                     // do we need this is parent updates position?
                     setDragPosition(marker.getLatLng());
-                    onDragEnd(marker.getLatLng(), thrownum);
+                    onDragEnd(marker.getLatLng(), markerIdx);
                 }
             },
             click: (e) => {
                 onClick(thrownum);
             },
         }),
-        [thrownum],
+        [thrownum, markerIdx],
     );
 
     return (
@@ -291,99 +371,107 @@ function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDrag
     );
 }
 
-export function MapView() {
+function Map({ sessionData }) {
     const [selectedThrowNum, setSelectedThrowNum] = useState(1);
     const [isMoving, setMoving] = useState(false);
-
+    const selectedHole = useSelectedHole();
+    const mutate = useMutateThrow();
     // temporary hold in state
-    const [throwData, setThrowData] = useState(data);
+    const [localScoreData, setLocalScoreData] = useState(null);
+    const [markerCoords, setMarkerCoords] = useState([]);
+    const originalPositionRef = useRef(null);
+    useEffect(() => {
+        const currentScore = sessionData?.user_score?.scores.find(
+            (val) => val.track_number === selectedHole?.track_number,
+        );
+        setLocalScoreData(currentScore);
 
-    const markerCoords = useMemo(
-        () =>
-            throwData.throws.reduce((acc, val, idx) => {
-                if (idx === 0) {
-                    acc.push([val.start_pos.latitude, val.start_pos.longitude]);
+        if (currentScore) {
+            const markers = currentScore.throws.reduce((acc, val, idx) => {
+                if (idx === 0 && val.start_lat && val.start_lng) {
+                    acc.push([val.start_lat, val.start_lng]);
                 }
-                acc.push([val.end_pos.latitude, val.end_pos.longitude]);
+                if (val.end_lat && val.end_lng) {
+                    acc.push([val.end_lat, val.end_lng]);
+                }
                 return acc;
-            }, []),
-        [throwData],
-    );
+            }, []);
+            setMarkerCoords(markers);
+        }
+    }, [selectedHole, sessionData]);
 
     const handleEndMoving = () => {
         // todo: send new positions to backend
-    };
-
-    const handleDragEnd = (position, thrownum) => {
-        // todo: handle thrownum somehow differently? just use indexes??
-        const throwIdx = thrownum - 1;
-        const pos = { latitude: position.lat, longitude: position.lng };
-        if (throwIdx === 0) {
-            // if starting pos moved only
-            setThrowData((prev) => {
-                const [first, ...rest] = prev.throws;
-                return {
-                    ...prev,
-                    throws: [
-                        {
-                            ...first,
-                            start_pos: pos,
-                        },
-                        ...rest,
-                    ],
-                };
-            });
-        } else if (throwData.throws.length <= throwIdx) {
-            // if on last item
-            setThrowData((prev) => {
-                const last = prev.throws.at(-1);
-
-                return {
-                    ...prev,
-                    throws: [...prev.throws.slice(0, -1), { ...last, end_pos: pos }],
-                };
-            });
-        } else {
-            // all other cases we need to move end and start position of adjacent items
-            setThrowData((prev) => {
-                const newThrows = prev.throws;
-                newThrows[throwIdx - 1].end_pos = pos;
-                newThrows[throwIdx].start_pos = pos;
-                return {
-                    ...prev,
-                    throws: newThrows,
-                };
-            });
+        // check which ones have changed
+        let updatedthrows = [];
+        for (const [idx, val] of markerCoords.entries()) {
+            // check if changed
+            // get full throw object by id
+            // update start position
+            // add to array
+            if (
+                val[0] !== originalPositionRef.current[idx][0] ||
+                val[1] !== originalPositionRef.current[idx][1]
+            ) {
+                const updateThrow = localScoreData.throws[idx];
+                updatedthrows.push({ ...updateThrow, start_lat: val[0], start_lng: val[1] });
+            }
+        }
+        if (updatedthrows.length > 0) {
+            mutate({ data: updatedthrows, method: "PATCH" });
         }
     };
 
+    const handleMovingStart = () => {
+        if (isMoving) {
+            handleEndMoving();
+            setMoving(false);
+        } else {
+            // TODO: what if user adds new throw during moving?
+            // TODO: what if user changes hole during moving? -> maybe stop moving and discard
+            originalPositionRef.current = markerCoords;
+            setMoving(true);
+        }
+    };
+
+    const handleDragEnd = (position, throwIdx) => {
+        const pos = [position.lat, position.lng];
+        if (markerCoords.length > throwIdx) {
+            setMarkerCoords((prev) => {
+                return prev.map((val, i) => (i === throwIdx ? pos : val));
+            });
+        }
+    };
     const throwMarkers = useMemo(() => {
         return (
             <>
                 {markerCoords.map((val, idx) => (
                     <ThrowMarker
-                        key={idx}
+                        key={val[0]}
                         position={val}
                         thrownum={idx + 1}
+                        markerIdx={idx}
                         onClick={(num) => setSelectedThrowNum(num)}
                         isSelected={idx + 1 === selectedThrowNum}
                         isMoving={idx + 1 === selectedThrowNum && isMoving}
                         onDragEnd={handleDragEnd}
                     />
                 ))}
+                {/* TODO: add distance labels to each line*/}
                 <Polyline
                     positions={markerCoords}
                     pathOptions={{ color: "red", dashArray: "10, 10", dashOffset: "0" }}
-                />
+                ></Polyline>
             </>
         );
     }, [markerCoords, selectedThrowNum, isMoving]);
 
     return (
-        <Box sx={{ height: "100%", width: "100%", overflow: "hidden", position: "relative" }}>
+        <>
             <MapContainer
                 zoom={19}
                 scrollWheelZoom={false}
+                center={[62.290715, 25.007085]}
                 style={{ height: "100%", width: "100%" }}
             >
                 <LayersControl position="bottomright">
@@ -404,7 +492,11 @@ export function MapView() {
                 {throwMarkers}
                 <RecenterMap markers={markerCoords} />
             </MapContainer>
-            <GameControls currentThrow={data.throws[selectedThrowNum - 1]} />
+            <ThrowInfo
+                currentThrow={localScoreData?.throws?.find(
+                    (val) => val.throw_number === selectedThrowNum,
+                )}
+            />
             <Button
                 sx={{
                     fontSize: "16px",
@@ -417,10 +509,24 @@ export function MapView() {
                 }}
                 variant="contained"
                 startIcon={<RoomIcon />}
-                onClick={() => setMoving((prev) => !prev)}
+                onClick={handleMovingStart}
             >
                 {isMoving ? "Moving!" : "Move"}
             </Button>
+        </>
+    );
+}
+
+export function MapView() {
+    const { data: sessionData } = useGameSession();
+
+    return (
+        <Box sx={{ height: "100%", width: "100%", overflow: "hidden", position: "relative" }}>
+            <Map sessionData={sessionData} />
+            <GameControls scoreData={sessionData?.user_score} />
+            <SelectHole data={sessionData?.user_score} />
+
+            <GameScoreDrawer />
         </Box>
     );
 }
