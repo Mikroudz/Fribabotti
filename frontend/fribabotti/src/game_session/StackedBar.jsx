@@ -1,12 +1,7 @@
 import { getScoreColor } from "#/components/PrettyPar";
 import { Box, useTheme } from "@mui/material";
 
-export function StackedBarChart({ scores }) {
-    const theme = useTheme();
-    if (!scores || !Array.isArray(scores)) {
-        return null;
-    }
-
+export function groupScores(scores) {
     const countedScores = scores
         .filter((val) => val.score !== 0)
         .reduce((acc, val) => {
@@ -19,7 +14,15 @@ export function StackedBarChart({ scores }) {
             return acc;
         }, {});
     const countTotal = Object.values(countedScores).reduce((sum, val) => sum + val, 0);
+    return [countedScores, countTotal];
+}
 
+export function StackedBarChart({ scores }) {
+    const theme = useTheme();
+    if (!scores || !Array.isArray(scores)) {
+        return null;
+    }
+    const [countedScores, countTotal] = groupScores(scores);
     return (
         <Box
             sx={{

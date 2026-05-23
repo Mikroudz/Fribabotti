@@ -21,7 +21,7 @@ function RouteComponent() {
             <ScoreCard data={data} />
             <Button
                 variant="contained"
-                sx={{ bgcolor: "secondary.main", width: "100%" }}
+                sx={{ bgcolor: "secondary.main", width: "100%", mt: 2 }}
                 component={Link}
                 to={MapRoute.to}
                 params={{ gameSessionId }}

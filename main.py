@@ -13,7 +13,7 @@ from fastapi import FastAPI
 
 from utils.env_settings import get_settings
 
-from routes import auth, device_routes, games, score
+from routes import auth, course, device_routes, games, score, group
 
 from database import create_db_and_tables, get_session
 
@@ -82,9 +82,11 @@ async def run_bot():
         while True:
             await asyncio.sleep(3600)
     except asyncio.CancelledError:
+        print("Telegram bot is shutting...")
         await application.updater.stop()
         await application.stop()
         await application.shutdown()
+        print("Telegram bot shut down...")
 
 
 app = FastAPI()
@@ -92,6 +94,8 @@ app.include_router(device_routes.router)
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(games.router, prefix="/api/v1")
 app.include_router(score.router, prefix="/api/v1")
+app.include_router(course.router, prefix="/api/v1")
+app.include_router(group.router, prefix="/api/v1")
 
 
 async def main():
@@ -99,7 +103,7 @@ async def main():
     config = uvicorn.Config(app, host="0.0.0.0", port=8000, loop="asyncio", reload=True)
     server = uvicorn.Server(config)
 
-    await asyncio.gather(server.serve(), run_bot())
+    await asyncio.gather(server.serve(), run_bot(), return_exceptions=True)
 
 
 if __name__ == "__main__":

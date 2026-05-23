@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
 
-from .model import GameSession, GameSessionReadLong
+from .model import GameSession, GameSessionReadLong, GameSessionReadShort
 from models.user.model import User
 from models.user.crud import read_user
 from models.track.model import Track
@@ -51,7 +51,7 @@ def read_game_session_user(
     active: bool | None = True,
     course_id: int | None = None,
     limit: int | None = None,
-) -> List[Tuple[GameSession, int]]:
+) -> List[GameSessionReadShort]:
     """Read game sessions where user is participating
 
     Args:
@@ -63,13 +63,30 @@ def read_game_session_user(
         List of GameSessions with Courses loaded (eg. GameSession.course)
 
     """
+
     subq = (
-        select(Score.game_session_id, func.sum(Score.score).label("score"))
+        select(
+            Score.game_session_id,
+            func.sum(Score.score).label("score"),
+            func.sum(Track.par).label("par"),
+        )
+        .join(
+            Track,
+            and_(
+                Track.course_id == Score.course_id,
+                Track.track_number == Score.track_number,
+            ),
+        )
+        .where(and_(Score.user_id == user_id))
         .group_by(Score.game_session_id)
         .subquery()
     )
     stmt = (
-        select(GameSession, subq.c.score)
+        select(
+            GameSession,
+            func.coalesce(subq.c.score, 0).label("score"),
+            func.coalesce(subq.c.par, 0).label("par"),
+        )
         .options(selectinload(GameSession.course))
         .join(
             SessionParticipantsLink,
@@ -93,9 +110,12 @@ def read_game_session_user(
     if limit is not None:
         stmt = stmt.limit(limit)
     ret = session.exec(stmt).all()
-    if ret == None or ret == [(None, None)]:
-        return []
-    return ret
+    return [
+        GameSessionReadShort(
+            **game.model_dump(), user_score=score, par=par, course=game.course
+        )
+        for game, score, par in ret
+    ]
 
 
 def read_game_session_long(

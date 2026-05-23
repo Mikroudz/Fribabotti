@@ -30,3 +30,19 @@ class Track(TrackBase, table=True):
     )
     course: Optional["Course"] = Relationship(back_populates="tracks")
     scores: List["Score"] = Relationship(back_populates="track")
+
+
+class TrackRead(SQLModel):
+    par: int
+    track_number: int
+
+
+class TrackCreate(SQLModel):
+    par: int
+    track_number: int
+
+
+class TrackUpdate(SQLModel):
+    id: int
+    par: int
+    track_number: int

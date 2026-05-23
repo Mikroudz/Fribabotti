@@ -1,22 +1,17 @@
 import { dateTimeNice } from "#/utils/helpers";
-import { Box, Typography, useTheme } from "@mui/material";
+import { Box, lighten, Typography } from "@mui/material";
 import { StackedBarChart } from "./StackedBar";
+import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 
 export function GameTitleInformation({ data }) {
     const userScoreTotal = data?.user_score?.total_score - data?.user_score?.par;
 
     return (
-        <Box
+        <StyledAnyContentBox
             sx={{
                 display: "flex",
                 flexDirection: "column",
-                m: 1,
-                p: 1,
                 alignItems: "center",
-                bgcolor: "background.paper",
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: "7px",
             }}
         >
             <Typography component="span" variant="h4">
@@ -26,15 +21,32 @@ export function GameTitleInformation({ data }) {
             <Typography component="span" sx={{ color: "text.secondary", fontSize: "14px" }}>
                 {dateTimeNice(data?.started_at)}
             </Typography>
-            <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+            <StyledAnyContentBox
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    pl: 2,
+                    pr: 2,
+                    pb: 0.5,
+                    pt: 0.5,
+                    mt: 0,
+                    border: 0,
+                    bgcolor: (theme) => lighten(theme.palette.background.paper, 0.05),
+                }}
+            >
                 <Typography component="span" variant="h6">
                     Total
                 </Typography>
 
-                <Typography component="span" variant="h6">
+                <Typography
+                    component="span"
+                    variant="h5"
+                    sx={{ color: "primary.600", fontWeight: 600 }}
+                >
                     {!userScoreTotal ? 0 : userScoreTotal}
                 </Typography>
-            </Box>
+            </StyledAnyContentBox>
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1 }}>
                 <Typography component="span" sx={{ textAlign: "center" }}>
                     Par <br /> {data?.user_score?.par}
@@ -42,11 +54,8 @@ export function GameTitleInformation({ data }) {
                 <Typography component="span" sx={{ textAlign: "center" }}>
                     Score <br /> {data?.user_score?.total_score}
                 </Typography>
-                <Typography component="span" sx={{ textAlign: "center" }}>
-                    Birdie <br />5
-                </Typography>
             </Box>
             <StackedBarChart scores={data?.user_score?.scores} />
-        </Box>
+        </StyledAnyContentBox>
     );
 }

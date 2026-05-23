@@ -2,7 +2,6 @@ import { createRouter as createTanStackRouter } from "@tanstack/react-router";
 import { routeTree } from "./routeTree.gen";
 
 import { getContext } from "./integrations/tanstack-query/root-provider";
-import { useTokens } from "./auth/UseTokens";
 import { createAuthManager } from "./auth/authManager";
 
 export function getRouter() {

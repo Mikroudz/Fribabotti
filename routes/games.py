@@ -1,24 +1,20 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, Body, Request
-from fastapi.security import APIKeyHeader
 from sqlmodel import Session
 from typing import Annotated, Union, List
 from database import get_session
 
-from models.game_session.model import (
-    GameSessionRead,
-    ThrowRead,
-    UpdateGameSession,
-    GameSessionShort,
-    GameSessionReadShort,
-)
-from models.score.crud import read_scores, update_game_session
+
 from models.game_session.crud import (
     read_game_session_user,
     create_game_session,
     read_game_session,
     read_game_session_long,
 )
-from models.game_session.model import GameSessionCreate, GameSessionReadLong
+from models.game_session.model import (
+    GameSessionCreate,
+    GameSessionReadLong,
+    GameSessionReadShort,
+)
 from .route_deps import token_required_user_id_in_response
 
 router = APIRouter(
@@ -42,14 +38,17 @@ async def game_session_read(
 
 @router.get("", response_model=List[GameSessionReadShort])
 async def game_sessions_read(
-    *, request: Request, session: Session = Depends(get_session)
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    course_id: int | None = None,
+    limit: int | None = None,
 ):
     # TODO: add params to read read non active also
     # TODO: create own reading function for api
-    return [
-        game
-        for game, _ in read_game_session_user(session, user_id=request.state.user_id)
-    ]
+    return read_game_session_user(
+        session, user_id=request.state.user_id, course_id=course_id, limit=limit
+    )
 
 
 @router.post("", response_model=GameSessionReadLong)
@@ -65,7 +64,7 @@ async def game_session_create(
         course_id=game_session.course_id,
         user_group_id=game_session.user_group_id,
     )
-    return read_game_session(
+    return read_game_session_long(
         session, user_id=request.state.user_id, game_session_id=created.id
     )
 

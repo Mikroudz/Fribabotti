@@ -1,14 +1,17 @@
 import { Box, Typography, useTheme } from "@mui/material";
 
 export function prettyParFormat(score, par = 0) {
+    const isInt = score % 1 === 0; //? Number(score.toFixed(1)) : score;
+
     if (score === 0) {
         return "-";
     } else if (score === par) {
         return "E";
     } else if (score > par) {
-        return `+${score - par}`;
+        const ret = !isInt ? Number((score - par).toFixed(1)) : score - par;
+        return `+${ret}`;
     } else {
-        return score - par;
+        return !isInt ? Number((score - par).toFixed(1)) : score - par;
     }
 }
 

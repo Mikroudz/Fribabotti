@@ -32,8 +32,16 @@ export async function getUser() {
     return baseFetch("/user");
 }
 
-export async function getGameSessions() {
-    return baseFetch("/game_session");
+export async function getGameSessions({ limit = null, course_id = null }) {
+    const params = {};
+    if (limit !== null) {
+        params["limit"] = limit;
+    }
+    if (course_id !== null) {
+        params["course_id"] = course_id;
+    }
+    const queryParams = new URLSearchParams(params);
+    return baseFetch("/game_session?" + queryParams.toString());
 }
 
 export async function getGameSession({ queryKey }) {
@@ -46,12 +54,18 @@ export async function createGameSession({ data, method = "POST" }) {
     return baseFetch(url, { method: method, body: JSON.stringify(data) });
 }
 
-export async function getTrack(track_id) {
-    return baseFetch(`/tracks/${track_id}`);
+export async function getCourse({ queryKey }) {
+    const [_key, course_id] = queryKey;
+    return baseFetch(`/courses/${course_id}`);
 }
 
-export async function getTracks() {
-    return baseFetch(`/tracks`);
+export async function getCourses() {
+    return baseFetch(`/courses`);
+}
+
+export async function createCourse({ data, method = "POST" }) {
+    const url = ["PATCH", "DELETE"].includes(method) ? `/courses/${data.id}` : "/courses";
+    return baseFetch(url, { method: method, body: JSON.stringify(data) });
 }
 
 export async function createThrow({ data, method = "POST" }) {
@@ -65,4 +79,8 @@ export async function deleteThrow(throw_id) {
 
 export async function updateScore({ data, method = "POST" }) {
     return baseFetch(`/scores`, { method: method, body: JSON.stringify(data) });
+}
+
+export async function getUserGroups() {
+    return baseFetch(`/groups`);
 }

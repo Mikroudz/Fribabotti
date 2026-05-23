@@ -3,11 +3,12 @@ from datetime import datetime, UTC, date
 
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, String
 from pydantic import ConfigDict
-from models.track.model import Track
+from models.track.model import TrackRead, TrackCreate
 
 if TYPE_CHECKING:
     from models.game.model import Game
     from models.game_session.model import GameSession
+    from models.track.model import Track
 
 
 class CourseBase(SQLModel):
@@ -36,10 +37,21 @@ class Course(CourseBase, table=True):
 
 
 class CourseUpdate(SQLModel):
+    id: int
     name: str | None = None
     location: str | None = None
     deleted: bool | None = None
+    tracks: list[TrackCreate] = []
+
+
+class CourseCreate(CourseBase):
+    tracks: list[TrackCreate] = []
 
 
 class CourseRead(CourseBase):
+    id: int
+
+
+class CourseReadShort(SQLModel):
+    name: str | None = None
     id: int

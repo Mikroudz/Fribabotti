@@ -7,15 +7,14 @@ from utils.formatting import datetime_to_pretty, convert_to_timezone
 from sqlmodel import Field, SQLModel, Relationship, text, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
 
-from ..score.model import ThrowReadLong, CourseScore
+from ..score.model import CourseScore
 from ..user_group.model import UserGroupReadShort
-from ..course.model import CourseRead
 
 if TYPE_CHECKING:
     from ..score.model import Score
 
     from ..course.model import Course
-    from ..user_group.model import UserGroup, UserGroupReadShort
+    from ..user_group.model import UserGroup
     from ..user.model import User
 
 CURRENT_TIMEZONE = "Europe/Helsinki"
@@ -93,15 +92,24 @@ class GameSessionRead(SQLModel):
 class GameSessionReadShort(GameSessionBase):
     id: int
     course_id: int
-    course: CourseRead
+    course: "CourseRead"
     started_at: datetime
     ended_at: datetime | None = None
+    par: int = 0
+    user_score: int = 0
+
+
+class GameSessionReadShortWithoutCourse(GameSessionBase):
+    id: int
+    started_at: datetime
+    ended_at: datetime | None = None
+    score: int = 0
 
 
 class GameSessionReadLong(GameSessionBase):
     id: int
     course_id: int
-    course: CourseRead
+    course: "CourseRead"
     user_group_id: int
     user_group: UserGroupReadShort
     user_score: CourseScore
@@ -122,3 +130,9 @@ class UpdateGameSession(SQLModel):
 class GameSessionCreate(SQLModel):
     course_id: int
     user_group_id: int
+
+
+from models.course.model import CourseRead
+
+GameSessionReadShort.model_rebuild()
+GameSessionReadLong.model_rebuild()

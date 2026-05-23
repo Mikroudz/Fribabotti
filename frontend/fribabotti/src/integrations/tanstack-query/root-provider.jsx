@@ -62,6 +62,6 @@ export function getContext() {
     const authHandlerRef = { current: null };
     const queryClient = createQueryClient(() => authHandlerRef.current);
 
-    return { queryClient, authHandlerRef };
+    return { queryClient, authHandlerRef, headerTitle: "" };
 }
 export default function TanstackQueryProvider() {}

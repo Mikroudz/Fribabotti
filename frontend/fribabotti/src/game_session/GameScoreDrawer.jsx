@@ -1,14 +1,17 @@
-import { Box, Chip, SwipeableDrawer, Typography } from "@mui/material";
+import { Box, Chip, IconButton, SwipeableDrawer, Typography } from "@mui/material";
 import { useState } from "react";
 import { calcTotalFromScores, PlayersHoleScores } from "./PlayersScores";
-import { useGameSession, useSelectedHole } from "#/hooks/GameSessionHooks";
+import { useGameSession, useHoleChanger, useSelectedHole } from "#/hooks/GameSessionHooks";
 import { prettyParFormat } from "#/components/PrettyPar";
 import { useGameState } from "#/context/GameSessionData";
+import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 export function GameScoreDrawer() {
     const { data: gameSessionData } = useGameSession();
     const selectedHole = useSelectedHole();
     const currentHoleScore = useGameState();
+    const { moveToNextHole, moveToPreviousHole } = useHoleChanger();
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -98,6 +101,8 @@ export function GameScoreDrawer() {
                     width: "100%",
                     bgcolor: "primary.300",
                     overflowY: "auto",
+                    display: "flex",
+                    flexDirection: "column",
                 }}
                 onTouchStart={(e) => e.stopPropagation()}
                 onTouchMove={(e) => {
@@ -107,6 +112,43 @@ export function GameScoreDrawer() {
                     }
                 }}
             >
+                <StyledAnyContentBox
+                    sx={{
+                        bgcolor: "primary.100",
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "center",
+                        m: 0,
+                        gap: 0.5,
+                        flexGrow: 0,
+                        alignSelf: "flex-start",
+                        p: 0,
+                        ml: "auto",
+                        mr: 1,
+                    }}
+                >
+                    <IconButton sx={{ color: "secondary.500" }} onClick={moveToPreviousHole}>
+                        <ChevronLeft fontSize="large" />
+                    </IconButton>
+                    <Box sx={{ textAlign: "center", minWidth: "80px" }}>
+                        <Typography
+                            variant="caption"
+                            color="white"
+                            sx={{ display: "block", opacity: 0.7 }}
+                        >
+                            HOLE
+                        </Typography>
+                        <Typography
+                            variant="h4"
+                            sx={{ fontWeight: "800", color: "white", lineHeight: "1em" }}
+                        >
+                            {selectedHole?.track_number}
+                        </Typography>
+                    </Box>
+                    <IconButton sx={{ color: "secondary.500" }} onClick={moveToNextHole}>
+                        <ChevronRight fontSize="large" />
+                    </IconButton>
+                </StyledAnyContentBox>
                 <PlayersHoleScores
                     gameSessionData={gameSessionData}
                     currentTrack={selectedHole?.track_number}

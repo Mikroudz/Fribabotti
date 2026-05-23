@@ -9,17 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TracksRouteImport } from './routes/tracks'
+import { Route as CourseRouteImport } from './routes/course'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CourseIndexRouteImport } from './routes/course.index'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
-import { Route as TracksTrackIdRouteImport } from './routes/tracks.$trackId'
+import { Route as CourseNewRouteImport } from './routes/course.new'
+import { Route as CourseCourseIdIndexRouteImport } from './routes/course.$courseId.index'
 import { Route as GamesessionGameSessionIdGamesessionRouteImport } from './routes/gamesession_/$gameSessionId/gamesession'
 import { Route as GamesessionGameSessionIdSessionlayoutRouteImport } from './routes/gamesession_/$gameSessionId/_sessionlayout'
+import { Route as CourseCourseIdNewgameRouteImport } from './routes/course.$courseId.newgame'
+import { Route as CourseCourseIdEditRouteImport } from './routes/course.$courseId.edit'
 import { Route as GamesessionGameSessionIdSessionlayoutMapRouteImport } from './routes/gamesession_/$gameSessionId/_sessionlayout.map'
 
-const TracksRoute = TracksRouteImport.update({
-  id: '/tracks',
-  path: '/tracks',
+const CourseRoute = CourseRouteImport.update({
+  id: '/course',
+  path: '/course',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -27,15 +31,25 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CourseIndexRoute = CourseIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => CourseRoute,
+} as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/auth/',
   path: '/auth/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TracksTrackIdRoute = TracksTrackIdRouteImport.update({
-  id: '/$trackId',
-  path: '/$trackId',
-  getParentRoute: () => TracksRoute,
+const CourseNewRoute = CourseNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => CourseRoute,
+} as any)
+const CourseCourseIdIndexRoute = CourseCourseIdIndexRouteImport.update({
+  id: '/$courseId/',
+  path: '/$courseId/',
+  getParentRoute: () => CourseRoute,
 } as any)
 const GamesessionGameSessionIdGamesessionRoute =
   GamesessionGameSessionIdGamesessionRouteImport.update({
@@ -49,6 +63,16 @@ const GamesessionGameSessionIdSessionlayoutRoute =
     path: '/gamesession/$gameSessionId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const CourseCourseIdNewgameRoute = CourseCourseIdNewgameRouteImport.update({
+  id: '/$courseId/newgame',
+  path: '/$courseId/newgame',
+  getParentRoute: () => CourseRoute,
+} as any)
+const CourseCourseIdEditRoute = CourseCourseIdEditRouteImport.update({
+  id: '/$courseId/edit',
+  path: '/$courseId/edit',
+  getParentRoute: () => CourseRoute,
+} as any)
 const GamesessionGameSessionIdSessionlayoutMapRoute =
   GamesessionGameSessionIdSessionlayoutMapRouteImport.update({
     id: '/map',
@@ -58,65 +82,87 @@ const GamesessionGameSessionIdSessionlayoutMapRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/tracks': typeof TracksRouteWithChildren
-  '/tracks/$trackId': typeof TracksTrackIdRoute
+  '/course': typeof CourseRouteWithChildren
+  '/course/new': typeof CourseNewRoute
   '/auth/': typeof AuthIndexRoute
+  '/course/': typeof CourseIndexRoute
+  '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession/$gameSessionId': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/course/$courseId/': typeof CourseCourseIdIndexRoute
   '/gamesession/$gameSessionId/map': typeof GamesessionGameSessionIdSessionlayoutMapRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/tracks': typeof TracksRouteWithChildren
-  '/tracks/$trackId': typeof TracksTrackIdRoute
+  '/course/new': typeof CourseNewRoute
   '/auth': typeof AuthIndexRoute
+  '/course': typeof CourseIndexRoute
+  '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession/$gameSessionId': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/course/$courseId': typeof CourseCourseIdIndexRoute
   '/gamesession/$gameSessionId/map': typeof GamesessionGameSessionIdSessionlayoutMapRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/tracks': typeof TracksRouteWithChildren
-  '/tracks/$trackId': typeof TracksTrackIdRoute
+  '/course': typeof CourseRouteWithChildren
+  '/course/new': typeof CourseNewRoute
   '/auth/': typeof AuthIndexRoute
+  '/course/': typeof CourseIndexRoute
+  '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession_/$gameSessionId/_sessionlayout': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession_/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
+  '/course/$courseId/': typeof CourseCourseIdIndexRoute
   '/gamesession_/$gameSessionId/_sessionlayout/map': typeof GamesessionGameSessionIdSessionlayoutMapRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/tracks'
-    | '/tracks/$trackId'
+    | '/course'
+    | '/course/new'
     | '/auth/'
+    | '/course/'
+    | '/course/$courseId/edit'
+    | '/course/$courseId/newgame'
     | '/gamesession/$gameSessionId'
     | '/gamesession/$gameSessionId/gamesession'
+    | '/course/$courseId/'
     | '/gamesession/$gameSessionId/map'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/tracks'
-    | '/tracks/$trackId'
+    | '/course/new'
     | '/auth'
+    | '/course'
+    | '/course/$courseId/edit'
+    | '/course/$courseId/newgame'
     | '/gamesession/$gameSessionId'
     | '/gamesession/$gameSessionId/gamesession'
+    | '/course/$courseId'
     | '/gamesession/$gameSessionId/map'
   id:
     | '__root__'
     | '/'
-    | '/tracks'
-    | '/tracks/$trackId'
+    | '/course'
+    | '/course/new'
     | '/auth/'
+    | '/course/'
+    | '/course/$courseId/edit'
+    | '/course/$courseId/newgame'
     | '/gamesession_/$gameSessionId/_sessionlayout'
     | '/gamesession_/$gameSessionId/gamesession'
+    | '/course/$courseId/'
     | '/gamesession_/$gameSessionId/_sessionlayout/map'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  TracksRoute: typeof TracksRouteWithChildren
+  CourseRoute: typeof CourseRouteWithChildren
   AuthIndexRoute: typeof AuthIndexRoute
   GamesessionGameSessionIdSessionlayoutRoute: typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   GamesessionGameSessionIdGamesessionRoute: typeof GamesessionGameSessionIdGamesessionRoute
@@ -124,11 +170,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/tracks': {
-      id: '/tracks'
-      path: '/tracks'
-      fullPath: '/tracks'
-      preLoaderRoute: typeof TracksRouteImport
+    '/course': {
+      id: '/course'
+      path: '/course'
+      fullPath: '/course'
+      preLoaderRoute: typeof CourseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -138,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/course/': {
+      id: '/course/'
+      path: '/'
+      fullPath: '/course/'
+      preLoaderRoute: typeof CourseIndexRouteImport
+      parentRoute: typeof CourseRoute
+    }
     '/auth/': {
       id: '/auth/'
       path: '/auth'
@@ -145,12 +198,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tracks/$trackId': {
-      id: '/tracks/$trackId'
-      path: '/$trackId'
-      fullPath: '/tracks/$trackId'
-      preLoaderRoute: typeof TracksTrackIdRouteImport
-      parentRoute: typeof TracksRoute
+    '/course/new': {
+      id: '/course/new'
+      path: '/new'
+      fullPath: '/course/new'
+      preLoaderRoute: typeof CourseNewRouteImport
+      parentRoute: typeof CourseRoute
+    }
+    '/course/$courseId/': {
+      id: '/course/$courseId/'
+      path: '/$courseId'
+      fullPath: '/course/$courseId/'
+      preLoaderRoute: typeof CourseCourseIdIndexRouteImport
+      parentRoute: typeof CourseRoute
     }
     '/gamesession_/$gameSessionId/gamesession': {
       id: '/gamesession_/$gameSessionId/gamesession'
@@ -166,6 +226,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesessionGameSessionIdSessionlayoutRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/course/$courseId/newgame': {
+      id: '/course/$courseId/newgame'
+      path: '/$courseId/newgame'
+      fullPath: '/course/$courseId/newgame'
+      preLoaderRoute: typeof CourseCourseIdNewgameRouteImport
+      parentRoute: typeof CourseRoute
+    }
+    '/course/$courseId/edit': {
+      id: '/course/$courseId/edit'
+      path: '/$courseId/edit'
+      fullPath: '/course/$courseId/edit'
+      preLoaderRoute: typeof CourseCourseIdEditRouteImport
+      parentRoute: typeof CourseRoute
+    }
     '/gamesession_/$gameSessionId/_sessionlayout/map': {
       id: '/gamesession_/$gameSessionId/_sessionlayout/map'
       path: '/map'
@@ -176,16 +250,24 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface TracksRouteChildren {
-  TracksTrackIdRoute: typeof TracksTrackIdRoute
+interface CourseRouteChildren {
+  CourseNewRoute: typeof CourseNewRoute
+  CourseIndexRoute: typeof CourseIndexRoute
+  CourseCourseIdEditRoute: typeof CourseCourseIdEditRoute
+  CourseCourseIdNewgameRoute: typeof CourseCourseIdNewgameRoute
+  CourseCourseIdIndexRoute: typeof CourseCourseIdIndexRoute
 }
 
-const TracksRouteChildren: TracksRouteChildren = {
-  TracksTrackIdRoute: TracksTrackIdRoute,
+const CourseRouteChildren: CourseRouteChildren = {
+  CourseNewRoute: CourseNewRoute,
+  CourseIndexRoute: CourseIndexRoute,
+  CourseCourseIdEditRoute: CourseCourseIdEditRoute,
+  CourseCourseIdNewgameRoute: CourseCourseIdNewgameRoute,
+  CourseCourseIdIndexRoute: CourseCourseIdIndexRoute,
 }
 
-const TracksRouteWithChildren =
-  TracksRoute._addFileChildren(TracksRouteChildren)
+const CourseRouteWithChildren =
+  CourseRoute._addFileChildren(CourseRouteChildren)
 
 interface GamesessionGameSessionIdSessionlayoutRouteChildren {
   GamesessionGameSessionIdSessionlayoutMapRoute: typeof GamesessionGameSessionIdSessionlayoutMapRoute
@@ -204,7 +286,7 @@ const GamesessionGameSessionIdSessionlayoutRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  TracksRoute: TracksRouteWithChildren,
+  CourseRoute: CourseRouteWithChildren,
   AuthIndexRoute: AuthIndexRoute,
   GamesessionGameSessionIdSessionlayoutRoute:
     GamesessionGameSessionIdSessionlayoutRouteWithChildren,

@@ -2826,6 +2826,7 @@ __metadata:
     lucide-react: "npm:^0.545.0"
     react: "npm:19.0.0-rc.1"
     react-dom: "npm:19.0.0-rc.1"
+    react-hook-form: "npm:^7.76.0"
     react-leaflet: "npm:5.0.0-rc.2"
     tailwindcss: "npm:^4.1.18"
     typescript: "npm:^6.0.2"
@@ -3698,6 +3699,15 @@ __metadata:
   peerDependencies:
     react: 19.0.0-rc.1
   checksum: 10c0/26fba423f41c8b3c7a47278ea490146506333175028e111e49eb39310110b6bda956cc772c77412abc8a7f28244eea80ebade15ec5b4382d79e2ac1b39bd2d0c
+  languageName: node
+  linkType: hard
+
+"react-hook-form@npm:^7.76.0":
+  version: 7.76.0
+  resolution: "react-hook-form@npm:7.76.0"
+  peerDependencies:
+    react: ^16.8.0 || ^17 || ^18 || ^19
+  checksum: 10c0/b78ff45a5beca6a954d8ef513031c484f9f30f726c174957228866c9faf0528e24dd5523dac850a8dd6db46753ca3485aae0cd61772f9a131a1a77293bb6931c
   languageName: node
   linkType: hard
 

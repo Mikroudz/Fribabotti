@@ -16,7 +16,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
-const IncDecButton = styled(Button)(() => ({
+export const IncDecButton = styled(Button)(() => ({
     fontSize: "24px",
     padding: 0,
     lineHeight: 1.55,
@@ -115,7 +115,7 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
 
     return (
         <StyledListItem
-            sx={{ pt: 0.75, pb: 0.75 }}
+            sx={{ pt: 0, pb: 0 }}
             key={userData.username}
             secondaryAction={
                 <ScoreControl

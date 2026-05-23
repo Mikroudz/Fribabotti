@@ -10,7 +10,12 @@ import RoomIcon from "@mui/icons-material/Room";
 import { getShortDistance } from "#/utils/helpers";
 import { getPositionAsync } from "#/hooks/usePosition";
 import { GameScoreDrawer } from "./GameScoreDrawer";
-import { GAME_SESSION_KEY, useGameSession, useSelectedHole } from "#/hooks/GameSessionHooks";
+import {
+    GAME_SESSION_KEY,
+    useGameSession,
+    useHoleChanger,
+    useSelectedHole,
+} from "#/hooks/GameSessionHooks";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createThrow } from "#/utils/api";
 import { useParams } from "@tanstack/react-router";
@@ -49,7 +54,7 @@ function SelectHole({ data }) {
     const [selectOpen, setSelectOpen] = useState(false);
     const [hole, setHole] = useState("");
     const queryClient = useQueryClient();
-    const selectedHole = useSelectedHole();
+    const { track_number } = useSelectedHole();
 
     const handleClose = () => {
         setSelectOpen(false);
@@ -59,17 +64,11 @@ function SelectHole({ data }) {
     };
 
     useEffect(() => {
-        // TODO: clean hole selection if we change session
-        // initially select first hole if nothing is set
-    }, [data]);
-
-    useEffect(() => {
         if (
             Array.isArray(data?.scores) &&
-            (selectedHole.track_number === "" ||
-                selectedHole.track_number === undefined ||
-                data?.scores?.findIndex((val) => val.track_number === selectedHole.track_number) !==
-                    -1)
+            (track_number === "" ||
+                track_number === undefined ||
+                data?.scores?.findIndex((val) => val.track_number === track_number) === -1)
         ) {
             handleSelectHole({ target: { value: data?.scores?.[0].track_number } });
         }
@@ -91,9 +90,7 @@ function SelectHole({ data }) {
         queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], { track_number: e.target.value });
     };
 
-    const hole_idx = data?.scores?.findIndex(
-        (val) => val.track_number === selectedHole.track_number,
-    );
+    const hole_idx = data?.scores?.findIndex((val) => val.track_number === track_number);
     const current_hole_par =
         hole_idx !== undefined && hole_idx !== -1 ? data.scores[hole_idx].par : 0;
 
@@ -114,7 +111,7 @@ function SelectHole({ data }) {
             <Box>
                 <Select
                     variant="standard"
-                    value={hole}
+                    value={track_number}
                     open={selectOpen}
                     onOpen={handleOpen}
                     onClose={handleClose}
@@ -223,6 +220,7 @@ function GameControls({ scoreData }) {
     const params = useParams({ strict: false });
     const { gameSessionId } = params;
     const mutate = useMutateThrow();
+    const { moveToNextHole } = useHoleChanger();
 
     const handleNewThrow = () => {
         // TODO: prompt user to allow location if we dont get it
@@ -238,23 +236,6 @@ function GameControls({ scoreData }) {
                 start_lat: testPos[0] + randomOffset,
                 start_lng: testPos[1] + randomOffset2,
             },
-        });
-    };
-
-    const handleNextHole = () => {
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => {
-            let next_track_num = 1;
-            if (Array.isArray(scoreData?.scores)) {
-                const track_num_idx = scoreData?.scores.findIndex(
-                    (val) => val.track_number === prev.track_number,
-                );
-                next_track_num = prev.track_number;
-                if (scoreData?.scores.length > track_num_idx + 1) {
-                    next_track_num = scoreData?.scores[track_num_idx + 1].track_number;
-                }
-            }
-
-            return { ...prev, track_number: next_track_num };
         });
     };
 
@@ -329,7 +310,7 @@ function GameControls({ scoreData }) {
                         pl: 1.5,
                         minWidth: "64px",
                     }}
-                    onClick={handleNextHole}
+                    onClick={moveToNextHole}
                 >
                     Next
                     <NavigateNextIcon />
