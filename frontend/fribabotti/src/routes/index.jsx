@@ -1,8 +1,10 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { GameSessionList } from "../game_session/GameSessionList";
-import { Button } from "@mui/material";
-import { Route as CourseRoute } from "./course.index";
+import { Box, Button, Typography } from "@mui/material";
+import { Route as NewGameRoute } from "./gamesession_/new";
+
 import { useGameSessions } from "#/hooks/GameSessionHooks";
+import BottomAddButton from "#/components/BottomAddButton";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -11,19 +13,18 @@ function Home() {
     // where we could construct like main view from smaller components easily
     // like sessions, top scores, other fun things
     const { data: gameSessions, status } = useGameSessions();
+    const navigate = useNavigate();
 
     return (
-        <>
-            <GameSessionList gameSessions={gameSessions} />
-            <Button
-                nativeButton={false}
-                variant="contained"
-                sx={{ bgcolor: "secondary.main", width: "100%" }}
-                component={Link}
-                to={CourseRoute.to}
-            >
-                Courses
-            </Button>
-        </>
+        <Box sx={{ m: 1 }}>
+            <Typography>Ongoing Games</Typography>
+            <GameSessionList gameSessions={gameSessions.filter((val) => val.ended_at === null)} />
+            <Typography>Past Games</Typography>
+            <GameSessionList gameSessions={gameSessions.filter((val) => val.ended_at)} />
+
+            <BottomAddButton onClick={async () => await navigate({ to: NewGameRoute.to })} extended>
+                New Game
+            </BottomAddButton>
+        </Box>
     );
 }

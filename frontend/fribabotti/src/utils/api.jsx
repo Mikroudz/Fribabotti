@@ -54,6 +54,11 @@ export async function createGameSession({ data, method = "POST" }) {
     return baseFetch(url, { method: method, body: JSON.stringify(data) });
 }
 
+export async function endGameSession({ data, session_id }) {
+    const { close = true } = data;
+    return baseFetch(`/game_session/${session_id}/end?close=${close}`, { method: "PATCH" });
+}
+
 export async function getCourse({ queryKey }) {
     const [_key, course_id] = queryKey;
     return baseFetch(`/courses/${course_id}`);

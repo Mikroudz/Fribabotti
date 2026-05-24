@@ -20,7 +20,8 @@ export const USER_GROUPS_KEY = "ALL_USER_GROUPS";
 export const useGameSessions = (notifyOnChangeProps) => {
     return useQuery({
         queryKey: [GAME_SESSIONS_KEY],
-        queryFn: getGameSessions,
+        queryFn: () => getGameSessions({ limit: 15 }),
+        initialData: [],
         notifyOnChangeProps,
     });
 };

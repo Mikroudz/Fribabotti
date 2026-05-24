@@ -123,12 +123,29 @@ def delete_course(session: Session, course_id: int):
 
 
 def read_courses(session: Session, game_id: int | None = None) -> List[Course]:
-    stmt = select(Course)
+    stmt = select(Course, func.sum(Track.par).label("par")).join(Track)
     if game_id:
         stmt = stmt.where(Course.game_id == game_id)
 
     courses = session.exec(stmt).all()
     return courses
+
+
+def read_courses_short(
+    session: Session, game_id: int | None = None
+) -> List[CourseReadShort]:
+    stmt = (
+        select(Course, func.count(Track.track_number).label("holes"))
+        .join(Track, Track.course_id == Course.id)
+        .group_by(Course.id)
+    )
+    if game_id:
+        stmt = stmt.where(Course.game_id == game_id)
+
+    courses = session.exec(stmt).all()
+    return [
+        CourseReadShort(**course.model_dump(), holes=holes) for course, holes in courses
+    ]
 
 
 def read_course(session: Session, course_id: int) -> Course:

@@ -12,6 +12,7 @@ from models.course.crud import (
     create_course_with_tracks,
     update_course_with_tracks,
     delete_course,
+    read_courses_short,
 )
 
 from models.game.crud import read_games
@@ -47,7 +48,7 @@ async def course_read(
 @router.get("", response_model=List[CourseReadShort])
 async def courses_read(*, request: Request, session: Session = Depends(get_session)):
 
-    return read_courses(session, get_game_id(session))
+    return read_courses_short(session, get_game_id(session))
 
 
 @router.post("", response_model=CourseWithStats)

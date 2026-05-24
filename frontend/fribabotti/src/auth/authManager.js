@@ -43,7 +43,7 @@ export function createAuthManager({ queryClient, router }) {
                             await executeSignOut();
                         } finally {
                             signingOut = false;
-                            navigate({ to: "/auth" });
+                            router.navigate({ to: "/auth" });
                         }
                     }
                 }

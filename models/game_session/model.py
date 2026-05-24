@@ -115,6 +115,7 @@ class GameSessionReadLong(GameSessionBase):
     user_score: CourseScore
     started_at: datetime
     ended_at: datetime | None = None
+    playtime: int = 0
     # should we return scores for all users or only current here?
 
 

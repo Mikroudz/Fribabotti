@@ -24,3 +24,12 @@ export function getShortDistance(lat1, lon1, lat2, lon2) {
     const y = ((lat2 - lat1) * Math.PI) / 180;
     return (Math.sqrt(x * x + y * y) * R).toFixed(1);
 }
+
+export function formatSecondsToTime(totalSeconds) {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+
+    // Convert to strings and pad with leading zeros if they are single digits
+
+    return `${hours}h ${minutes}m`;
+}

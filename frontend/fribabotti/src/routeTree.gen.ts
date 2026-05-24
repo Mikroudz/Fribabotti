@@ -13,6 +13,7 @@ import { Route as CourseRouteImport } from './routes/course'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CourseIndexRouteImport } from './routes/course.index'
 import { Route as AuthIndexRouteImport } from './routes/auth.index'
+import { Route as GamesessionNewRouteImport } from './routes/gamesession_/new'
 import { Route as CourseNewRouteImport } from './routes/course.new'
 import { Route as CourseCourseIdIndexRouteImport } from './routes/course.$courseId.index'
 import { Route as GamesessionGameSessionIdGamesessionRouteImport } from './routes/gamesession_/$gameSessionId/gamesession'
@@ -39,6 +40,11 @@ const CourseIndexRoute = CourseIndexRouteImport.update({
 const AuthIndexRoute = AuthIndexRouteImport.update({
   id: '/auth/',
   path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GamesessionNewRoute = GamesessionNewRouteImport.update({
+  id: '/gamesession_/new',
+  path: '/gamesession/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CourseNewRoute = CourseNewRouteImport.update({
@@ -84,6 +90,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/course': typeof CourseRouteWithChildren
   '/course/new': typeof CourseNewRoute
+  '/gamesession/new': typeof GamesessionNewRoute
   '/auth/': typeof AuthIndexRoute
   '/course/': typeof CourseIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
@@ -96,6 +103,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/course/new': typeof CourseNewRoute
+  '/gamesession/new': typeof GamesessionNewRoute
   '/auth': typeof AuthIndexRoute
   '/course': typeof CourseIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
@@ -110,6 +118,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/course': typeof CourseRouteWithChildren
   '/course/new': typeof CourseNewRoute
+  '/gamesession_/new': typeof GamesessionNewRoute
   '/auth/': typeof AuthIndexRoute
   '/course/': typeof CourseIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
@@ -125,6 +134,7 @@ export interface FileRouteTypes {
     | '/'
     | '/course'
     | '/course/new'
+    | '/gamesession/new'
     | '/auth/'
     | '/course/'
     | '/course/$courseId/edit'
@@ -137,6 +147,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/course/new'
+    | '/gamesession/new'
     | '/auth'
     | '/course'
     | '/course/$courseId/edit'
@@ -150,6 +161,7 @@ export interface FileRouteTypes {
     | '/'
     | '/course'
     | '/course/new'
+    | '/gamesession_/new'
     | '/auth/'
     | '/course/'
     | '/course/$courseId/edit'
@@ -163,6 +175,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CourseRoute: typeof CourseRouteWithChildren
+  GamesessionNewRoute: typeof GamesessionNewRoute
   AuthIndexRoute: typeof AuthIndexRoute
   GamesessionGameSessionIdSessionlayoutRoute: typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   GamesessionGameSessionIdGamesessionRoute: typeof GamesessionGameSessionIdGamesessionRoute
@@ -196,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gamesession_/new': {
+      id: '/gamesession_/new'
+      path: '/gamesession/new'
+      fullPath: '/gamesession/new'
+      preLoaderRoute: typeof GamesessionNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/course/new': {
@@ -287,6 +307,7 @@ const GamesessionGameSessionIdSessionlayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CourseRoute: CourseRouteWithChildren,
+  GamesessionNewRoute: GamesessionNewRoute,
   AuthIndexRoute: AuthIndexRoute,
   GamesessionGameSessionIdSessionlayoutRoute:
     GamesessionGameSessionIdSessionlayoutRouteWithChildren,

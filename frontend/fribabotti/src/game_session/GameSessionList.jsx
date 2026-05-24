@@ -7,7 +7,7 @@ import { Route as GameSessionRoute } from "#/routes/gamesession_/$gameSessionId/
 
 export function GameSessionList({ gameSessions }) {
     return (
-        <List dense sx={{ m: 1 }}>
+        <List dense>
             {gameSessions?.map((val) => (
                 <StyledListItem
                     key={val.id}
@@ -29,6 +29,7 @@ export function GameSessionList({ gameSessions }) {
                         component={Link}
                         to={GameSessionRoute.to}
                         params={{ gameSessionId: val.id }}
+                        from=""
                     >
                         <ListItemText
                             primary={val?.course?.name}

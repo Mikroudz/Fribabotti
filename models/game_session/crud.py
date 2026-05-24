@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from sqlmodel import Session, select, and_, asc, desc, func
+from sqlmodel import Session, select, and_, asc, desc, func, case
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone
@@ -38,11 +38,7 @@ def create_game_session(
         session.add(game)
         session.commit()
         session.refresh(game)
-        return session.exec(
-            select(GameSession)
-            .options(selectinload(GameSession.course))
-            .where(GameSession.id == game.id)
-        ).first()
+        return game
 
 
 def read_game_session_user(
@@ -97,6 +93,7 @@ def read_game_session_user(
             GameSession.id == subq.c.game_session_id,
         )
         .where(SessionParticipantsLink.user_id == user_id)
+        .order_by(GameSession.ended_at.desc().nulls_first())
     )
 
     if active is not None:
@@ -121,8 +118,25 @@ def read_game_session_user(
 def read_game_session_long(
     session: Session, user_id: int, game_session_id: int
 ) -> GameSessionReadLong | None:
+
+    db_type = session.bind.dialect.name
+    if db_type == "sqlite":
+        end_sec = func.unixepoch(func.max(Score.created_at))
+        start_sec = func.unixepoch(func.min(Score.created_at))
+        time_diff = end_sec - start_sec
+    else:
+        time_diff = func.unix_timestamp(
+            func.max(Score.created_at)
+        ) - func.unix_timestamp(func.min(Score.created_at))
+
+    # note that playtime is limited to 6 hours; set to 0 if we go over that (something weird has happened with the scores)
     stmt = (
-        select(GameSession)
+        select(
+            GameSession,
+            case(
+                (time_diff > (6 * 3600), 0), (time_diff == None, 0), else_=time_diff
+            ).label("playtime"),
+        )
         .options(
             selectinload(GameSession.course).selectinload(Course.tracks),
             selectinload(GameSession.scores).selectinload(Score.throws),
@@ -132,6 +146,7 @@ def read_game_session_long(
             SessionParticipantsLink,
             GameSession.id == SessionParticipantsLink.game_session_id,
         )
+        .outerjoin(Score, Score.game_session_id == GameSession.id)
         .where(
             and_(
                 SessionParticipantsLink.user_id == user_id,
@@ -142,6 +157,7 @@ def read_game_session_long(
     res = session.exec(stmt).first()
     if res == None:
         return None
+    res, playtime = res
     # TODO: actually get scores for all users if requested idk
     user = read_user(session, user_id)
 
@@ -176,6 +192,7 @@ def read_game_session_long(
         user_score=scores,
         started_at=res.started_at,
         ended_at=res.ended_at,
+        playtime=playtime,
     )
     return game
 
@@ -253,13 +270,15 @@ def read_game_session(session: Session, session_id: int) -> GameSession | None:
     return session.exec(stmt).first()
 
 
-def end_game_session(session: Session, session_id: int):
-
+def end_game_session(
+    session: Session, session_id: int, close: bool = True, read: bool = True
+):
     db_session = session.get(GameSession, session_id)
     if db_session:
-        setattr(db_session, "ended_at", datetime.now(timezone.utc))
+        setattr(db_session, "ended_at", datetime.now(timezone.utc) if close else None)
+        session.add(db_session)
         session.commit()
-        return read_game_session(session, session_id)
+        return read_game_session(session, session_id) if read else {"status": "ok"}
 
 
 def reopen_game_session(session: Session, session_id: int):

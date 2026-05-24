@@ -88,30 +88,43 @@ export function ScoreCard({ data }) {
                                     </Typography>
                                 </Box>
                             ))}
-                            <Box
-                                sx={{
-                                    display: "flex",
-                                    flexDirection: "column",
-                                    fontWeight: "bold",
-                                    alignItems: "center",
-                                }}
-                            >
-                                <Typography component="span" sx={{ fontSize: "13px", flexGrow: 1 }}>
-                                    total
-                                </Typography>
-                                <Typography
-                                    component="span"
-                                    sx={{ color: "text.secondary", fontSize: "13px", flexGrow: 1 }}
+                            {chunkIndex + 1 >= chunked.length && (
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        fontWeight: "bold",
+                                        alignItems: "center",
+                                    }}
                                 >
-                                    0
-                                </Typography>
-                                <Typography
-                                    component="span"
-                                    sx={{ color: "text.secondary", fontSize: "13px", flexGrow: 1 }}
-                                >
-                                    {trackTotalPar}
-                                </Typography>
-                            </Box>
+                                    <Typography
+                                        component="span"
+                                        sx={{ fontSize: "13px", flexGrow: 1 }}
+                                    >
+                                        total
+                                    </Typography>
+                                    <Typography
+                                        component="span"
+                                        sx={{
+                                            color: "text.secondary",
+                                            fontSize: "13px",
+                                            flexGrow: 1,
+                                        }}
+                                    >
+                                        0
+                                    </Typography>
+                                    <Typography
+                                        component="span"
+                                        sx={{
+                                            color: "text.secondary",
+                                            fontSize: "13px",
+                                            flexGrow: 1,
+                                        }}
+                                    >
+                                        {trackTotalPar}
+                                    </Typography>
+                                </Box>
+                            )}
                         </Box>
                         {user_scores.map((user) => (
                             <Box
@@ -152,26 +165,28 @@ export function ScoreCard({ data }) {
                                         </Box>
                                     );
                                 })}
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                    }}
-                                >
-                                    <PrettyPar
-                                        wrap={false}
-                                        score={user.total_score}
-                                        par={user.par}
-                                        sx={{ lineHeight: "1em" }}
-                                    />
-                                    <Typography
-                                        component="span"
-                                        sx={{ fontSize: "14px", lineHeight: "1em" }}
+                                {chunkIndex + 1 >= chunked.length && (
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                        }}
                                     >
-                                        ({user.total_score})
-                                    </Typography>
-                                </Box>
+                                        <PrettyPar
+                                            wrap={false}
+                                            score={user.total_score}
+                                            par={user.par}
+                                            sx={{ lineHeight: "1em" }}
+                                        />
+                                        <Typography
+                                            component="span"
+                                            sx={{ fontSize: "14px", lineHeight: "1em" }}
+                                        >
+                                            ({user.total_score})
+                                        </Typography>
+                                    </Box>
+                                )}
                             </Box>
                         ))}
                     </Box>

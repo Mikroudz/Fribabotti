@@ -1,7 +1,7 @@
-import { List, ListItemText } from "@mui/material";
+import { List, ListItemSecondaryAction, ListItemText } from "@mui/material";
 import { useCourses } from "../hooks/GameSessionHooks";
 import { StyledListItem, StyledListItemButton } from "#/components/List";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { Route as CourseRoute } from "#/routes/course.$courseId.index";
 
 export function CourseList() {
@@ -19,6 +19,7 @@ export function CourseList() {
                         from={location.pathname}
                     >
                         <ListItemText primary={val?.name} />
+                        <ListItemSecondaryAction>{val?.holes} holes</ListItemSecondaryAction>
                     </StyledListItemButton>
                 </StyledListItem>
             ))}

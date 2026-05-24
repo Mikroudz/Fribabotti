@@ -5,6 +5,7 @@ import { CssBaseline } from "@mui/material";
 import { RouterProvider } from "@tanstack/react-router";
 import { getRouter } from "./router";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { AppBarPortalProvider } from "./context/AppBarPortal";
 
 const router = getRouter();
 
@@ -14,7 +15,9 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <MuiTheme>
-                <RouterProvider router={router} />
+                <AppBarPortalProvider>
+                    <RouterProvider router={router} />
+                </AppBarPortalProvider>
             </MuiTheme>
         </QueryClientProvider>
     );

@@ -9,6 +9,8 @@ from models.game_session.crud import (
     create_game_session,
     read_game_session,
     read_game_session_long,
+    end_game_session,
+    delete_game_session,
 )
 from models.game_session.model import (
     GameSessionCreate,
@@ -47,7 +49,11 @@ async def game_sessions_read(
     # TODO: add params to read read non active also
     # TODO: create own reading function for api
     return read_game_session_user(
-        session, user_id=request.state.user_id, course_id=course_id, limit=limit
+        session,
+        user_id=request.state.user_id,
+        course_id=course_id,
+        limit=limit,
+        active=None,
     )
 
 
@@ -80,12 +86,29 @@ async def game_session_update(
     return
 
 
-@router.delete("/{expense_id}")
+@router.delete("/{gamesession_id}")
 async def game_session_delete(
     *,
     request: Request,
     session: Session = Depends(get_session),
-    expense_id: int,
+    gamesession_id: int,
 ):
-
+    # TODO: check if user has permission to delete
+    delete_game_session(session, gamesession_id)
     return {"status": "ok"}
+
+
+# this is separate, but does not need to be. Could be just a part of update
+@router.patch("/{gamesession_id}/end", response_model=GameSessionReadLong)
+async def game_session_end(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    gamesession_id: int,
+    close: bool = True,
+):
+    # TODO: check if user has permission to end
+    end_game_session(session, gamesession_id, close=close, read=False)
+    return read_game_session_long(
+        session, user_id=request.state.user_id, game_session_id=gamesession_id
+    )

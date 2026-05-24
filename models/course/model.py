@@ -55,3 +55,4 @@ class CourseRead(CourseBase):
 class CourseReadShort(SQLModel):
     name: str | None = None
     id: int
+    holes: int = 0

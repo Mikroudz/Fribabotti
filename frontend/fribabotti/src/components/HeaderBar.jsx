@@ -1,6 +1,8 @@
 import { AppBar, IconButton, Toolbar, Typography } from "@mui/material";
 import { useCanGoBack, useMatches, useRouter } from "@tanstack/react-router";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { AppBarPortalSlot } from "#/context/AppBarPortal";
+
 export function HeaderBar() {
     const router = useRouter();
     const canGoBack = useCanGoBack();
@@ -29,7 +31,10 @@ export function HeaderBar() {
                         <ArrowBackIcon />
                     </IconButton>
                 )}
-                <Typography variant="h6">{currentTitle}</Typography>
+                <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                    {currentTitle}
+                </Typography>
+                <AppBarPortalSlot />
             </Toolbar>
         </AppBar>
     );

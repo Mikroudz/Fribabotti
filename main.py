@@ -8,6 +8,11 @@ from telegram.ext import (
 )
 
 import asyncio
+import sys
+
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -100,7 +105,13 @@ app.include_router(group.router, prefix="/api/v1")
 
 async def main():
     create_db_and_tables()
-    config = uvicorn.Config(app, host="0.0.0.0", port=8000, loop="asyncio", reload=True)
+    config = uvicorn.Config(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        loop="asyncio",
+        reload=True,
+    )
     server = uvicorn.Server(config)
 
     await asyncio.gather(server.serve(), run_bot(), return_exceptions=True)

@@ -6,6 +6,7 @@ from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 from pydantic_extra_types.coordinate import Coordinate
 from models.throw.model import ThrowReadLong
 from models.course.model import CourseRead
+from datetime import datetime
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
@@ -48,6 +49,13 @@ class Score(ScoreBase, table=True):
     game_session: Optional["GameSession"] = Relationship(back_populates="scores")
 
     throws: List["Throw"] = Relationship(back_populates="score")
+
+    created_at: Optional[datetime] = Field(
+        default=None,
+        sa_column_kwargs={
+            "server_default": text("CURRENT_TIMESTAMP"),
+        },
+    )
 
 
 class HoleReadLong(SQLModel):
