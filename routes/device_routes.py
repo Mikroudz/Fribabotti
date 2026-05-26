@@ -9,8 +9,9 @@ from models.game_session.model import (
     ThrowRead,
     UpdateGameSession,
     GameSessionShort,
+    DeviceUpdateGameSession,
 )
-from models.score.crud import read_scores, update_game_session
+from models.score.crud import read_scores, update_game_session_device
 from models.game_session.crud import read_game_session_user
 
 from models.device_sessions.crud import (
@@ -40,7 +41,7 @@ async def game_session_read(
     out = GameSessionRead()
 
     for score, track in scores:
-        score_num = 0 if score == None else score.score + track.par
+        score_num = 0 if score == None else score.score
         out.holes.append(ThrowRead(throws=[20] * score_num, par=track.par))
     return out
 
@@ -55,7 +56,7 @@ async def game_session_list(
     user_active_games = read_game_session_user(session, user_id, active=True)
     out = list()
 
-    for game, _ in user_active_games:
+    for game in user_active_games:
         out.append(
             GameSessionShort(
                 id=game.id,
@@ -69,11 +70,10 @@ async def game_session_list(
 @router.post("/{session_id}")
 async def game_session_update(
     *,
-    request: Request,
     session: Session = Depends(get_session),
-    data: UpdateGameSession,
+    data: DeviceUpdateGameSession,
     session_id: int,
     user_id: int = Depends(get_user_id_device),
 ):
     # TODO: add timestamp from watch: if requests come in incorrect order we can deduce if we should update database values
-    return update_game_session(session, session_id, user_id, data)
+    return update_game_session_device(session, session_id, user_id, data)

@@ -79,15 +79,16 @@ export const useGameSession = (game_session_id = null, notifyOnChangeProps) => {
 };
 
 export const useSelectedHole = () => {
-    const { data: selectedHole } = useQuery({
+    const { data } = useQuery({
         queryKey: ["CURRENT_SELECTED_HOLE"],
         enabled: false,
         staleTime: Infinity,
+        gcTime: Infinity,
         initialData: { track_number: "", hole_count: null },
-        queryFn: () => Promise.resolve([]),
+        queryFn: () => Promise.resolve({ track_number: "", hole_count: null }),
     });
 
-    return selectedHole;
+    return data;
 };
 
 export const useHoleChanger = () => {

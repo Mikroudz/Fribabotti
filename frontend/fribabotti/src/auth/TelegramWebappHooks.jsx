@@ -1,7 +1,12 @@
-import { useCallback, useRef } from "react";
-import { USER_QUERY_KEY, useSignIn } from "./UserHooks";
+import { USER_QUERY_KEY } from "./UserHooks";
 import { isTelegramApp, TELEGRAM_AUTH_TYPES } from "../utils/telegramHelpers";
-import { useRawInitData, useLaunchParams, retrieveRawLaunchParams } from "@tma.js/sdk-react";
+import {
+    useRawInitData,
+    useLaunchParams,
+    retrieveRawLaunchParams,
+    retrieveLaunchParams,
+    retrieveRawInitData,
+} from "@tma.js/sdk-react";
 import { telegramAuth } from "../utils/api";
 
 export function useLaunchDataTg() {
@@ -22,9 +27,15 @@ export function useRawTgInitData() {
 
 export async function executeTgWebAppAuth(queryClient) {
     if (isTelegramApp()) {
-        const launchParam = retrieveRawLaunchParams();
+        const launchParam = retrieveRawInitData();
+        console.log("Trying to auth via webapp");
+        const authData = {
+            type: TELEGRAM_AUTH_TYPES.webapp,
+            value: launchParam,
+        };
+        let result;
         try {
-            const result = await telegramAuth(launchParam);
+            result = await telegramAuth(authData);
         } catch {
             return false;
         }
@@ -33,7 +44,7 @@ export async function executeTgWebAppAuth(queryClient) {
     }
     return false;
 }
-
+/*
 export function TgWebAppAuth(queryClient, nav) {
     const signInMutation = useSignIn(queryClient, nav);
     const launchData = useLaunchDataTg();
@@ -67,4 +78,4 @@ export function TgWebAppAuth(queryClient, nav) {
     }, [signInMutation, launchData, launchParamRaw]);
 
     return signInWithWebApp;
-}
+}*/

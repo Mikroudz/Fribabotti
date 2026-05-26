@@ -1,5 +1,5 @@
 import { useGameSession, useSelectedHole } from "#/hooks/GameSessionHooks";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useMemo } from "react";
 
 const GameSessionContext = createContext({});
 

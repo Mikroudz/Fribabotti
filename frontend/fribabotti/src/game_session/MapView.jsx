@@ -52,7 +52,6 @@ const StyledContentBox = styled(Box)(({ theme }) => ({
 
 function SelectHole({ data }) {
     const [selectOpen, setSelectOpen] = useState(false);
-    const [hole, setHole] = useState("");
     const queryClient = useQueryClient();
     const { track_number } = useSelectedHole();
 
@@ -62,17 +61,6 @@ function SelectHole({ data }) {
     const handleOpen = () => {
         setSelectOpen(true);
     };
-
-    useEffect(() => {
-        if (
-            Array.isArray(data?.scores) &&
-            (track_number === "" ||
-                track_number === undefined ||
-                data?.scores?.findIndex((val) => val.track_number === track_number) === -1)
-        ) {
-            handleSelectHole({ target: { value: data?.scores?.[0].track_number } });
-        }
-    }, [data]);
 
     const handleBoxClick = (e) => {
         // e.currentTarget is the StyledContentBox.
@@ -84,10 +72,24 @@ function SelectHole({ data }) {
         }
         setSelectOpen(true);
     };
+    useEffect(() => {
+        if (
+            (track_number === "" ||
+                track_number === undefined ||
+                (Array.isArray(data?.scores) &&
+                    data?.scores.findIndex((val) => val.track_number === track_number) === -1)) &&
+            Array.isArray(data?.scores)
+        ) {
+            //console.log("setting track number", data.scores[0].track_number);
+            handleSelectHole({ target: { value: data.scores[0].track_number } });
+        }
+    }, [data]);
 
     const handleSelectHole = (e) => {
-        setHole(e.target.value);
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], { track_number: e.target.value });
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => ({
+            ...prev,
+            track_number: e.target.value,
+        }));
     };
 
     const hole_idx = data?.scores?.findIndex((val) => val.track_number === track_number);
@@ -111,7 +113,7 @@ function SelectHole({ data }) {
             <Box>
                 <Select
                     variant="standard"
-                    value={track_number}
+                    value={track_number ?? ""}
                     open={selectOpen}
                     onOpen={handleOpen}
                     onClose={handleClose}
@@ -137,7 +139,7 @@ function SelectHole({ data }) {
                 >
                     {data?.scores.map((val) => (
                         <MenuItem
-                            selected={hole === val.track_number}
+                            selected={track_number === val.track_number}
                             key={val.track_number}
                             value={val.track_number}
                             sx={{
