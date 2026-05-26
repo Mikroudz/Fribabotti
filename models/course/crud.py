@@ -122,7 +122,9 @@ def delete_course(session: Session, course_id: int):
         session.commit()
 
 
-def read_courses(session: Session, game_id: int | None = None) -> List[Course]:
+def read_courses(
+    session: Session, game_id: int | None = None
+) -> List[tuple[Course, int]]:
     stmt = select(Course, func.sum(Track.par).label("par")).join(Track)
     if game_id:
         stmt = stmt.where(Course.game_id == game_id)

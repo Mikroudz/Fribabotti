@@ -38,7 +38,11 @@ def create_game_session(
         session.add(game)
         session.commit()
         session.refresh(game)
-        return game
+        return session.exec(
+            select(GameSession)
+            .options(selectinload(GameSession.course))
+            .where(GameSession.id == game.id)
+        ).first()
 
 
 def read_game_session_user(

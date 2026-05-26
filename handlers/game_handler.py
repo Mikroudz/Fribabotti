@@ -77,7 +77,7 @@ async def start_game_menu(
                 callback_data=f"session_selected:{game.id}",
             )
         ]
-        for game, _ in user_active_games
+        for game in user_active_games
     ]
 
     keyboard = [
@@ -343,8 +343,8 @@ async def list_old_sessions(
     session_msg = f"Old sessions\n{len(game_sessions)} found\n\n"
     session_msg += "\n".join(
         [
-            f"{session.course.name} {session.ended_at_local()} {par_score_format(score)} /gs_{session.id}"
-            for session, score in game_sessions[
+            f"{session.course.name} {session.ended_at_local()} {par_score_format(session.user_score - session.par)} /gs_{session.id}"
+            for session in game_sessions[
                 (page_id) * show_items_on_page : (page_id) * show_items_on_page
                 + show_items_on_page
             ]
@@ -396,7 +396,7 @@ async def new_session_select_course(
             InlineKeyboardButton(
                 f"{course.name}", callback_data=f"select_course:{course.id}"
             )
-            for course in course_group
+            for course, _ in course_group
         ]
         for course_group in courses
     ]
