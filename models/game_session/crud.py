@@ -93,7 +93,7 @@ def read_game_session_user(
             GameSession.id == subq.c.game_session_id,
         )
         .where(SessionParticipantsLink.user_id == user_id)
-        .order_by(GameSession.ended_at.desc().nulls_first())
+        .order_by(GameSession.ended_at.is_(None).desc(), GameSession.ended_at.desc())
     )
 
     if active is not None:

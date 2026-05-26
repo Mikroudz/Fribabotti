@@ -26,17 +26,16 @@ class SubmitCourseState {
         } else {
             System.println("Response: " + responseCode);            // print response code
 			state = STATE_ERROR;
-            _callback.invoke();
+            _callback.invoke(data);
         }
-
     }
 
 	function makeRequest(data, session_id as Number) as Void {
-        var url = "https://kiisu.club/fribabotti/game/" + session_id;
+        var url = "https://kiisu.club/fribabotti/api/v1/game/" + session_id;
 
         var token = sharedData.getAuthToken();
 
-        var params = {"throws" => data, "game_session_id" => session_id};
+        var params = {"scores" => data, "game_session_id" => session_id};
         var options = {                                             // set the options
             :method => Communications.HTTP_REQUEST_METHOD_POST,      // set HTTP method
             :headers => {                                           // set headers

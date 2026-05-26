@@ -24,7 +24,7 @@ class LoadGameSession {
     }
 
 	function makeRequest(session_id, callback) as Void {
-        var url = "https://kiisu.club/fribabotti/game/" + session_id;
+        var url = "https://kiisu.club/fribabotti/api/v1/game/" + session_id;
         var token = sharedData.getAuthToken();
         var options = {                                             // set the options
             :method => Communications.HTTP_REQUEST_METHOD_GET,      // set HTTP method
@@ -42,4 +42,4 @@ class LoadGameSession {
     }
 }
 
-var session_fetcher = new LoadGameSession();
+var gamesession_fetcher = new LoadGameSession();

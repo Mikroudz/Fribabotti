@@ -3,55 +3,30 @@ import Toybox.WatchUi;
 
 class sessionSelectDelegate extends WatchUi.BehaviorDelegate {
     var _view;
-    var _sessions_fetcher;
 
     function initialize(view) {
         BehaviorDelegate.initialize();
         _view = view;
-        _sessions_fetcher = new LoadGameSessions(method(:onSessionsFetchComplete));
-
-        // try loading data
-        _sessions_fetcher.makeRequest();
     }
 
-    function onSessionsFetchComplete(data as Dictionary?){
-        var sessionSelect = _view.findDrawableById("SessionSelect");
-        sessionSelect.setSelectables(data);
-        WatchUi.requestUpdate();
-    }
 
-    function onSessionLoaded(data as Dictionary?){
-        if(data.hasKey("holes")){
-            sharedData.setCurrentCourse(data["holes"]);
+
+
+    function onKeyReleased(keyEvent as KeyEvent) as Boolean {
+        if(keyEvent.getKey() == KEY_ENTER){
+            _view.onSelectListItem();
+            return true;
         }
-        var view = new throwView();
-        WatchUi.pushView(view, new throwDelegate(view), WatchUi.SLIDE_UP);
+        return false;
     }
 
-    function onSelect() as Boolean {
-        var sessionSelect = _view.findDrawableById("SessionSelect");
-        // save to global memory
-        var session_id = sessionSelect.getCurrentItem();
-        if(session_id.equals("refresh")){
-            if(_sessions_fetcher.state != STATE_PENDING){
-                _sessions_fetcher.makeRequest();
-            }
-        
-        } else if (session_id.equals("settings")) {
-            var menu = new WatchUi.Menu2({:title=>"Settings"});
-            menu.addItem(new WatchUi.ToggleMenuItem("Vibrations", "Enable vibrations", "vibrations", sharedData.getUseVibrations(), null));
-            menu.addItem(new WatchUi.ToggleMenuItem("Register device to bot", "Enable to start registeration process", "register_device", false, null));
-            
-            WatchUi.pushView(menu, new SettingsMenuDelegate(menu), WatchUi.SLIDE_UP);
-        } else {
-            sharedData.setCurrentSessionId(session_id);
-            // start fetching session and show progress bar
-            session_fetcher.makeRequest(session_id, method(:onSessionLoaded));
-
-            var progressBar = new ProgressBar("Loading game...", null);
-            WatchUi.pushView(progressBar, null, SLIDE_DOWN);
+    function onTap(clickEvent as ClickEvent) as Boolean {
+        if(clickEvent.getType() == CLICK_TYPE_TAP){
+            _view.onSelectListItem();
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     function onBack() as Boolean {
@@ -61,17 +36,13 @@ class sessionSelectDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onNextPage() as Boolean {
-        var sessionSelect = _view.findDrawableById("SessionSelect");
-        sessionSelect.goDown();
-        WatchUi.requestUpdate();
+        _view.listGoDown();
 
         return true;
     }
 
     function onPreviousPage() as Boolean {
-        var sessionSelect = _view.findDrawableById("SessionSelect");
-        sessionSelect.goUp();
-        WatchUi.requestUpdate();
+        _view.listGoUp();
         return true;
     }
 

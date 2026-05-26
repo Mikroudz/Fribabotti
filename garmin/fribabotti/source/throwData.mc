@@ -10,8 +10,7 @@ class ThrowData  {
 	// throw locations where 0 is tee, so 1 is end of 1st throw and start of 2nd throw etc.
 	// we COULD store this as dictionary in throws but
 	var _throw_locations as Array<Position.Location or Null> = [];
-	var start_pos as Position.Location or Null;
-	var end_pos as Position.Location or Null;
+
 
 
 	function initialize(p_par, p_throws){
@@ -59,6 +58,7 @@ class ThrowData  {
 	function addThrow(location as Position.Location or Null){
 		if(throws.size() == 0){
 			throws.add(0.0);
+			// starting location
 			_throw_locations.add(location);
 		}else if(throws.size() == 1 && throws[0] == 0.0 && _throw_locations.size() > 0){
 			// edit 1st throw
@@ -80,8 +80,13 @@ class ThrowData  {
 	}
 
 	function removeThrow() as Boolean{
-		if(throws.size() > 0){
-			// should we set first throw to 0 to before removing it fully to allow user to change the landing spot of disc?
+		if(throws.size() == 1 && throws[0] != 0.0){
+			// IF we have one landing (one throw (distance) and two locations, zero first throw and remove one location)
+			throws[0] = 0.0;
+			_throw_locations = _throw_locations.slice(0, _throw_locations.size() - 1);
+			return true;
+		}else if(throws.size() > 0){
+			// if we are on first throw, set in to 0.
 			throws = throws.slice(0, throws.size() - 1);
 			_throw_locations = _throw_locations.slice(0, _throw_locations.size() - 1);
 			return true;

@@ -48,7 +48,10 @@ class Score(ScoreBase, table=True):
     )
     game_session: Optional["GameSession"] = Relationship(back_populates="scores")
 
-    throws: List["Throw"] = Relationship(back_populates="score")
+    throws: List["Throw"] = Relationship(
+        back_populates="score",
+        sa_relationship_kwargs={"cascade": "all,delete,delete-orphan"},
+    )
 
     created_at: Optional[datetime] = Field(
         default=None,

@@ -38,6 +38,10 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 					item.setSubLabel("");
 				}
 			}
+		} else if (item.getId().equals("enable_gps")){
+			if (item instanceof WatchUi.ToggleMenuItem) {
+				sharedData.setEnableGps(item.isEnabled());
+			}
 		}
     }
 
@@ -71,7 +75,6 @@ class SettingsMenuDelegate extends WatchUi.Menu2InputDelegate {
 				menuItem.setSubLabel("");
 				WatchUi.requestUpdate();
 			}
-			
 		}
 	}
 

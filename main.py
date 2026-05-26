@@ -95,12 +95,36 @@ async def run_bot():
 
 
 app = FastAPI()
-app.include_router(device_routes.router)
+app.include_router(device_routes.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(games.router, prefix="/api/v1")
 app.include_router(score.router, prefix="/api/v1")
 app.include_router(course.router, prefix="/api/v1")
 app.include_router(group.router, prefix="/api/v1")
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Get the raw request body (optional, but helpful for debugging)
+    body = await request.body()
+
+    # Print detailed error formatting to the server terminal
+    print("--- 422 Unprocessable Entity Detected ---")
+    print(f"Path: {request.url.path}")
+    print(f"Method: {request.method}")
+    print(f"Raw Body: {body.decode('utf-8')}")
+    print(f"Validation Errors: {exc.errors()}")
+    print("----------------------------------------")
+
+    # Return the default FastAPI error JSON format to keep clients happy
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": exc.errors()},
+    )
 
 
 async def main():

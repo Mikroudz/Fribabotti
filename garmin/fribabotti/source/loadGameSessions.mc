@@ -24,7 +24,7 @@ class LoadGameSessions {
     }
 
 	function makeRequest() as Void {
-        var url = "https://kiisu.club/fribabotti/game/";
+        var url = "https://kiisu.club/fribabotti/api/v1/game/";
         var token = sharedData.getAuthToken();
         var options = {                                             // set the options
             :method => Communications.HTTP_REQUEST_METHOD_GET,      // set HTTP method

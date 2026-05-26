@@ -8,7 +8,7 @@ class ButtonHoldProgressDrawable extends WatchUi.Drawable {
 
 	var _isProgressing as Boolean = false;
 	var _progressLevel as Number = 0;
-	var _timer;
+	var _timer as Timer.Timer?;
 	var _progressEndCallback;
 	var _msg;
 
@@ -17,28 +17,46 @@ class ButtonHoldProgressDrawable extends WatchUi.Drawable {
         // in this case you should pass the params along as size
         // and location values may be defined.
         Drawable.initialize(params);
-		_timer = new Timer.Timer();
     }
 
 	public function startProgress(progressEndCallback, msg as String){
-		_isProgressing = true;
-		_msg = msg;
-		_progressLevel = 0;
-		_progressEndCallback = progressEndCallback;
-		_timer.start(method(:onTimerUpdate), 500, true);
+		
+		if(_timer == null){
+			_isProgressing = true;
+			_msg = msg;
+			_progressLevel = 0;
+			_progressEndCallback = progressEndCallback;
+			_timer = new Timer.Timer();
+			_timer.start(method(:onTimerUpdate), 500, true);
+		}
+		
+		System.println("Hold STARTED");
+
 		// start timer
 	}
 
 	public function endProgress(){
+		System.println("Stopping hold...");
 		_isProgressing = false;
 		// stop timer
-		_timer.stop();
+		if(_timer != null){
+
+			_timer.stop();
+			_timer = null;
+		}
+		WatchUi.requestUpdate();
 	}
 
-	function onTimerUpdate(){
+	public function isHolding() as Boolean{
+		return _isProgressing;
+	}
+
+	function onTimerUpdate() as Void{
 		if(_progressLevel > 2){
 			// call callback
+			System.println("Progress DONE");
 			_timer.stop();
+			_timer = null;
 			_progressEndCallback.invoke();
 			_isProgressing = false;
 			return; // return here; some other place will update UI

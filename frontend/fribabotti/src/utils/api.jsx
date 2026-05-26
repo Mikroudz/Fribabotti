@@ -1,6 +1,6 @@
 async function baseFetch(endpoint, options = {}) {
     // new URL required for testing.
-    const url = new URL(`${import.meta.env.VITE_API_URL}${endpoint}`, import.meta.url);
+    const url = `${import.meta.env.VITE_API_URL}${endpoint}`;
     const defaults = {
         mode: "cors",
         headers: {

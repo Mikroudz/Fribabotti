@@ -1,6 +1,7 @@
 import Toybox.Lang;
 import Toybox.WatchUi;
 using Toybox.Attention;
+using Toybox.Timer;
 
 enum Vibepattern {
 	NEXT_HOLE = 0,
@@ -12,26 +13,26 @@ enum Vibepattern {
 
 class throwDelegate extends WatchUi.InputDelegate {
 	private var _view;
-	private var _submitCourse;
-	private var _holdStartTimer;
-	private var _isHolding as Boolean = true;
+	private var _holdStartTimer as Timer.Timer?;
 	private var _holdKey;
 	private var trackTracker;
 	private var throwTracker;
+	private var holdProgress as ButtonHoldProgressDrawable?;
+	private var _had_hold_progress as Boolean = false;
 
 	private var vibeData as Array<Array<Attention.VibeProfile>> = [];
+	// no other way to track this for dismissing the game
+	private var _endGameDialogOpen as Boolean = false;
 
 
     function initialize(view) {
         InputDelegate.initialize();
 		_view = view;
-		_submitCourse = new SubmitCourseState(method(:onSubmitDone));
 		_holdStartTimer = new Timer.Timer();
 		initilizeVibes();
     }
 
 	function onKeyPressed(keyEvent as KeyEvent) as Boolean {
-		_isHolding = false;
 		if(keyEvent.getKey() == KEY_ENTER){
 			// start timer'
 			_holdKey = keyEvent.getKey();
@@ -52,16 +53,32 @@ class throwDelegate extends WatchUi.InputDelegate {
 			// move to view
 			trackTracker = _view.findDrawableById("TrackTracker");
 			throwTracker = _view.findDrawableById("ThrowTracker");
+			holdProgress = _view.findDrawableById("HoldProgress");
+		}
+		//System.println("Key release event");
+		//System.println(keyEvent.getKey());
+
+		// we need to skip release event after progress has finished to prevent extra presses from occurring on release
+		if(_had_hold_progress){
+			_had_hold_progress = false;
+			return true;
 		}
 
-		if(!_isHolding){
+		if(!holdProgress.isHolding()){
 			_holdStartTimer.stop();
 			
 			// Regular keypress actions
 			if(keyEvent.getKey() == KEY_ENTER){
 				if(trackTracker.isLastHole()){
-					// submit score and return to session selection
-					_submitCourse.makeRequest(throwTracker.getCourseStateArray(), sharedData.getCurrentSessionId());
+					_endGameDialogOpen = true;
+					var message = "Submit scores to Fribabotti? ";
+        			var dialog = new WatchUi.Confirmation(message);
+					// Push the view onto the screen along with its dedicated delegate
+					WatchUi.pushView(
+						dialog, 
+						new ConfirmSubmitScoresDelegate(throwTracker.getCourseStateArray()), 
+						WatchUi.SLIDE_IMMEDIATE
+					);
 				} else {
 					var new_hole = trackTracker.moveNextHole();
 					throwTracker.setHoleIndex(new_hole);
@@ -81,34 +98,36 @@ class throwDelegate extends WatchUi.InputDelegate {
 				}
 				WatchUi.requestUpdate();
 			}else if(keyEvent.getKey() == KEY_ESC){
-				var loc = _view.getGpsLocation();
-				throwTracker.addThrow(loc);
-				WatchUi.requestUpdate();
-				vibrate(ADD_THROW);
+				if(_endGameDialogOpen){
+					System.println("User selected NO");
+					_endGameDialogOpen = false;
+					// Handle the cancellation here
+					var view = new selectSessionView();
+        			WatchUi.switchToView(view, new sessionSelectDelegate(view), WatchUi.SLIDE_UP);
+				}else{
+					var loc = _view.getGpsLocation();
+					throwTracker.addThrow(loc);
+					WatchUi.requestUpdate();
+					vibrate(ADD_THROW);
+				}
 			}
 		}else{
 			// calling while progress is active
-			var holdProgress = _view.findDrawableById("HoldProgress");
-			if(keyEvent.getKey() == KEY_ENTER){
-				_holdStartTimer.stop();
-				holdProgress.endProgress();
-			}else if (keyEvent.getKey() == KEY_DOWN){
-				_holdStartTimer.stop();
-				holdProgress.endProgress();
-			}
+			_holdStartTimer.stop();
+			holdProgress.endProgress();
 		}
 		return true;
 	}
 
-	function onHoldStartTimerEnd(){
-		_isHolding = true;
-		var holdProgress = _view.findDrawableById("HoldProgress");
+	function onHoldStartTimerEnd() as Void{
 		var hold_msg = _holdKey == KEY_ESC ? "Hold to delete throw..." : "Going to previous hole...";
+		
 		
 		holdProgress.startProgress(method(:onHoldActionComplete), hold_msg);
 	}
 
-	function onHoldActionComplete(){
+	function onHoldActionComplete() as Void {
+		_had_hold_progress = true;
 		if (_holdKey == KEY_ENTER){
 			var new_hole = trackTracker.movePrevHole();
 			throwTracker.setHoleIndex(new_hole);
@@ -119,11 +138,6 @@ class throwDelegate extends WatchUi.InputDelegate {
 		}
 		
 		WatchUi.requestUpdate();
-	}
-
-	function onSubmitDone(data as Dictionary?){
-		var view = new selectSessionView();
-        WatchUi.pushView(view, new sessionSelectDelegate(view), WatchUi.SLIDE_UP);
 	}
 
 	function initilizeVibes(){

@@ -45,6 +45,10 @@ class throwView extends WatchUi.View {
     }
 
     function startGps(){
+        // check if user enabled gps (on by default)
+        // throws will send null to backend when this is disabled
+        if(!sharedData.getEnableGps()){return;}
+
         var options = {
             :acquisitionType => Position.LOCATION_CONTINUOUS
         };
@@ -67,6 +71,8 @@ class throwView extends WatchUi.View {
     }
 
     function stopGps(){
+        // no need to stop if user disabled gps.
+        if(!sharedData.getEnableGps()){return;}
         System.println("GPS is STOPPED");
         Position.enableLocationEvents(Position.LOCATION_DISABLE, method(:onPosition));
     }
@@ -85,6 +91,8 @@ class throwView extends WatchUi.View {
     // the state of this View and prepare it to be shown. This includes
     // loading resources into memory.
     function onShow() as Void {
+        // might have stopped gps
+        startGps();
     }
 
 

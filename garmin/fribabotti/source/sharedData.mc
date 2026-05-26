@@ -6,6 +6,7 @@ class SharedData {
 	var _course_data;
 	var _vibration_enabled = true;
 	var _auth_token as String = "";
+	var _enable_gps as Boolean = true;
 
 	function initialize(){
 		var vibRead = Storage.getValue("vibrations");
@@ -16,6 +17,8 @@ class SharedData {
 		if(token != null){
 			_auth_token = token;
 		}
+
+
 
 	}
 
@@ -51,6 +54,15 @@ class SharedData {
 
 	function getAuthToken() as String {
 		return _auth_token;
+	}
+
+	function getEnableGps() as Boolean {
+		return _enable_gps;
+	}
+
+	function setEnableGps(isEnabled as Boolean) {
+		_enable_gps = isEnabled;
+		Storage.setValue("gps_enabled", isEnabled);
 	}
 
 }

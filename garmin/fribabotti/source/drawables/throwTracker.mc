@@ -31,11 +31,21 @@ class ThrowTrackerDrawable extends WatchUi.Drawable {
 		}
 	}
 
-	function getCourseStateArray() as Array<Array<Number>> {
+	function getCourseStateArray() as Array<Dictionary<String, Array<Dictionary<String, Float or Number or Null>>>> {
 		var out = [];
 		for(var i = 0; i < _throws.size(); i++){
-			out.add(_throws[i].throws);
+			out.add({"throws" => []});
+			for(var j = 0; j < _throws[i]._throw_locations.size(); j++){
+
+				if(_throws[i]._throw_locations[j] != null){
+					var degs = _throws[i]._throw_locations[j].toDegrees();
+					out[i]["throws"].add({"lat" => degs[0].toFloat(), "lng" => degs[1].toFloat(), "throw_number" => j + 1});
+				}else{
+					out[i]["throws"].add({"lat" => null, "lng" => null, "throw_number" => j + 1});
+				}
+			}
 		}
+		//System.println(out);
 		return out;
 	}
 

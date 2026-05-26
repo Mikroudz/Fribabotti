@@ -13,6 +13,7 @@ export function getRouter() {
         scrollRestoration: true,
         defaultPreload: "intent",
         defaultPreloadStaleTime: 0,
+        basepath: import.meta.env.VITE_BASE_PATH || "/",
     });
 
     const authManager = createAuthManager({

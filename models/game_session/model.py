@@ -128,6 +128,22 @@ class UpdateGameSession(SQLModel):
     throws: List[List[float]] = []
 
 
+class DeviceThrowUpdate(SQLModel):
+    lat: float | None = None
+    lng: float | None = None
+    throw_number: int
+
+
+class DeviceScore(SQLModel):
+    throws: list[DeviceThrowUpdate] = []
+    # add track/hole number?
+
+
+class DeviceUpdateGameSession(SQLModel):
+    scores: List[DeviceScore] = []
+    game_session_id: int | None = None  # not used at the moment
+
+
 class GameSessionCreate(SQLModel):
     course_id: int
     user_group_id: int
