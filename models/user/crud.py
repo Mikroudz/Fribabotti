@@ -36,7 +36,6 @@ def telegram_login(session: Session, data: TgWebAppAuthData | UserCreateTgAuth) 
         valid_user = verify_telegram_hash(data)
     elif data.type == "TGWEBAPP":
         parsed_data = dict(parse_qsl(data.value, keep_blank_values=True))
-        print(parsed_data)
         valid_user = verify_telegram_hash_webapp(parsed_data)
 
     if not valid_user:

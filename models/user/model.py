@@ -1,7 +1,7 @@
-from typing import Optional, List, TYPE_CHECKING, Dict, Any, Literal
-from datetime import datetime, UTC, date
-from pydantic import computed_field
-from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func
+from typing import Optional, List, TYPE_CHECKING, Literal
+from datetime import datetime
+from pydantic import computed_field, model_validator
+from sqlmodel import Field, SQLModel, Relationship
 
 from ..links.user_group_members_link import UserGroupMembersLink
 from ..links.session_participants_link import SessionParticipantsLink
@@ -77,6 +77,12 @@ class UserCreate(UserBaseOptionalUsername):
 
 class UserCreateTgAuth(UserBaseOptionalUsername):
     type: Literal["TGAUTH"]
+
+    @computed_field
+    @property
+    def name(self) -> str:
+        return None
+
     id: Optional[int] | None
 
 

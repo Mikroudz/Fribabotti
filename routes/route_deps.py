@@ -5,7 +5,7 @@ from typing import Annotated
 
 from utils.auth import verify_access_token
 
-cookie_refresh = APIKeyCookie(name="refresh_token", auto_error=False)
+cookie_refresh = APIKeyCookie(name="refresh_token")
 cookie_access = APIKeyCookie(name="access_token")
 
 
