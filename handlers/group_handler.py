@@ -10,7 +10,7 @@ from telegram.ext import (
 from telegram.constants import ParseMode
 from telegram.helpers import escape_markdown
 
-from database import get_session
+from database import get_session_cx as get_session
 from .helpers import handler_helper
 from models.user_group.model import UpdateUserGroup
 

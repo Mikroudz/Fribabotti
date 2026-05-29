@@ -12,7 +12,7 @@ from telegram.ext import (
 )
 import re
 
-from database import get_session
+from database import get_session_cx as get_session
 
 from utils.formatting import par_score_format
 

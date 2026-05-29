@@ -11,7 +11,7 @@ from telegram.ext import (
 )
 from datetime import datetime, timedelta
 
-from database import get_session
+from database import get_session_cx as get_session
 from utils.generate_result_card import create_result_card_image
 
 from models.course.crud import read_courses

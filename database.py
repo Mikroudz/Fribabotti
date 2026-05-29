@@ -1,4 +1,6 @@
 from sqlmodel import create_engine, SQLModel, Session, Relationship
+from contextlib import contextmanager
+
 from models.user.model import User
 
 from models.game_session.model import GameSession
@@ -47,4 +49,11 @@ def create_db_and_tables():
 
 
 def get_session():
-    return Session(engine)
+    with Session(engine) as session:
+        yield session
+
+
+@contextmanager
+def get_session_cx():
+    with Session(engine) as session:
+        yield session

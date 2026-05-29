@@ -9,7 +9,7 @@ from telegram.ext import (
     ConversationHandler,
 )
 
-from database import get_session
+from database import get_session_cx as get_session
 
 from models.device_sessions.crud import (
     create_device_session,
