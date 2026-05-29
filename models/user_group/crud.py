@@ -1,11 +1,17 @@
 from typing import List
 from sqlmodel import Session, select, exists, and_
 from pydantic import ValidationError
+from sqlalchemy.orm import selectinload
+from fastapi import HTTPException
 
-from .model import UserGroup, UpdateUserGroup
+from .model import UserGroup, UpdateUserGroup, UserGroupRead
 from models.user.model import User
+from models.game_session.model import GameSession, GameSessionReadShortWithCourse
+from models.course.model import Course
+
 
 from models.links.user_group_members_link import UserGroupMembersLink
+from models.links.session_participants_link import SessionParticipantsLink
 import logging
 
 logger = logging.getLogger(__name__)
@@ -94,7 +100,10 @@ def read_groups(session: Session, user_id: int) -> List[UserGroup]:
     stmt = (
         select(UserGroup)
         .join(UserGroupMembersLink, UserGroup.id == UserGroupMembersLink.user_group_id)
-        .where(UserGroupMembersLink.user_id == user_id)
+        .where(
+            UserGroupMembersLink.user_id == user_id,
+            UserGroup.deleted == False,
+        )
     )
     groups = session.exec(stmt).all()
     return groups
@@ -103,6 +112,60 @@ def read_groups(session: Session, user_id: int) -> List[UserGroup]:
 def read_group(session: Session, group_id: int) -> UserGroup:
 
     return session.get(UserGroup, group_id)
+
+
+def read_group_invite(session: Session, invite: str) -> UserGroup:
+    stmt = select(UserGroup).where(
+        UserGroup.invite_code == invite, UserGroup.deleted == False
+    )
+    res = session.exec(stmt).first()
+    return res
+
+
+def read_group_long(session: Session, group_id: int, user_id: int) -> UserGroupRead:
+    stmt = (
+        select(UserGroup)
+        .options(selectinload(UserGroup.members))
+        .join(UserGroupMembersLink, UserGroup.id == UserGroupMembersLink.user_group_id)
+        .where(
+            UserGroupMembersLink.user_id == user_id,
+            UserGroup.id == group_id,
+            UserGroup.deleted == False,
+        )
+    )
+    group = session.exec(stmt).first()
+    if not group:
+        raise HTTPException(
+            status_code=404,
+            detail="Group not found",
+        )
+    stmt_gamesessions = (
+        select(GameSession, Course.name)
+        # I dont really need to use users table for this but dunno how to access only the link user_id value
+        .options(selectinload(GameSession.participants).load_only(User.id))
+        .join(Course, GameSession.course_id == Course.id)
+        .where(
+            GameSession.user_group_id == group_id,
+            UserGroup.deleted == False,
+        )
+        .order_by(GameSession.started_at.desc())
+        .limit(5)
+    )
+
+    gamesessions = session.exec(stmt_gamesessions).all()
+
+    return UserGroupRead(
+        **group.model_dump(),
+        recent_games=[
+            GameSessionReadShortWithCourse(
+                **game.model_dump(),
+                course_name=course_name,
+                participants=[p.id for p in game.participants],
+            )
+            for game, course_name in gamesessions
+        ],
+        members=group.members,
+    )
 
 
 def read_group_members(session: Session, group_id: int) -> List[User]:

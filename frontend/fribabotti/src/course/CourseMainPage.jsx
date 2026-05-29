@@ -11,6 +11,7 @@ import { Route as RouteCourse } from "#/routes/course.$courseId.index";
 
 import EditIcon from "@mui/icons-material/Edit";
 import { Route as RouteNewGame } from "#/routes/course.$courseId.newgame";
+import { formatSecondsToTime } from "#/utils/helpers";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -125,6 +126,12 @@ function CourseStatsGlance({ course }) {
                     <Typography sx={{ color: "text.secondary" }}>Games Played</Typography>
                     <Typography variant="h4" sx={{ fontWeight: 600 }}>
                         {course?.games_played_cnt}
+                    </Typography>
+                </StyledAnyContentBox>
+                <StyledAnyContentBox size={3} component={Grid} sx={{ m: 0, p: 1 }}>
+                    <Typography sx={{ color: "text.secondary" }}>Total Playtime</Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                        {course?.playtime > 0 ? formatSecondsToTime(course?.playtime) : "-"}
                     </Typography>
                 </StyledAnyContentBox>
             </Grid>

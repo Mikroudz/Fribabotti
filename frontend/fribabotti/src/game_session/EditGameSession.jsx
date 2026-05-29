@@ -1,33 +1,14 @@
-import { StyledTextInput } from "#/components/Inputs";
-import { StyledListItem } from "#/components/List";
 import { SubmitButton } from "#/components/SubmitButton";
 import { Route as GamesessionRoute } from "#/routes/gamesession_/$gameSessionId/gamesession";
 
-import DeleteIcon from "@mui/icons-material/Delete";
 import { createGameSession } from "#/utils/api";
-import {
-    Autocomplete,
-    Box,
-    IconButton,
-    List,
-    ListItemIcon,
-    ListItemText,
-    Stack,
-    TextField,
-    Typography,
-} from "@mui/material";
+import { Autocomplete, Box, Stack, TextField, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import {
-    useForm,
-    FormProvider,
-    useFieldArray,
-    Controller,
-    useFormContext,
-    useWatch,
-} from "react-hook-form";
-import { useCourses, useUserGroups } from "#/hooks/GameSessionHooks";
+import { useEffect } from "react";
+import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useCourses } from "#/hooks/GameSessionHooks";
+import { useUserGroups } from "#/hooks/ProfileHooks";
 
 const FORM_DEFAULTS = {
     id: "",

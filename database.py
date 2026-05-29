@@ -39,7 +39,7 @@ engine_args = (
     else {"pool_pre_ping": True}
 )
 
-engine = create_engine(db_url, pool_size=20, echo=False, **engine_args)
+engine = create_engine(db_url, pool_size=20, echo=True, **engine_args)
 
 
 def create_db_and_tables():

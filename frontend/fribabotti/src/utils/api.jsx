@@ -29,7 +29,16 @@ export async function refreshToken() {
 }
 
 export async function getUser() {
-    return baseFetch("/user");
+    return baseFetch("/profile");
+}
+
+export async function getUserStats({ days_to_past = null }) {
+    const params = {};
+    if (days_to_past !== null) {
+        params["days_to_past"] = days_to_past;
+    }
+    const queryParams = new URLSearchParams(params);
+    return baseFetch("/game_session/user_stats?" + queryParams.toString());
 }
 
 export async function getGameSessions({ limit = null, course_id = null }) {
@@ -88,4 +97,25 @@ export async function updateScore({ data, method = "POST" }) {
 
 export async function getUserGroups() {
     return baseFetch(`/groups`);
+}
+
+export async function getUserGroup({ queryKey }) {
+    const [_key, group_id] = queryKey;
+
+    return baseFetch(`/groups/${group_id}`);
+}
+
+export async function getGroupInvite({ queryKey }) {
+    const [_key, invite] = queryKey;
+
+    return baseFetch(`/groups/join/${invite}`);
+}
+
+export async function joinGroup(invite) {
+    return baseFetch(`/groups/join/${invite}`, { method: "POST" });
+}
+
+export async function createGroup({ data, method = "POST" }) {
+    const url = method === "POST" ? "/groups" : `/groups/${data.id}`;
+    return baseFetch(url, { method: method, body: JSON.stringify(data) });
 }

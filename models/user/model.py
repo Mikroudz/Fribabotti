@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any, Literal
 from datetime import datetime, UTC, date
-
+from pydantic import computed_field
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func
 
 from ..links.user_group_members_link import UserGroupMembersLink
@@ -20,6 +20,13 @@ class UserBase(SQLModel):
     photo_url: Optional[str | None] = None
     auth_date: datetime | None = None
     hash: str | None = ""
+
+    @computed_field
+    @property
+    def name(self) -> int:
+        if self.username == "":
+            return self.first_name + self.last_name
+        return self.username
 
 
 class User(UserBase, table=True):
@@ -43,6 +50,10 @@ class UserRead(UserBase):
     id: int
 
 
+class UserReadLong(UserBase):
+    id: int
+
+
 class UserCreateNestedUser(SQLModel):
     id: int
     username: str
@@ -52,6 +63,12 @@ class UserCreateNestedUser(SQLModel):
 
 class UserBaseOptionalUsername(UserBase):
     username: str | None = ""
+
+
+class GroupMemberRead(SQLModel):
+    name: str = ""
+    id: int
+    photo_url: str | None = None
 
 
 class UserCreate(UserBaseOptionalUsername):

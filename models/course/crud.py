@@ -1,5 +1,5 @@
 from typing import List
-from sqlmodel import Session, select, and_, func, delete, col
+from sqlmodel import Session, select, and_, func, delete, col, case, cast, Integer
 from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
 from pydantic import ValidationError
@@ -212,8 +212,27 @@ def read_course_with_user_stats(
         .scalar_subquery()
     )
 
+    db_type = session.bind.dialect.name
+    if db_type == "sqlite":
+        time_diff = (
+            func.julianday(func.max(Score.created_at))
+            - func.julianday(func.min(Score.created_at))
+        ) * 86400
+    else:
+        time_diff = func.unix_timestamp(
+            func.max(Score.created_at)
+        ) - func.unix_timestamp(func.min(Score.created_at))
+
     round_totals = (
-        select(Score.game_session_id, func.sum(Score.score).label("round_total"))
+        select(
+            Score.game_session_id,
+            func.sum(Score.score).label("round_total"),
+            case(
+                (time_diff > (6 * 3600), 0),
+                (time_diff.is_(None), 0),
+                else_=cast(time_diff, Integer),
+            ).label("playtime"),
+        )
         .where(Score.user_id == user_id, Score.course_id == course_id, Score.score > 0)
         .group_by(Score.game_session_id)
         .having(func.count(Score.track_number) == course_track_count_subq)
@@ -244,6 +263,7 @@ def read_course_with_user_stats(
         func.count(round_totals.c.game_session_id).label("game_count"),
         func.coalesce(func.avg(round_totals.c.round_total), 0).label("avg_score"),
         func.coalesce(func.min(round_totals.c.round_total), 0).label("best_round"),
+        func.coalesce(func.sum(round_totals.c.playtime), 0).label("playtime"),
         best_round_id_subq.label("best_round_id"),
         func.coalesce(hypothetical_best_subq, 0).label("hypothetical_best"),
     )
@@ -267,6 +287,7 @@ def read_course_with_user_stats(
         best_round_id=db_stats.best_round_id,
         hypothetical_best=db_stats.hypothetical_best,
         user_recent_rounds=recent_rounds,
+        playtime=db_stats.playtime,
     )
 
     return ret

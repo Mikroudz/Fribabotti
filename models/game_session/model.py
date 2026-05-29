@@ -8,7 +8,6 @@ from sqlmodel import Field, SQLModel, Relationship, text, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
 
 from ..score.model import CourseScore
-from ..user_group.model import UserGroupReadShort
 
 if TYPE_CHECKING:
     from ..score.model import Score
@@ -106,12 +105,20 @@ class GameSessionReadShortWithoutCourse(GameSessionBase):
     score: int = 0
 
 
+class GameSessionReadShortWithCourse(SQLModel):
+    id: int
+    started_at: datetime
+    course_name: str = ""
+    # this is list of user ID's participating in game for the UI. could be done better
+    participants: list[int]
+
+
 class GameSessionReadLong(GameSessionBase):
     id: int
     course_id: int
     course: "CourseRead"
     user_group_id: int
-    user_group: UserGroupReadShort
+    user_group: "UserGroupReadShort"
     user_score: CourseScore
     started_at: datetime
     ended_at: datetime | None = None
@@ -149,7 +156,14 @@ class GameSessionCreate(SQLModel):
     user_group_id: int
 
 
+# General stats about user
+class GameSessionUserStats(SQLModel):
+    playtime: int
+    playcount: int
+
+
 from models.course.model import CourseRead
+from ..user_group.model import UserGroupReadShort
 
 GameSessionReadShort.model_rebuild()
 GameSessionReadLong.model_rebuild()

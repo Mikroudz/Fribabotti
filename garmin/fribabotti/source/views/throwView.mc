@@ -23,8 +23,6 @@ class throwView extends WatchUi.View {
 			holes.add(i+1);
 		}
 		trackTracker.setHoles(holes);
-        // we have to use continuous gps so we get good accuracy and no time delay
-        startGps();
     }
 
     function updateClock(){

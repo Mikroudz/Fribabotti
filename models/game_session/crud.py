@@ -1,10 +1,15 @@
 from typing import List, Tuple
-from sqlmodel import Session, select, and_, asc, desc, func, case
+from sqlmodel import Session, select, and_, asc, desc, func, case, cast, Integer
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
-from .model import GameSession, GameSessionReadLong, GameSessionReadShort
+from .model import (
+    GameSession,
+    GameSessionReadLong,
+    GameSessionReadShort,
+    GameSessionUserStats,
+)
 from models.user.model import User
 from models.user.crud import read_user
 from models.track.model import Track
@@ -356,3 +361,49 @@ def read_user_session_time(
     if isinstance(total_timedelta, datetime):
         total_timedelta = total_timedelta.total_seconds()
     return count, total_timedelta
+
+
+def read_user_stats(
+    session: Session, user_id: int, days_to_past: int
+) -> GameSessionUserStats:
+    start_n_days_ago = datetime.now() - timedelta(days=days_to_past)
+
+    db_type = session.bind.dialect.name
+    if db_type == "sqlite":
+        time_diff = (
+            func.julianday(func.max(Score.created_at))
+            - func.julianday(func.min(Score.created_at))
+        ) * 86400
+    else:
+        time_diff = func.unix_timestamp(
+            func.max(Score.created_at)
+        ) - func.unix_timestamp(func.min(Score.created_at))
+
+    round_totals = (
+        select(
+            Score.game_session_id,
+            case(
+                (time_diff > (6 * 3600), 0),
+                (time_diff.is_(None), 0),
+                else_=cast(time_diff, Integer),
+            ).label("playtime"),
+        )
+        .where(
+            Score.user_id == user_id,
+            Score.score > 0,
+            Score.created_at > start_n_days_ago,
+            Score.created_at.isnot(None),
+        )
+        .group_by(Score.game_session_id)
+        .subquery()
+    )
+
+    stmt_avg_play_cnt = select(
+        func.count(round_totals.c.game_session_id).label("game_count"),
+        func.coalesce(func.sum(round_totals.c.playtime), 0).label("playtime"),
+    ).select_from(round_totals)
+    db_stats = session.exec(stmt_avg_play_cnt).first()
+
+    return GameSessionUserStats(
+        playtime=db_stats.playtime, playcount=db_stats.game_count
+    )

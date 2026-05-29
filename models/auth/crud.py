@@ -49,7 +49,6 @@ def refresh_session(
             detail="No active session found",
             headers={"WWW-Authenticate": "Bearer"},
         )
-
     if token_index != db_session.counter:
         raise HTTPException(
             status_code=401,

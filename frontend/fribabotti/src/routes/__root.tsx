@@ -10,6 +10,7 @@ import { Person } from '@mui/icons-material';
 import "@fontsource-variable/lexend/wght.css";
 import type { QueryClient } from "@tanstack/react-query";
 import { Route as CourseRoute } from "./course.index"
+import { Route as ProfileRoute } from "./profile/index"
 
 import { HeaderBar } from "#/components/HeaderBar";
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -49,7 +50,7 @@ function RootDocument() {
                     <BottomNavigation showLabels>
                     <BottomNavigationAction label="Game" icon={<PlayArrowIcon />} component={Link} to={"/"} />
                     <BottomNavigationAction label="Courses" icon={<GolfCourseIcon />} component={Link} to={CourseRoute.to} />
-                    <BottomNavigationAction label="Profile" icon={<Person />} />
+                    <BottomNavigationAction label="Profile" icon={<Person />} component={Link} to={ProfileRoute.to} />
                     </BottomNavigation>
                 </Paper>
                 </Box>

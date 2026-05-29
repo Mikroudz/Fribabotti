@@ -13,3 +13,4 @@ class CourseWithStats(CourseBase):
     best_round_id: int | None = None
     hypothetical_best: int = 0
     user_recent_rounds: list["GameSessionReadShortWithoutCourse"] = []
+    playtime: int = 0

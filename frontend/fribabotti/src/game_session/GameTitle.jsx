@@ -1,5 +1,5 @@
 import { dateTimeNice, formatSecondsToTime } from "#/utils/helpers";
-import { Box, Button, lighten, Typography } from "@mui/material";
+import { Box, Button, Chip, lighten, Typography } from "@mui/material";
 import { StackedBarChart } from "./StackedBar";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 import { PrettyPar } from "#/components/PrettyPar";
@@ -45,10 +45,21 @@ export function GameTitleInformation({ data }) {
                 flexDirection: "column",
                 alignItems: "center",
                 position: "relative",
+                pt: 3,
             }}
         >
             <EndOpenGameSession gameSessionId={data?.id} isGameOpen={!!!data?.ended_at} />
-
+            <Chip
+                label={data?.user_group?.name}
+                size="small"
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    m: 0.5,
+                    bgcolor: "primary.main",
+                }}
+            ></Chip>
             <Typography component="span" variant="h4">
                 Round
             </Typography>

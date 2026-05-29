@@ -1,4 +1,4 @@
-import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
+import { MutationCache, QueryCache, QueryClient, skipToken } from "@tanstack/react-query";
 
 export const checkThrowQuery = (error) => {
     const { status } = error;
@@ -13,6 +13,7 @@ const createQueryClient = (getAuthErrorFn, options = {}) => {
     const queryClient = new QueryClient({
         defaultOptions: {
             queries: {
+                queryFn: skipToken,
                 retry: (failureCount, error) => {
                     console.log("got reply", error);
                     const { status } = error;

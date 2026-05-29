@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { useEffect, useRef } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
-import { calculateDummyHash, TELEGRAM_AUTH_TYPES } from "../utils/telegramHelpers";
+import { Box, Grid, Typography } from "@mui/material";
+import { TELEGRAM_AUTH_TYPES } from "../utils/telegramHelpers";
 import { useSignIn } from "../auth/UserHooks";
 import FribaIcon from "../utils/FribaIcon";
 

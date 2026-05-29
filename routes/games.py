@@ -11,11 +11,13 @@ from models.game_session.crud import (
     read_game_session_long,
     end_game_session,
     delete_game_session,
+    read_user_stats,
 )
 from models.game_session.model import (
     GameSessionCreate,
     GameSessionReadLong,
     GameSessionReadShort,
+    GameSessionUserStats,
 )
 from .route_deps import token_required_user_id_in_response
 
@@ -24,6 +26,15 @@ router = APIRouter(
     tags=["game session"],
     dependencies=[Depends(token_required_user_id_in_response)],
 )
+
+
+@router.get("/user_stats", response_model=GameSessionUserStats)
+async def game_sessions_user_stats_read(
+    *, request: Request, session: Session = Depends(get_session), days_to_past: int = 7
+):
+    return read_user_stats(
+        session, user_id=request.state.user_id, days_to_past=days_to_past
+    )
 
 
 @router.get("/{game_session_id}", response_model=GameSessionReadLong)

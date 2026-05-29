@@ -5,6 +5,7 @@ import { Route as NewGameRoute } from "./gamesession_/new";
 
 import { useGameSessions } from "#/hooks/GameSessionHooks";
 import BottomAddButton from "#/components/BottomAddButton";
+import { UserGameOverview } from "#/game_session/UserGameOverview";
 
 export const Route = createFileRoute("/")({ component: Home });
 
@@ -17,6 +18,7 @@ function Home() {
 
     return (
         <Box sx={{ m: 1 }}>
+            <UserGameOverview />
             <Typography>Ongoing Games</Typography>
             <GameSessionList gameSessions={gameSessions.filter((val) => val.ended_at === null)} />
             <Typography>Past Games</Typography>

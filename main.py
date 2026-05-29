@@ -18,7 +18,7 @@ from fastapi import FastAPI
 
 from utils.env_settings import get_settings
 
-from routes import auth, course, device_routes, games, score, group
+from routes import auth, course, device_routes, games, score, group, profile
 
 from database import create_db_and_tables, get_session
 
@@ -101,6 +101,7 @@ app.include_router(games.router, prefix="/api/v1")
 app.include_router(score.router, prefix="/api/v1")
 app.include_router(course.router, prefix="/api/v1")
 app.include_router(group.router, prefix="/api/v1")
+app.include_router(profile.router, prefix="/api/v1")
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError

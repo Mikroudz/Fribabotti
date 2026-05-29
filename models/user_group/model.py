@@ -2,7 +2,7 @@ from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from sqlmodel import Field, SQLModel, Relationship, String
 
 from ..group_chat.model import GroupChat
-from ..user.model import User
+from ..user.model import User, GroupMemberRead
 
 if TYPE_CHECKING:
     from ..game_session.model import GameSession
@@ -43,8 +43,26 @@ class UpdateUserGroup(SQLModel):
     name: str | None = None
     deleted: bool | None = None
     notify_groups: bool | None = None
+    reset_invite: bool = False
+
+
+class CreateUserGroup(SQLModel):
+    name: str | None = None
 
 
 class UserGroupReadShort(SQLModel):
     name: str = ""
     id: int
+
+
+class UserGroupRead(SQLModel):
+    name: str = ""
+    id: int
+    invite_code: str
+    members: list[GroupMemberRead] = []
+    recent_games: list["GameSessionReadShortWithCourse"] = []
+
+
+from ..game_session.model import GameSessionReadShortWithCourse
+
+UserGroupRead.model_rebuild()

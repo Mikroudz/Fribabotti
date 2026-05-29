@@ -1,11 +1,5 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-    getGameSession,
-    getGameSessions,
-    getCourses,
-    getCourse,
-    getUserGroups,
-} from "../utils/api";
+import { getGameSession, getGameSessions, getCourses, getCourse, getUserStats } from "../utils/api";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 
@@ -16,6 +10,8 @@ export const CURRENT_SELECTED_HOLE = "CURRENT_SELECTED_HOLE";
 export const COURSES_KEY = "ALL_COURSES";
 
 export const USER_GROUPS_KEY = "ALL_USER_GROUPS";
+
+export const USER_STATS = "USER_STATS";
 
 export const useGameSessions = (notifyOnChangeProps) => {
     return useQuery({
@@ -37,11 +33,10 @@ export const useCourses = (notifyOnChangeProps) => {
     });
 };
 
-export const useUserGroups = (notifyOnChangeProps) => {
+export const useUserStats = (notifyOnChangeProps) => {
     return useQuery({
-        queryKey: [USER_GROUPS_KEY],
-        queryFn: getUserGroups,
-        initialData: [],
+        queryKey: [USER_STATS],
+        queryFn: getUserStats,
         notifyOnChangeProps,
     });
 };

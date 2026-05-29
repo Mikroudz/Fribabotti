@@ -26,7 +26,8 @@ export function GameScoreDrawer() {
     const NAV_HEIGHT = 56;
     const VISIBLE_HANDLE = 40;
     const TOTAL_BLEED = NAV_HEIGHT + VISIBLE_HANDLE;
-    const [total_score, _par] = calcTotalFromScores(gameSessionData?.user_score?.scores);
+    const [total_score, total_par] = calcTotalFromScores(gameSessionData?.user_score?.scores);
+
     return (
         <SwipeableDrawer
             anchor="bottom"
@@ -72,7 +73,7 @@ export function GameScoreDrawer() {
             >
                 <Box sx={{ position: "absolute", left: 0, m: 0.5, display: "flex", gap: 1 }}>
                     <Chip
-                        label={`Total ${prettyParFormat(total_score)}`}
+                        label={`Total ${prettyParFormat(total_score, total_par)}`}
                         sx={{ bgcolor: "primary.500" }}
                     ></Chip>
                     <Chip
