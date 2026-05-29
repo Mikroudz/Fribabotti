@@ -12,10 +12,10 @@ from .model import (
 )
 from models.user.model import User
 from models.user.crud import read_user
-from models.track.model import Track
+from models.track.model import Track, HoleReadLong
 
 from models.course.model import Course
-from models.score.model import Score, CourseScore, HoleReadLong, ThrowReadLong
+from models.score.model import Score, CourseScore
 
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
@@ -186,9 +186,7 @@ def read_game_session_long(
             for throw in find_score[0].throws:
                 throws.append(throw)
         scores.scores.append(
-            HoleReadLong(
-                par=track.par, track_number=track_num, throws=throws, score=score
-            )
+            HoleReadLong(**track.model_dump(), throws=throws, score=score)
         )
     scores.par = track_total_par
     scores.total_score = score_total

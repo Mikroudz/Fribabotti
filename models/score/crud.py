@@ -108,14 +108,15 @@ def update_game_session_device(
         # make list of throws
         for i, throw in enumerate(throws):
             # on last throw dont create new
-            if i < len(throws) - 1:
-                to_save_throws.append(
-                    Throw(
-                        throw_number=throw.throw_number,
-                        start_lat=throw.lat,
-                        start_lng=throw.lng,
-                    )
+            # NOTE: frontend handles throws so that last only has start position
+            # if i < len(throws) - 1:
+            to_save_throws.append(
+                Throw(
+                    throw_number=throw.throw_number,
+                    start_lat=throw.lat,
+                    start_lng=throw.lng,
                 )
+            )
             if i > 0:
                 setattr(to_save_throws[i - 1], "end_lat", throw.lat)
                 setattr(to_save_throws[i - 1], "end_lng", throw.lng)

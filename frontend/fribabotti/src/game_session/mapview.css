@@ -14,6 +14,14 @@
   color: blue;
 }
 
+.custom-tee-icon {
+
+  background-color: #23a057;
+  border: 1px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+
 .custom-number-icon.selected{
 	border-color: blue;
 
@@ -36,3 +44,4 @@
 	background-color: #1b211b !important;
 	color: white !important;
 }
+

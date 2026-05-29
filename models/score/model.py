@@ -3,10 +3,9 @@ from pydantic import computed_field
 from utils.formatting import par_score_format
 from sqlmodel import Field, SQLModel, Relationship, text
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
-from pydantic_extra_types.coordinate import Coordinate
 from models.throw.model import ThrowReadLong
-from models.course.model import CourseRead
 from datetime import datetime
+from models.track.model import HoleReadLong
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
@@ -59,13 +58,6 @@ class Score(ScoreBase, table=True):
             "server_default": text("CURRENT_TIMESTAMP"),
         },
     )
-
-
-class HoleReadLong(SQLModel):
-    track_number: int
-    par: int
-    score: int | None = None
-    throws: List[ThrowReadLong]
 
 
 class ScoreRead(SQLModel):

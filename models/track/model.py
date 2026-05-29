@@ -1,6 +1,7 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, UTC, date
 from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
+from models.throw.model import ThrowReadLong
 
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, text
 
@@ -12,6 +13,10 @@ if TYPE_CHECKING:
 class TrackBase(SQLModel):
     par: int = None
     deleted: bool = False
+    tee_lat: Optional[float] = None
+    tee_lng: Optional[float] = None
+    basket_lat: Optional[float] = None
+    basket_lng: Optional[float] = None
 
 
 class Track(TrackBase, table=True):
@@ -35,6 +40,17 @@ class Track(TrackBase, table=True):
 class TrackRead(SQLModel):
     par: int
     track_number: int
+
+
+class HoleReadLong(SQLModel):
+    track_number: int
+    par: int
+    score: int | None = None
+    throws: List[ThrowReadLong]
+    tee_lat: Optional[float] = None
+    tee_lng: Optional[float] = None
+    basket_lat: Optional[float] = None
+    basket_lng: Optional[float] = None
 
 
 class TrackCreate(SQLModel):

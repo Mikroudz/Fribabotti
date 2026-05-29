@@ -83,7 +83,7 @@ export function GameScoreDrawer() {
                 </Box>
                 <Box sx={{ position: "absolute", right: 0, m: 0.5, display: "flex", gap: 1 }}>
                     <Chip
-                        label={`vsPar ${prettyParFormat(currentHoleScore?.score, currentHoleScore?.par)}`}
+                        label={`${prettyParFormat(currentHoleScore?.score, currentHoleScore?.par)} vsPar`}
                         sx={{ bgcolor: "primary.500", mr: 8 }}
                     ></Chip>
                 </Box>

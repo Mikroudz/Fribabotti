@@ -1,13 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, Request
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+    BackgroundTasks,
+)
 from sqlmodel import Session
-from typing import Annotated, Union, List
+from typing import List
 from database import get_session
 
 
 from models.game_session.crud import (
     read_game_session_user,
     create_game_session,
-    read_game_session,
     read_game_session_long,
     end_game_session,
     delete_game_session,
@@ -19,6 +23,8 @@ from models.game_session.model import (
     GameSessionReadShort,
     GameSessionUserStats,
 )
+
+from models.track.crud import recalculate_track_gps
 from .route_deps import token_required_user_id_in_response
 
 router = APIRouter(
@@ -117,9 +123,17 @@ async def game_session_end(
     session: Session = Depends(get_session),
     gamesession_id: int,
     close: bool = True,
+    backgroud_tasks: BackgroundTasks,
 ):
     # TODO: check if user has permission to end
     end_game_session(session, gamesession_id, close=close, read=False)
-    return read_game_session_long(
+
+    game = read_game_session_long(
         session, user_id=request.state.user_id, game_session_id=gamesession_id
     )
+
+    if close:
+        # calculate hole start and end from received data
+        backgroud_tasks.add_task(recalculate_track_gps, session, game.course_id)
+
+    return game

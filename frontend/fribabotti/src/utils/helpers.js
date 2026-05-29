@@ -18,11 +18,11 @@ export function getBrowserLanguageCode() {
     return navigator.language;
 }
 
-export function getShortDistance(lat1, lon1, lat2, lon2) {
+export function getShortDistance(lat1, lon1, lat2, lon2, decimalplaces = 1) {
     const R = 6371e3;
     const x = (((lon2 - lon1) * Math.PI) / 180) * Math.cos(((lat1 + lat2) * Math.PI) / 360);
     const y = ((lat2 - lat1) * Math.PI) / 180;
-    return (Math.sqrt(x * x + y * y) * R).toFixed(1);
+    return (Math.sqrt(x * x + y * y) * R).toFixed(decimalplaces);
 }
 
 export function formatSecondsToTime(totalSeconds) {

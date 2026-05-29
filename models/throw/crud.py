@@ -28,8 +28,8 @@ def create_throw(session: Session, throw: ThrowCreate, user_id: int) -> Score | 
 
     # score is created with 0 as we dont count first throw as a full throw
     score = 0
-    if db_score:
-        # add one throw TODO: roll back this value if score creation fails
+    if db_score and len(db_score.throws) > 0:
+        # add one throw
         score = db_score.score + 1
 
     # update or create score

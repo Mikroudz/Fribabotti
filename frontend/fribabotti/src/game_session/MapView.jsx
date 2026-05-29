@@ -1,5 +1,13 @@
 import { Box, Button, MenuItem, Select, styled, Typography } from "@mui/material";
-import { MapContainer, TileLayer, useMap, Marker, Polyline, LayersControl } from "react-leaflet";
+import {
+    MapContainer,
+    TileLayer,
+    useMap,
+    Marker,
+    Polyline,
+    LayersControl,
+    Circle,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./mapview.css";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -95,6 +103,16 @@ function SelectHole({ data }) {
     const hole_idx = data?.scores?.findIndex((val) => val.track_number === track_number);
     const current_hole_par =
         hole_idx !== undefined && hole_idx !== -1 ? data.scores[hole_idx].par : 0;
+    const current_hole_dist =
+        hole_idx !== undefined && hole_idx !== -1
+            ? getShortDistance(
+                  data.scores[hole_idx].tee_lat,
+                  data.scores[hole_idx].tee_lng,
+                  data.scores[hole_idx].basket_lat,
+                  data.scores[hole_idx].basket_lng,
+                  0,
+              )
+            : 0;
 
     return (
         <StyledContentBox
@@ -104,64 +122,66 @@ function SelectHole({ data }) {
                 bottom: 0,
                 left: 0,
                 zIndex: 1000,
+                pt: 0,
+                pb: 0,
                 ml: 1,
                 mb: 12,
                 pr: 1.5,
                 pl: 1.5,
             }}
         >
-            <Box>
-                <Select
-                    variant="standard"
-                    value={track_number ?? ""}
-                    open={selectOpen}
-                    onOpen={handleOpen}
-                    onClose={handleClose}
-                    onChange={handleSelectHole}
-                    renderValue={(val) => (
-                        <Typography sx={{ color: "text.secondary" }}>{`Hole ${val}`}</Typography>
-                    )}
-                    sx={{
-                        "& .MuiSelect-icon": {
-                            color: "text.secondary",
-                        },
-                    }}
-                    MenuProps={{
-                        anchorOrigin: {
-                            vertical: "bottom",
-                            horizontal: "right",
-                        },
-                        transformOrigin: {
-                            vertical: "top",
-                            horizontal: "left",
-                        },
-                    }}
-                >
-                    {data?.scores.map((val) => (
-                        <MenuItem
-                            selected={track_number === val.track_number}
-                            key={val.track_number}
-                            value={val.track_number}
-                            sx={{
-                                "&.Mui-selected": {
-                                    bgcolor: "primary.400",
-                                },
-                            }}
-                        >{`Hole ${val.track_number}`}</MenuItem>
-                    ))}
-                </Select>
+            <Select
+                variant="standard"
+                value={track_number ?? ""}
+                open={selectOpen}
+                onOpen={handleOpen}
+                onClose={handleClose}
+                onChange={handleSelectHole}
+                renderValue={(val) => (
+                    <Typography sx={{ color: "text.secondary" }}>{`Hole ${val}`}</Typography>
+                )}
+                sx={{
+                    "& .MuiSelect-icon": {
+                        color: "text.secondary",
+                    },
+                }}
+                MenuProps={{
+                    anchorOrigin: {
+                        vertical: "bottom",
+                        horizontal: "right",
+                    },
+                    transformOrigin: {
+                        vertical: "top",
+                        horizontal: "left",
+                    },
+                }}
+            >
+                {data?.scores.map((val) => (
+                    <MenuItem
+                        selected={track_number === val.track_number}
+                        key={val.track_number}
+                        value={val.track_number}
+                        sx={{
+                            "&.Mui-selected": {
+                                bgcolor: "primary.400",
+                            },
+                        }}
+                    >{`Hole ${val.track_number}`}</MenuItem>
+                ))}
+            </Select>
 
-                <Typography variant="h6">{`Par ${current_hole_par}`}</Typography>
-            </Box>
+            <Typography variant="h6">
+                {`Par ${current_hole_par}`}
+                <br />
+                {`${current_hole_dist}M`}
+            </Typography>
         </StyledContentBox>
     );
 }
 
 function calculateThrowDistance(t) {
-    if (t?.start_lat && t?.start_lng && t?.end_lat && t?.end_lng) {
-        return getShortDistance(t.start_lat, t.start_lng, t.end_lat, t.end_lng);
-    }
-    return 0;
+    if (!t?.start_lat || !t?.start_lng || !t?.end_lat || !t?.end_lng) return "-";
+    return getShortDistance(t.start_lat, t.start_lng, t.end_lat, t.end_lng);
 }
 
 function ThrowInfo({ currentThrow }) {
@@ -354,6 +374,35 @@ function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDrag
     );
 }
 
+const createStartIcon = () => {
+    return L.divIcon({
+        className: `custom-tee-icon`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+    });
+};
+
+const createBasketIcon = () => {
+    return L.divIcon({
+        className: `custom-number-icon`,
+        iconSize: [24, 38],
+        iconAnchor: [0, 38],
+    });
+};
+
+function StartMarker({ position }) {
+    if (position) return <Marker position={position} icon={createStartIcon()}></Marker>;
+}
+
+function BasketMarker({ position }) {
+    return (
+        <>
+            <Circle center={position} radius={10} />
+            <Circle center={position} radius={20} />
+        </>
+    );
+}
+
 function Map({ sessionData }) {
     const [selectedThrowNum, setSelectedThrowNum] = useState(1);
     const [isMoving, setMoving] = useState(false);
@@ -363,6 +412,7 @@ function Map({ sessionData }) {
     const [localScoreData, setLocalScoreData] = useState(null);
     const [markerCoords, setMarkerCoords] = useState([]);
     const originalPositionRef = useRef(null);
+
     useEffect(() => {
         const currentScore = sessionData?.user_score?.scores.find(
             (val) => val.track_number === selectedHole?.track_number,
@@ -425,6 +475,22 @@ function Map({ sessionData }) {
             });
         }
     };
+
+    const [startEndmarkers, startEndPositions] = useMemo(() => {
+        if (localScoreData?.tee_lat == null) return [null, []];
+
+        const startmarker = [localScoreData?.tee_lat, localScoreData?.tee_lng];
+        const endMarker = [localScoreData?.basket_lat, localScoreData?.basket_lng];
+
+        return [
+            <>
+                <StartMarker position={startmarker} />
+                <BasketMarker position={endMarker} />
+            </>,
+            [startmarker, endMarker],
+        ];
+    }, [localScoreData]);
+
     const throwMarkers = useMemo(() => {
         return (
             <>
@@ -473,7 +539,8 @@ function Map({ sessionData }) {
                 </LayersControl>
 
                 {throwMarkers}
-                <RecenterMap markers={markerCoords} />
+                {startEndmarkers}
+                <RecenterMap markers={[...markerCoords, ...startEndPositions]} />
             </MapContainer>
             <ThrowInfo
                 currentThrow={localScoreData?.throws?.find(
