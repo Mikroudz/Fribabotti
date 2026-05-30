@@ -1,11 +1,14 @@
 import Toybox.Graphics;
 import Toybox.WatchUi;
+import Toybox.Lang;
+
+
 using Toybox.Position;
 
 class throwView extends WatchUi.View {
 
     var _has_gps_fix = false;
-    var _last_location;
+    var _last_location as Array<Double> or Null;
 
     function initialize() {
         View.initialize();
@@ -34,7 +37,7 @@ class throwView extends WatchUi.View {
         }
     }
 
-    function getGpsLocation() as Position.Location or Null {
+    function getGpsLocation() as Array<Double> or Null {
         if(_has_gps_fix){
             return _last_location;
         } else {

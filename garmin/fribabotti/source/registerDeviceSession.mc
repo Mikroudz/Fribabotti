@@ -25,7 +25,7 @@ class RegisterDeviceSession {
     }
 
 	function makeRequest(device_id as Number) as Void {
-        var url = "https://kiisu.club/fribabotti/api/v1/auth/";
+        var url = "http://127.0.0.1:8000/api/v1/auth/";
 
         var params = {"device_id" => device_id};
         var options = {                                             // set the options

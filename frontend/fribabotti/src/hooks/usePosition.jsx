@@ -4,6 +4,7 @@ const defaultSettings = {
     enableHighAccuracy: false,
     timeout: Infinity,
     maximumAge: 0,
+    targetAccuracy: 20, // in meters
 };
 
 export const usePosition = (userSettings = {}) => {
@@ -64,4 +65,51 @@ export const getPositionAsync = async (userSettings = {}) => {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, settings);
     });
+};
+
+let watchId;
+let callback;
+let startTime;
+
+export const getPositionWithCallback = async (cb, userSettings = {}) => {
+    if (!navigator || !navigator.geolocation) {
+        console.log("no geolocation");
+        return null;
+    }
+    const settings = {
+        ...defaultSettings,
+        ...userSettings,
+    };
+    try {
+        const permission = await navigator.permissions.query({ name: "geolocation" });
+        console.log(permission);
+        if (permission.state !== "granted") {
+            return null;
+        }
+    } catch (e) {
+        console.error(e);
+        return null;
+    }
+    callback = cb;
+    startTime = Date.now();
+    const checkAccuracy = (pos) => {
+        const currentAccuracy = pos.coords.accuracy;
+        if (
+            currentAccuracy <= settings.targetAccuracy ||
+            Date.now() - startTime >= settings.timeout * 1000
+        ) {
+            console.log("High accuracy location achieved:", pos.coords);
+            navigator.geolocation.clearWatch(watchId);
+            callback(pos);
+        }
+    };
+    const fail = () => {};
+
+    watchId = navigator.geolocation.watchPosition(checkAccuracy, fail, settings);
+};
+
+export const stopPositionWatch = () => {
+    if (watchId !== undefined) {
+        navigator.geolocation.clearWatch(watchId);
+    }
 };

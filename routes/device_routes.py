@@ -5,14 +5,13 @@ from typing import Annotated, Union
 from database import get_session
 
 from models.game_session.model import (
-    GameSessionRead,
-    ThrowRead,
+    GameSessionReadDevice,
     UpdateGameSession,
     GameSessionShort,
     DeviceUpdateGameSession,
 )
 from models.score.crud import read_scores, update_game_session_device
-from models.game_session.crud import read_game_session_user
+from models.game_session.crud import read_game_session_user, read_game_session_device
 
 from models.device_sessions.crud import (
     get_user_id_from_device,
@@ -29,7 +28,7 @@ def get_user_id_device(
     return get_user_id_from_device(session, token)
 
 
-@router.get("/{game_session_id}", response_model=GameSessionRead)
+@router.get("/{game_session_id}", response_model=GameSessionReadDevice)
 async def game_session_read(
     *,
     request: Request,
@@ -37,13 +36,7 @@ async def game_session_read(
     game_session_id: int,
     user_id: int = Depends(get_user_id_device),
 ):
-    scores = read_scores(session, game_session_id, user_id)
-    out = GameSessionRead()
-
-    for score, track in scores:
-        score_num = 0 if score == None else score.score
-        out.holes.append(ThrowRead(throws=[20] * score_num, par=track.par))
-    return out
+    return read_game_session_device(session, game_session_id, user_id)
 
 
 @router.get("/", response_model=list[GameSessionShort])

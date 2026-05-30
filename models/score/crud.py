@@ -7,7 +7,7 @@ from models.track.model import Track
 from models.user.model import User
 from models.throw.model import Throw
 from models.links.session_participants_link import SessionParticipantsLink
-from models.game_session.model import UpdateGameSession, DeviceUpdateGameSession
+from models.game_session.model import DeviceUpdateGameSession
 from datetime import datetime
 
 from models.game_session.model import GameSession
@@ -110,14 +110,16 @@ def update_game_session_device(
             # on last throw dont create new
             # NOTE: frontend handles throws so that last only has start position
             # if i < len(throws) - 1:
-            to_save_throws.append(
-                Throw(
-                    throw_number=throw.throw_number,
-                    start_lat=throw.lat,
-                    start_lng=throw.lng,
+            # Dont save throw if positions are none; we dont need them anymroe
+            if throw.lat and throw.lng:
+                to_save_throws.append(
+                    Throw(
+                        throw_number=throw.throw_number,
+                        start_lat=throw.lat,
+                        start_lng=throw.lng,
+                    )
                 )
-            )
-            if i > 0:
+            if i > 0 and len(to_save_throws) > 0:
                 setattr(to_save_throws[i - 1], "end_lat", throw.lat)
                 setattr(to_save_throws[i - 1], "end_lng", throw.lng)
 

@@ -9,6 +9,9 @@ from .model import (
     GameSessionReadLong,
     GameSessionReadShort,
     GameSessionUserStats,
+    GameSessionReadDevice,
+    HoleReadDevice,
+    ThrowShortDevice,
 )
 from models.user.model import User
 from models.user.crud import read_user
@@ -202,6 +205,48 @@ def read_game_session_long(
         playtime=playtime,
     )
     return game
+
+
+# specific formatting for devices
+def read_game_session_device(
+    session: Session, session_id: int, user_id: int
+) -> GameSessionReadDevice:
+    stmt = (
+        select(Score, Track)
+        .join(
+            Score,
+            and_(
+                Track.track_number == Score.track_number,
+                Score.user_id == user_id,
+                Score.game_session_id == session_id,
+            ),
+            isouter=True,
+        )
+        .options(selectinload(Score.throws))
+        .join(GameSession, GameSession.id == session_id)
+        .where(and_(Track.deleted == False, Track.course_id == GameSession.course_id))
+        .order_by(Track.track_number)
+    )
+
+    data = session.exec(stmt).all()
+    holes = []
+
+    for score, track in data:
+        throws = []
+        if score:
+            cnt_throws_with_loc = 0
+            for index, throw in enumerate(score.throws):
+                if throw.start_lat and throw.start_lat:
+                    cnt_throws_with_loc += 1
+                    throws.append(
+                        ThrowShortDevice(lat=throw.start_lat, lng=throw.start_lat)
+                    )
+            if score.score > len(throws):
+                throws += [None] * (score.score - len(throws) + 1)
+
+        holes.append(HoleReadDevice(throws=throws, par=track.par))
+
+    return GameSessionReadDevice(holes=holes)
 
 
 def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSession]:

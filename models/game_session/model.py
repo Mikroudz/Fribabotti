@@ -78,14 +78,19 @@ class GameSession(GameSessionBase, table=True):
     )
 
 
-class ThrowRead(SQLModel):
-    throws: List[float] = []
+class ThrowShortDevice(SQLModel):
+    lat: float | None = None
+    lng: float | None = None
+
+
+class HoleReadDevice(SQLModel):
+    throws: List[ThrowShortDevice | None] = []
     par: int = 0
 
 
 # Returns only scores for current user who requested the data
-class GameSessionRead(SQLModel):
-    holes: List[ThrowRead] = []
+class GameSessionReadDevice(SQLModel):
+    holes: List[HoleReadDevice] = []
 
 
 class GameSessionReadShort(GameSessionBase):

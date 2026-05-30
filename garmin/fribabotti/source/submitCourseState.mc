@@ -31,7 +31,7 @@ class SubmitCourseState {
     }
 
 	function makeRequest(data, session_id as Number) as Void {
-        var url = "https://kiisu.club/fribabotti/api/v1/game/" + session_id;
+        var url = "http://127.0.0.1:8000/api/v1/game/" + session_id;
 
         var token = sharedData.getAuthToken();
 

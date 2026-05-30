@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Response, Body, Request
 from fastapi.security import APIKeyHeader
 from sqlmodel import Session
 from typing import Annotated, Union, List
-from database import get_session
+from database import get_session as get_session
 
 from models.course.model import CourseReadShort, CourseCreate, CourseUpdate
 from models.course.stat_model import CourseWithStats

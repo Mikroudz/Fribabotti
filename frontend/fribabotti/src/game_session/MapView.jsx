@@ -1,4 +1,4 @@
-import { Box, Button, MenuItem, Select, styled, Typography } from "@mui/material";
+import { Box, Button, IconButton, MenuItem, Select, styled, Typography } from "@mui/material";
 import {
     MapContainer,
     TileLayer,
@@ -16,7 +16,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RoomIcon from "@mui/icons-material/Room";
 import { getShortDistance } from "#/utils/helpers";
-import { getPositionAsync } from "#/hooks/usePosition";
+import { getPositionAsync, getPositionWithCallback, stopPositionWatch } from "#/hooks/usePosition";
 import { GameScoreDrawer } from "./GameScoreDrawer";
 import {
     GAME_SESSION_KEY,
@@ -27,7 +27,7 @@ import {
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createThrow } from "#/utils/api";
 import { useParams } from "@tanstack/react-router";
-
+import MyLocationIcon from "@mui/icons-material/MyLocation";
 const createNumberedIcon = (number, selected) => {
     return L.divIcon({
         className: `custom-number-icon ${selected ? "selected" : ""}`,
@@ -170,7 +170,7 @@ function SelectHole({ data }) {
                 ))}
             </Select>
 
-            <Typography variant="h6">
+            <Typography variant="h6" sx={{ lineHeight: "1.25em" }}>
                 {`Par ${current_hole_par}`}
                 <br />
                 {`${current_hole_dist}M`}
@@ -244,7 +244,7 @@ function GameControls({ scoreData }) {
     const mutate = useMutateThrow();
     const { moveToNextHole } = useHoleChanger();
 
-    const handleNewThrow = () => {
+    const handleNewThrow = (pos) => {
         // TODO: prompt user to allow location if we dont get it
         //getPositionAsync({ enableHighAccuracy: true }).then((data) => console.log(data));
 
@@ -255,8 +255,8 @@ function GameControls({ scoreData }) {
             data: {
                 track_number: selectedTrack.track_number,
                 game_session_id: gameSessionId,
-                start_lat: testPos[0] + randomOffset,
-                start_lng: testPos[1] + randomOffset2,
+                start_lat: pos.coords.latitude,
+                start_lng: pos.coords.longitude,
             },
         });
     };
@@ -282,6 +282,10 @@ function GameControls({ scoreData }) {
                 method: "DELETE",
             });
         }
+    };
+
+    const handleThrowButton = async () => {
+        await getPositionWithCallback(handleNewThrow, { timeout: 10, enableHighAccuracy: true });
     };
 
     return (
@@ -320,7 +324,7 @@ function GameControls({ scoreData }) {
                         fontSize: "16px",
                     }}
                     variant="contained"
-                    onClick={handleNewThrow}
+                    onClick={handleThrowButton}
                 >
                     Record throw
                 </Button>
@@ -338,6 +342,73 @@ function GameControls({ scoreData }) {
                     <NavigateNextIcon />
                 </Button>
             </Box>
+        </>
+    );
+}
+
+const createMeIcon = () => {
+    return L.divIcon({
+        className: `custom-me-icon`,
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+    });
+};
+
+function LocateSelfButton() {
+    const map = useMap();
+    const [position, setPosition] = useState(null);
+
+    useEffect(() => {
+        map.on("locationfound", (e) => {
+            setPosition(e.latlng);
+            map.setView(e.latlng, 16);
+        });
+
+        map.on("locationerror", (e) => {
+            alert(`Geolocation error: ${e.message}`);
+        });
+    }, [map]);
+
+    const handleLocate = () => {
+        map.locate({ setView: false, maxZoom: 16 });
+    };
+
+    useEffect(() => {
+        return stopPositionWatch;
+    }, []);
+
+    return (
+        <>
+            {/* Custom Button Placed in a Leaflet Control Container Slot */}
+            <Box
+                className="leaflet-bottom leaflet-right"
+                sx={{ pointerEvents: "auto", bottom: 150 }}
+            >
+                <Box className="leaflet-control leaflet-bar">
+                    <IconButton
+                        onClick={handleLocate}
+                        sx={{
+                            backgroundColor: "background.paper",
+                            borderRadius: "4px",
+
+                            width: "44px",
+                            height: "44px",
+                            lineHeight: "44px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            border: "none",
+                            cursor: "pointer",
+                            fontSize: "18px",
+                        }}
+                    >
+                        <MyLocationIcon sx={{ color: "text.primary" }} />
+                    </IconButton>
+                </Box>
+            </Box>
+
+            {/* Render a marker at the user's location once it is found */}
+            {position && <Marker position={position} icon={createMeIcon()}></Marker>}
         </>
     );
 }
@@ -379,14 +450,6 @@ const createStartIcon = () => {
         className: `custom-tee-icon`,
         iconSize: [20, 20],
         iconAnchor: [10, 10],
-    });
-};
-
-const createBasketIcon = () => {
-    return L.divIcon({
-        className: `custom-number-icon`,
-        iconSize: [24, 38],
-        iconAnchor: [0, 38],
     });
 };
 
@@ -528,6 +591,7 @@ function Map({ sessionData }) {
                         <TileLayer
                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                            referrerPolicy={"strict-origin-when-cross-origin"}
                         />
                     </LayersControl.BaseLayer>
                     <LayersControl.BaseLayer name="Satellite">
@@ -541,6 +605,7 @@ function Map({ sessionData }) {
                 {throwMarkers}
                 {startEndmarkers}
                 <RecenterMap markers={[...markerCoords, ...startEndPositions]} />
+                <LocateSelfButton />
             </MapContainer>
             <ThrowInfo
                 currentThrow={localScoreData?.throws?.find(

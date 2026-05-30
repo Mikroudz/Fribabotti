@@ -20,7 +20,7 @@ class ThrowTrackerDrawable extends WatchUi.Drawable {
         Drawable.initialize(params);
 
         // Get any extra values you wish to use out of the params Dictionary
-		//initializeCourse([{"par" => 3, "throws" => []}, {"par" => 5, "throws" => []}, {"par" => 4, "throws" => []},{"par" => 2, "throws" => []},{"par" => 4, "throws" => []},{"par" => 5, "throws" => []}]);
+		//initializeCourse([{"par" => 3, "throws" => [{"lat" => 1.25235, "lng" => 23.534534}, {"lat" => 1.25235, "lng" => 23.534534}, {"lat" => 11.25235, "lng" => 20.534534}]}, {"par" => 5, "throws" => []}, {"par" => 4, "throws" => []},{"par" => 2, "throws" => []},{"par" => 4, "throws" => []},{"par" => 5, "throws" => []}]);
 
     }
 
@@ -38,7 +38,7 @@ class ThrowTrackerDrawable extends WatchUi.Drawable {
 			for(var j = 0; j < _throws[i]._throw_locations.size(); j++){
 
 				if(_throws[i]._throw_locations[j] != null){
-					var degs = _throws[i]._throw_locations[j].toDegrees();
+					var degs = _throws[i]._throw_locations[j];
 					out[i]["throws"].add({"lat" => degs[0].toFloat(), "lng" => degs[1].toFloat(), "throw_number" => j + 1});
 				}else{
 					out[i]["throws"].add({"lat" => null, "lng" => null, "throw_number" => j + 1});
@@ -53,7 +53,7 @@ class ThrowTrackerDrawable extends WatchUi.Drawable {
 		_current_hole_index = hole_idx;
 	}
 
-	function addThrow(location){
+	function addThrow(location as Array<Double> or Null){
 		// we should always be inside the array but test still
 		if(_throws.size() <= _current_hole_index) {return;}
 		_throws[_current_hole_index].addThrow(location);
@@ -137,10 +137,10 @@ class ThrowTrackerDrawable extends WatchUi.Drawable {
 			);
 		}
 		
-		// throw distances
+		// throw distances.
 		var distString = "";
-		for(var i = 0; i < _throws[_current_hole_index].throws.size(); i++){
-			distString += _throws[_current_hole_index].throws[i].format("%.0f") + "M·";
+		for(var i = 0; i < _throws[_current_hole_index].distances.size(); i++){
+			distString += _throws[_current_hole_index].distances[i].format("%.0f") + "M·";
 		}
 		dc.drawText(dc.getWidth() * 0.5, 196, Graphics.FONT_XTINY, distString, Graphics.TEXT_JUSTIFY_CENTER);
     }
