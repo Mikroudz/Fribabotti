@@ -5,13 +5,17 @@ from sqlalchemy.orm import selectinload
 from pydantic import ValidationError
 
 from .model import Course, CourseUpdate, CourseCreate, CourseReadShort
-from .stat_model import CourseWithStats
+from .stat_model import CourseWithStats, CourseStatHistory
 
 from models.track.model import Track
 from models.game.model import Game
 from models.score.model import Score
 from models.game_session.crud import read_game_session_user
-from models.game_session.model import GameSessionReadShortWithoutCourse
+from models.game_session.model import (
+    GameSessionReadShortWithoutCourse,
+    GameSession,
+    GameSessionReadStat,
+)
 
 
 def create_course(
@@ -216,12 +220,12 @@ def read_course_with_user_stats(
     if db_type == "sqlite":
         time_diff = (
             func.julianday(func.max(Score.created_at))
-            - func.julianday(func.min(Score.created_at))
+            - func.julianday(GameSession.started_at)
         ) * 86400
     else:
         time_diff = func.unix_timestamp(
             func.max(Score.created_at)
-        ) - func.unix_timestamp(func.min(Score.created_at))
+        ) - func.unix_timestamp(GameSession.started_at)
 
     round_totals = (
         select(
@@ -233,6 +237,7 @@ def read_course_with_user_stats(
                 else_=cast(time_diff, Integer),
             ).label("playtime"),
         )
+        .join(GameSession, Score.game_session_id == GameSession.id)
         .where(Score.user_id == user_id, Score.course_id == course_id, Score.score > 0)
         .group_by(Score.game_session_id)
         .having(func.count(Score.track_number) == course_track_count_subq)
@@ -291,3 +296,46 @@ def read_course_with_user_stats(
     )
 
     return ret
+
+
+def read_course_history_user_stats(
+    session: Session, course_id: int, user_id: int
+) -> CourseWithStats | None:
+    stmt_course = (
+        select(Course, func.sum(Track.par).label("total_par"))
+        .join(Track, Course.id == Track.course_id)
+        .where(Course.id == course_id)
+    )
+    db_course = session.exec(stmt_course).first()
+
+    if not db_course:
+        raise HTTPException(404, f"Course id {course_id} not found")
+
+    course_track_count_subq = (
+        select(func.count(Track.track_number))
+        .where(Track.course_id == course_id)
+        .scalar_subquery()
+    )
+
+    stmt = (
+        select(GameSession, func.sum(Score.score).label("total_score"))
+        .join(Score, GameSession.id == Score.game_session_id)
+        .where(
+            GameSession.course_id == course_id,
+            Score.user_id == user_id,
+            Score.score > 0,
+        )
+        .having(func.count(Score.track_number) == course_track_count_subq)
+        .group_by(GameSession.id)
+        .order_by(GameSession.started_at.asc())
+    )
+    games = session.exec(stmt).all()
+
+    return CourseStatHistory(
+        **db_course[0].model_dump(),
+        par=db_course[1],
+        user_past_rounds=[
+            GameSessionReadStat(**game.model_dump(), score=score)
+            for game, score in games
+        ],
+    )

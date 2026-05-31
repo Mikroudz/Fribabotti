@@ -25,6 +25,7 @@ import { Route as GroupsGroupIdEditRouteImport } from './routes/groups/$groupId.
 import { Route as GamesessionGameSessionIdGamesessionRouteImport } from './routes/gamesession_/$gameSessionId/gamesession'
 import { Route as GamesessionGameSessionIdSessionlayoutRouteImport } from './routes/gamesession_/$gameSessionId/_sessionlayout'
 import { Route as CourseCourseIdNewgameRouteImport } from './routes/course.$courseId.newgame'
+import { Route as CourseCourseIdGraphsRouteImport } from './routes/course.$courseId.graphs'
 import { Route as CourseCourseIdEditRouteImport } from './routes/course.$courseId.edit'
 import { Route as GamesessionGameSessionIdSessionlayoutMapRouteImport } from './routes/gamesession_/$gameSessionId/_sessionlayout.map'
 
@@ -110,6 +111,11 @@ const CourseCourseIdNewgameRoute = CourseCourseIdNewgameRouteImport.update({
   path: '/$courseId/newgame',
   getParentRoute: () => CourseRoute,
 } as any)
+const CourseCourseIdGraphsRoute = CourseCourseIdGraphsRouteImport.update({
+  id: '/$courseId/graphs',
+  path: '/$courseId/graphs',
+  getParentRoute: () => CourseRoute,
+} as any)
 const CourseCourseIdEditRoute = CourseCourseIdEditRouteImport.update({
   id: '/$courseId/edit',
   path: '/$courseId/edit',
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/groups/': typeof GroupsIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/graphs': typeof CourseCourseIdGraphsRoute
   '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession/$gameSessionId': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/groups': typeof GroupsIndexRoute
   '/profile': typeof ProfileIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/graphs': typeof CourseCourseIdGraphsRoute
   '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession/$gameSessionId': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
@@ -173,6 +181,7 @@ export interface FileRoutesById {
   '/groups/': typeof GroupsIndexRoute
   '/profile/': typeof ProfileIndexRoute
   '/course/$courseId/edit': typeof CourseCourseIdEditRoute
+  '/course/$courseId/graphs': typeof CourseCourseIdGraphsRoute
   '/course/$courseId/newgame': typeof CourseCourseIdNewgameRoute
   '/gamesession_/$gameSessionId/_sessionlayout': typeof GamesessionGameSessionIdSessionlayoutRouteWithChildren
   '/gamesession_/$gameSessionId/gamesession': typeof GamesessionGameSessionIdGamesessionRoute
@@ -195,6 +204,7 @@ export interface FileRouteTypes {
     | '/groups/'
     | '/profile/'
     | '/course/$courseId/edit'
+    | '/course/$courseId/graphs'
     | '/course/$courseId/newgame'
     | '/gamesession/$gameSessionId'
     | '/gamesession/$gameSessionId/gamesession'
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/profile'
     | '/course/$courseId/edit'
+    | '/course/$courseId/graphs'
     | '/course/$courseId/newgame'
     | '/gamesession/$gameSessionId'
     | '/gamesession/$gameSessionId/gamesession'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/groups/'
     | '/profile/'
     | '/course/$courseId/edit'
+    | '/course/$courseId/graphs'
     | '/course/$courseId/newgame'
     | '/gamesession_/$gameSessionId/_sessionlayout'
     | '/gamesession_/$gameSessionId/gamesession'
@@ -373,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CourseCourseIdNewgameRouteImport
       parentRoute: typeof CourseRoute
     }
+    '/course/$courseId/graphs': {
+      id: '/course/$courseId/graphs'
+      path: '/$courseId/graphs'
+      fullPath: '/course/$courseId/graphs'
+      preLoaderRoute: typeof CourseCourseIdGraphsRouteImport
+      parentRoute: typeof CourseRoute
+    }
     '/course/$courseId/edit': {
       id: '/course/$courseId/edit'
       path: '/$courseId/edit'
@@ -394,6 +413,7 @@ interface CourseRouteChildren {
   CourseNewRoute: typeof CourseNewRoute
   CourseIndexRoute: typeof CourseIndexRoute
   CourseCourseIdEditRoute: typeof CourseCourseIdEditRoute
+  CourseCourseIdGraphsRoute: typeof CourseCourseIdGraphsRoute
   CourseCourseIdNewgameRoute: typeof CourseCourseIdNewgameRoute
   CourseCourseIdIndexRoute: typeof CourseCourseIdIndexRoute
 }
@@ -402,6 +422,7 @@ const CourseRouteChildren: CourseRouteChildren = {
   CourseNewRoute: CourseNewRoute,
   CourseIndexRoute: CourseIndexRoute,
   CourseCourseIdEditRoute: CourseCourseIdEditRoute,
+  CourseCourseIdGraphsRoute: CourseCourseIdGraphsRoute,
   CourseCourseIdNewgameRoute: CourseCourseIdNewgameRoute,
   CourseCourseIdIndexRoute: CourseCourseIdIndexRoute,
 }

@@ -45,6 +45,7 @@ export function GameTitleInformation({ data }) {
                 flexDirection: "column",
                 alignItems: "center",
                 position: "relative",
+                m: 0,
                 pt: 3,
             }}
         >

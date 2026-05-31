@@ -1,5 +1,12 @@
 import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getGameSession, getGameSessions, getCourses, getCourse, getUserStats } from "../utils/api";
+import {
+    getGameSession,
+    getGameSessions,
+    getCourses,
+    getCourse,
+    getUserStats,
+    getCourseHistoryStats,
+} from "../utils/api";
 import { useParams } from "@tanstack/react-router";
 import { useCallback, useEffect } from "react";
 
@@ -45,6 +52,12 @@ export const courseQueryOptions = (queryId) =>
     queryOptions({
         queryKey: ["COURSE", queryId],
         queryFn: getCourse,
+    });
+
+export const courseGraphQueryOptions = (queryId) =>
+    queryOptions({
+        queryFn: getCourseHistoryStats,
+        queryKey: ["COURSE_HISTORY_STATS", queryId],
     });
 
 // can pass id manually or get from route

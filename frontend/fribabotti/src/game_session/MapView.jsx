@@ -7,6 +7,7 @@ import {
     Polyline,
     LayersControl,
     Circle,
+    LayerGroup,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./mapview.css";
@@ -557,18 +558,23 @@ function Map({ sessionData }) {
     const throwMarkers = useMemo(() => {
         return (
             <>
-                {markerCoords.map((val, idx) => (
-                    <ThrowMarker
-                        key={val[0]}
-                        position={val}
-                        thrownum={idx + 1}
-                        markerIdx={idx}
-                        onClick={(num) => setSelectedThrowNum(num)}
-                        isSelected={idx + 1 === selectedThrowNum}
-                        isMoving={idx + 1 === selectedThrowNum && isMoving}
-                        onDragEnd={handleDragEnd}
-                    />
-                ))}
+                {markerCoords.map((val, idx) => {
+                    // should not show last throw marker
+                    return (
+                        idx !== markerCoords.length - 1 && (
+                            <ThrowMarker
+                                key={`coordinate-${val[0]}-${val[1]}`}
+                                position={val}
+                                thrownum={idx + 1}
+                                markerIdx={idx}
+                                onClick={(num) => setSelectedThrowNum(num)}
+                                isSelected={idx + 1 === selectedThrowNum}
+                                isMoving={idx + 1 === selectedThrowNum && isMoving}
+                                onDragEnd={handleDragEnd}
+                            />
+                        )
+                    );
+                })}
                 {/* TODO: add distance labels to each line*/}
                 <Polyline
                     positions={markerCoords}
@@ -584,7 +590,7 @@ function Map({ sessionData }) {
                 zoom={19}
                 scrollWheelZoom={false}
                 center={[62.290715, 25.007085]}
-                style={{ height: "100%", width: "100%" }}
+                style={{ height: "100%", width: "100%", position: "relative" }}
             >
                 <LayersControl position="bottomright">
                     <LayersControl.BaseLayer checked name="OpenStreetMap">
@@ -601,9 +607,11 @@ function Map({ sessionData }) {
                         />
                     </LayersControl.BaseLayer>
                 </LayersControl>
+                <LayerGroup key={selectedHole.track_number}>
+                    {throwMarkers}
+                    {startEndmarkers}
+                </LayerGroup>
 
-                {throwMarkers}
-                {startEndmarkers}
                 <RecenterMap markers={[...markerCoords, ...startEndPositions]} />
                 <LocateSelfButton />
             </MapContainer>

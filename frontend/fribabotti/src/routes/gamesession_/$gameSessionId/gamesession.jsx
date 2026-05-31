@@ -1,6 +1,6 @@
 import { GameTitleInformation } from "#/game_session/GameTitle";
 import { ScoreCard } from "#/game_session/Scorecard";
-import { Button, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import { Box, Button, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Route as MapRoute } from "./_sessionlayout.map";
 import { useGameSession } from "#/hooks/GameSessionHooks";
@@ -69,19 +69,21 @@ function RouteComponent() {
     const { data, status } = useGameSession(gameSessionId);
 
     return (
-        <>
+        <Box sx={{ p: 1 }}>
             <GameTitleInformation data={data} />
-            <ScoreCard data={data} />
             <Button
                 variant="contained"
-                sx={{ bgcolor: "secondary.main", width: "100%", mt: 2 }}
+                sx={{ bgcolor: "secondary.main", width: "100%", mb: 1, mt: 1 }}
                 component={Link}
                 to={MapRoute.to}
                 params={{ gameSessionId }}
             >
                 Map/Play
             </Button>
+
+            <ScoreCard data={data} />
+
             <AppBarMenu data={data} />
-        </>
+        </Box>
     );
 }

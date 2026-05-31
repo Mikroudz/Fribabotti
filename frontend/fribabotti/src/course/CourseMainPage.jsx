@@ -8,10 +8,12 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { Route as GameSessionRoute } from "#/routes/gamesession_/$gameSessionId/gamesession";
 import { Route as RouteEditcourse } from "#/routes/course.$courseId.edit";
 import { Route as RouteCourse } from "#/routes/course.$courseId.index";
+import { Route as RouteGraph } from "#/routes/course.$courseId.graphs";
 
 import EditIcon from "@mui/icons-material/Edit";
 import { Route as RouteNewGame } from "#/routes/course.$courseId.newgame";
 import { formatSecondsToTime } from "#/utils/helpers";
+import AnalyticsIcon from "@mui/icons-material/Analytics";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -123,10 +125,21 @@ function CourseStatsGlance({ course }) {
                     ></PrettyPar>
                 </StyledAnyContentBox>
                 <StyledAnyContentBox size={{ xs: 3, sm: 3 }} component={Grid} sx={{ m: 0, p: 1 }}>
-                    <Typography sx={{ color: "text.secondary" }}>Games Played</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 600 }}>
-                        {course?.games_played_cnt}
-                    </Typography>
+                    <Box
+                        onClick={() =>
+                            navigate({ to: RouteGraph.to, params: { courseId: course?.id } })
+                        }
+                        sx={{ position: "relative" }}
+                    >
+                        <AnalyticsIcon
+                            fontSize="small"
+                            sx={{ position: "absolute", right: 0, top: 0, color: "text.secondary" }}
+                        ></AnalyticsIcon>
+                        <Typography sx={{ color: "text.secondary" }}>Games Played</Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                            {course?.games_played_cnt}
+                        </Typography>
+                    </Box>
                 </StyledAnyContentBox>
                 <StyledAnyContentBox size={3} component={Grid} sx={{ m: 0, p: 1 }}>
                     <Typography sx={{ color: "text.secondary" }}>Total Playtime</Typography>

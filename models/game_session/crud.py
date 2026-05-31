@@ -20,6 +20,8 @@ from models.track.model import Track, HoleReadLong
 from models.course.model import Course
 from models.score.model import Score, CourseScore
 
+from models.throw.model import Throw
+
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink
 from models.links.user_group_members_link import UserGroupMembersLink
@@ -134,12 +136,12 @@ def read_game_session_long(
     db_type = session.bind.dialect.name
     if db_type == "sqlite":
         end_sec = func.unixepoch(func.max(Score.created_at))
-        start_sec = func.unixepoch(func.min(Score.created_at))
+        start_sec = func.unixepoch(GameSession.started_at)
         time_diff = end_sec - start_sec
     else:
         time_diff = func.unix_timestamp(
             func.max(Score.created_at)
-        ) - func.unix_timestamp(func.min(Score.created_at))
+        ) - func.unix_timestamp(GameSession.started_at)
 
     # note that playtime is limited to 6 hours; set to 0 if we go over that (something weird has happened with the scores)
     stmt = (

@@ -110,6 +110,12 @@ class GameSessionReadShortWithoutCourse(GameSessionBase):
     score: int = 0
 
 
+class GameSessionReadStat(GameSessionBase):
+    id: int
+    started_at: datetime
+    score: int = 0
+
+
 class GameSessionReadShortWithCourse(SQLModel):
     id: int
     started_at: datetime
