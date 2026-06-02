@@ -81,7 +81,7 @@ function RouteComponent() {
                 Map/Play
             </Button>
 
-            <ScoreCard data={data} />
+            <ScoreCard data={data?.user_score} />
 
             <AppBarMenu data={data} />
         </Box>

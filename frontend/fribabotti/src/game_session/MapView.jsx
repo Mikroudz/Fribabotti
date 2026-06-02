@@ -17,7 +17,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RoomIcon from "@mui/icons-material/Room";
 import { getShortDistance } from "#/utils/helpers";
-import { getPositionAsync, getPositionWithCallback, stopPositionWatch } from "#/hooks/usePosition";
+import { getPositionWithCallback, stopPositionWatch } from "#/hooks/usePosition";
 import { GameScoreDrawer } from "./GameScoreDrawer";
 import {
     GAME_SESSION_KEY,
@@ -29,6 +29,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createThrow } from "#/utils/api";
 import { useParams } from "@tanstack/react-router";
 import MyLocationIcon from "@mui/icons-material/MyLocation";
+
 const createNumberedIcon = (number, selected) => {
     return L.divIcon({
         className: `custom-number-icon ${selected ? "selected" : ""}`,
@@ -256,8 +257,8 @@ function GameControls({ scoreData }) {
             data: {
                 track_number: selectedTrack.track_number,
                 game_session_id: gameSessionId,
-                start_lat: pos.coords.latitude,
-                start_lng: pos.coords.longitude,
+                start_lat: testPos[0] - randomOffset, //pos.coords.latitude,
+                start_lng: testPos[1] - randomOffset2, //pos.coords.longitude,
             },
         });
     };
@@ -286,6 +287,7 @@ function GameControls({ scoreData }) {
     };
 
     const handleThrowButton = async () => {
+        handleNewThrow();
         await getPositionWithCallback(handleNewThrow, { timeout: 10, enableHighAccuracy: true });
     };
 
@@ -382,8 +384,8 @@ function LocateSelfButton() {
         <>
             {/* Custom Button Placed in a Leaflet Control Container Slot */}
             <Box
-                className="leaflet-bottom leaflet-right"
-                sx={{ pointerEvents: "auto", bottom: 150 }}
+                className="leaflet-right"
+                sx={{ pointerEvents: "auto", bottom: 160, position: "absolute" }}
             >
                 <Box className="leaflet-control leaflet-bar">
                     <IconButton
@@ -481,6 +483,14 @@ function Map({ sessionData }) {
         const currentScore = sessionData?.user_score?.scores.find(
             (val) => val.track_number === selectedHole?.track_number,
         );
+        // if we have more or less throws disable moving
+        if (
+            isMoving &&
+            originalPositionRef.current &&
+            originalPositionRef.current.length !== currentScore?.throws?.length
+        ) {
+            setMoving(false);
+        }
         setLocalScoreData(currentScore);
 
         if (currentScore) {
@@ -521,10 +531,10 @@ function Map({ sessionData }) {
 
     const handleMovingStart = () => {
         if (isMoving) {
-            handleEndMoving();
             setMoving(false);
+            handleEndMoving();
         } else {
-            // TODO: what if user adds new throw during moving?
+            // if throw is added during moving end moving
             // TODO: what if user changes hole during moving? -> maybe stop moving and discard
             originalPositionRef.current = markerCoords;
             setMoving(true);
@@ -559,9 +569,10 @@ function Map({ sessionData }) {
         return (
             <>
                 {markerCoords.map((val, idx) => {
-                    // should not show last throw marker
+                    // should show last marker only when moving
+                    const showMarker = idx !== markerCoords.length - 1 || isMoving;
                     return (
-                        idx !== markerCoords.length - 1 && (
+                        showMarker && (
                             <ThrowMarker
                                 key={`coordinate-${val[0]}-${val[1]}`}
                                 position={val}

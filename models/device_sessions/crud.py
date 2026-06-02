@@ -6,9 +6,17 @@ from fastapi import HTTPException, status
 from .model import DeviceSession
 
 
-def read_device_sessions_user(session: Session, user_id: int) -> List[DeviceSession]:
+def read_device_sessions_user(
+    session: Session, user_id: int, filter_unidentified: bool = False
+) -> List[DeviceSession]:
 
-    stmt = select(DeviceSession).where(DeviceSession.user_id == user_id)
+    stmt = (
+        select(DeviceSession)
+        .where(DeviceSession.user_id == user_id)
+        .order_by(DeviceSession.created_at.desc())
+    )
+    if filter_unidentified:
+        stmt = stmt.where(DeviceSession.has_identified == True)
     res = session.exec(stmt).all()
     return res
 

@@ -1,7 +1,7 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, UTC, date
 from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
-from models.throw.model import ThrowReadLong
+from models.throw.model import ThrowReadLong, ThrowLandingPos
 
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, text
 
@@ -42,6 +42,12 @@ class TrackRead(SQLModel):
     track_number: int
 
 
+class TrackReadUserScore(SQLModel):
+    par: int
+    track_number: int
+    user_avg: float | None = None
+
+
 class HoleReadLong(SQLModel):
     track_number: int
     par: int
@@ -62,3 +68,8 @@ class TrackUpdate(SQLModel):
     id: int
     par: int
     track_number: int
+
+
+class TrackWithHoleStatistic(TrackBase):
+    track_number: int
+    throws: list[ThrowLandingPos] = []

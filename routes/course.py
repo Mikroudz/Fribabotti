@@ -7,7 +7,6 @@ from database import get_session as get_session
 from models.course.model import CourseReadShort, CourseCreate, CourseUpdate
 from models.course.stat_model import CourseWithStats, CourseStatHistory
 from models.course.crud import (
-    read_courses,
     read_course_with_user_stats,
     create_course_with_tracks,
     update_course_with_tracks,
@@ -17,6 +16,9 @@ from models.course.crud import (
 )
 
 from models.game.crud import read_games
+
+from models.track.model import TrackWithHoleStatistic
+from models.throw.crud import get_hole_throws_history
 
 from .route_deps import token_required_user_id_in_response
 
@@ -52,14 +54,37 @@ async def course_read(
     request: Request,
     session: Session = Depends(get_session),
     course_id: int,
+    limit: int = 50,
 ):
-    return read_course_history_user_stats(session, course_id, request.state.user_id)
+    return read_course_history_user_stats(
+        session, course_id, request.state.user_id, limit=limit
+    )
+
+
+@router.get(
+    "/{course_id}/history/{track_number}", response_model=TrackWithHoleStatistic
+)
+async def course_read(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    course_id: int,
+    track_number: int,
+):
+    return get_hole_throws_history(
+        session,
+        course_id=course_id,
+        user_id=request.state.user_id,
+        track_number=track_number,
+    )
 
 
 @router.get("", response_model=List[CourseReadShort])
 async def courses_read(*, request: Request, session: Session = Depends(get_session)):
 
-    return read_courses_short(session, get_game_id(session))
+    return read_courses_short(
+        session, get_game_id(session), user_id=request.state.user_id
+    )
 
 
 @router.post("", response_model=CourseWithStats)

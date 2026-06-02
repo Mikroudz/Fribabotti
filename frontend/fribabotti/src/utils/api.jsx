@@ -32,6 +32,10 @@ export async function getUser() {
     return baseFetch("/profile");
 }
 
+export async function getDeviceSessions() {
+    return baseFetch("/profile/devices");
+}
+
 export async function getUserStats({ days_to_past = null }) {
     const params = {};
     if (days_to_past !== null) {
@@ -76,6 +80,11 @@ export async function getCourse({ queryKey }) {
 export async function getCourseHistoryStats({ queryKey }) {
     const [_key, course_id] = queryKey;
     return baseFetch(`/courses/${course_id}/history`);
+}
+
+export async function getTrackHistoryStats({ queryKey }) {
+    const [_key, course_id, track_number] = queryKey;
+    return baseFetch(`/courses/${course_id}/history/${track_number}`);
 }
 
 export async function getCourses() {

@@ -1,8 +1,10 @@
 from typing import List, Tuple
 from sqlmodel import Session, select, not_, and_, exists, func, desc, asc
 from sqlalchemy.orm import selectinload, with_loader_criteria
-from .model import Throw, ThrowCreate, ThrowUpdate
+from .model import Throw, ThrowCreate, ThrowUpdate, ThrowLandingPos
 from models.score.model import Score
+from models.track.model import Track, TrackWithHoleStatistic
+
 from models.score.crud import upsert_score, read_score
 from fastapi import HTTPException
 
@@ -152,3 +154,35 @@ def remove_throw(session: Session, throw_id: int, user_id: int) -> Score:
         )
         session.commit()
         return read_score(session, score_id)
+
+
+def get_hole_throws_history(
+    session: Session, user_id: int, course_id: int, track_number: int
+) -> TrackWithHoleStatistic:
+
+    stmt = (
+        select(Throw)
+        .join(Score, Score.id == Throw.score_id)
+        .where(
+            Score.course_id == course_id,
+            Score.track_number == track_number,
+            Score.user_id == user_id,
+            Throw.end_lng.is_not(None),
+            Throw.end_lat.is_not(None),
+            Throw.throw_number == 1,
+        )
+    )
+    throws = session.exec(stmt).all()
+
+    track = session.exec(
+        select(Track).where(
+            Track.track_number == track_number, Track.course_id == course_id
+        )
+    ).first()
+    if not track:
+        raise HTTPException(404, "Track not found")
+
+    return TrackWithHoleStatistic(
+        **track.model_dump(),
+        throws=[ThrowLandingPos(lat=t.end_lat, lng=t.end_lng) for t in throws],
+    )

@@ -1,7 +1,11 @@
 import { useUser } from "#/auth/UserHooks";
+import { StyledListItem, StyledListItemButton } from "#/components/List";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 import { GroupList } from "#/Groups/GroupList";
-import { Avatar, Box, lighten, Typography } from "@mui/material";
+import { getDeviceSessions } from "#/utils/api";
+import { dateTimeNice } from "#/utils/helpers";
+import { Avatar, Box, lighten, List, ListItemText, Typography } from "@mui/material";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/profile/")({
@@ -11,7 +15,7 @@ export const Route = createFileRoute("/profile/")({
     }),
 });
 
-function InfoBox({ title, value }) {
+export function InfoBox({ title, value }) {
     return (
         <StyledAnyContentBox
             sx={{
@@ -38,7 +42,6 @@ function InfoBox({ title, value }) {
 
 function ProfileInfo() {
     const { user } = useUser();
-    console.log(user);
     return (
         <StyledAnyContentBox>
             <Box
@@ -62,11 +65,41 @@ function ProfileInfo() {
     );
 }
 
+function ProfileDevices() {
+    const { data: devices } = useQuery({
+        queryFn: getDeviceSessions,
+        queryKey: ["DEVICE_SESSIONS"],
+        initialData: [],
+    });
+    return (
+        <StyledAnyContentBox>
+            <Typography>Registered Devices</Typography>
+            <Typography variant="caption">Devices can only be added in Telegram bot</Typography>
+
+            <List>
+                {devices?.length === 0 && <Typography>No devices registered</Typography>}
+                {devices?.map((val) => (
+                    <StyledListItem
+                        key={val.created_at}
+                        sx={{ alignItems: "center", bgcolor: "background.default", mb: 1, pb: 0 }}
+                    >
+                        <ListItemText
+                            secondary={dateTimeNice(val?.created_at)}
+                            primary={"Device"}
+                        />
+                    </StyledListItem>
+                ))}
+            </List>
+        </StyledAnyContentBox>
+    );
+}
+
 function RouteComponent() {
     return (
         <>
             <ProfileInfo />
             <GroupList />
+            <ProfileDevices />
         </>
     );
 }

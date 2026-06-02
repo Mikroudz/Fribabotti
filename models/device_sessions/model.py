@@ -37,3 +37,7 @@ class RegisterDeviceData(SQLModel):
 class ReadDeviceSession(SQLModel):
     key: str
     username: str
+
+
+class FrontReadDeviceSession(SQLModel):
+    created_at: datetime

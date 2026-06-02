@@ -3,12 +3,12 @@ from models.game_session.model import (
     GameSessionReadStat,
 )
 from .model import CourseBase
-from models.track.model import TrackRead
+from models.track.model import TrackReadUserScore
 
 
 class CourseWithStats(CourseBase):
     id: int
-    tracks: list[TrackRead] = []
+    tracks: list[TrackReadUserScore] = []
     games_played_cnt: int = 0
     score_avg: float = 0.0
     total_par: int = 0
@@ -23,3 +23,4 @@ class CourseStatHistory(CourseBase):
     id: int
     par: int = 0
     user_past_rounds: list["GameSessionReadStat"] = []
+    tracks: list[int] = []

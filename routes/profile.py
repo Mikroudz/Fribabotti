@@ -5,8 +5,9 @@ from database import get_session
 
 
 from models.user.crud import read_user
+from models.device_sessions.crud import read_device_sessions_user
+from models.device_sessions.model import FrontReadDeviceSession
 
-from models.user_group.model import UserGroupReadShort
 from models.user.model import UserReadLong
 
 
@@ -20,9 +21,20 @@ router = APIRouter(
 
 
 @router.get("", response_model=UserReadLong)
-async def register_device(
+async def user_read(
     *,
     request: Request,
     session: Session = Depends(get_session),
 ):
     return read_user(session, request.state.user_id)
+
+
+@router.get("/devices", response_model=list[FrontReadDeviceSession])
+async def registered_devices(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+):
+    return read_device_sessions_user(
+        session, request.state.user_id, filter_unidentified=True
+    )

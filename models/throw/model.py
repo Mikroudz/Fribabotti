@@ -58,3 +58,8 @@ class ThrowUpdate(SQLModel):
 
     end_lat: float | None = None
     end_lng: float | None = None
+
+
+class ThrowLandingPos(SQLModel):
+    lat: float | None = None
+    lng: float | None = None

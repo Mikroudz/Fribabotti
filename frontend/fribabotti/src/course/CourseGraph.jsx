@@ -1,7 +1,6 @@
-import { getCourseHistoryStats } from "#/utils/api";
-import { Box, Link as MuiLink, Typography, useMediaQuery } from "@mui/material";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { Link, useParams, useRouter } from "@tanstack/react-router";
+import { Box, Link as MuiLink, useTheme } from "@mui/material";
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Route as GameSessionRoute } from "#/routes/gamesession_/$gameSessionId/gamesession";
@@ -22,7 +21,6 @@ function GameTooltip({ active, payload, label }) {
         month: "short",
         day: "numeric",
     });
-    const isTouchScreen = useMediaQuery("(pointer: coarse)");
     return (
         <Box
             sx={{
@@ -30,6 +28,7 @@ function GameTooltip({ active, payload, label }) {
                 bgcolor: "primary.main",
                 p: 1,
                 pointerEvents: "auto",
+                borderRadius: "6px",
             }}
         >
             {isVisible && (
@@ -52,9 +51,10 @@ function GameTooltip({ active, payload, label }) {
 }
 
 function Graph({ data }) {
+    const theme = useTheme();
     return (
         <LineChart
-            key={data?.length}
+            //key={data?.length}
             style={{
                 width: "100%",
                 maxWidth: "700px",
@@ -76,16 +76,29 @@ function Graph({ data }) {
                 stroke="white"
                 type="category"
                 tickFormatter={formatXAxis}
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                minTickGap={20}
             />
-            <YAxis width="auto" stroke="white" type="number" dataKey="score" />
+            <YAxis
+                width="auto"
+                stroke="white"
+                type="number"
+                dataKey="score"
+                axisLine={false}
+                tickLine={false}
+            />
             <Tooltip content={GameTooltip} />
             <Legend />
             <Line
                 type="monotone"
                 dataKey="score"
-                stroke="white"
+                stroke={theme.palette.secondary.main}
+                name="Score"
+                strokeWidth={2}
                 dot={{
-                    fill: "white",
+                    fill: theme.palette.secondary.main,
                 }}
                 activeDot={{ r: 8, stroke: "white" }}
             />
@@ -99,16 +112,13 @@ export function CourseGraph() {
     const { data: course } = useSuspenseQuery(courseGraphQueryOptions(courseId));
 
     return (
-        <Box sx={{ p: 1, width: "100%", minWidth: "300px" }}>
-            <Typography variant="h5">{course?.name}</Typography>
-            <Box sx={{ height: "500px", width: "100%", minWidth: "300px" }}>
-                <Graph
-                    data={course?.user_past_rounds?.map((val) => ({
-                        ...val,
-                        score: val.score - course?.par,
-                    }))}
-                />
-            </Box>
+        <Box sx={{ height: "500px", width: "100%", minWidth: "300px" }}>
+            <Graph
+                data={course?.user_past_rounds?.map((val) => ({
+                    ...val,
+                    score: val.score - course?.par,
+                }))}
+            />
         </Box>
     );
 }

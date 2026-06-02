@@ -6,8 +6,9 @@ from pydantic import ValidationError
 
 from .model import Course, CourseUpdate, CourseCreate, CourseReadShort
 from .stat_model import CourseWithStats, CourseStatHistory
+from models.links.session_participants_link import SessionParticipantsLink
 
-from models.track.model import Track
+from models.track.model import Track, TrackReadUserScore
 from models.game.model import Game
 from models.score.model import Score
 from models.game_session.crud import read_game_session_user
@@ -138,13 +139,30 @@ def read_courses(
 
 
 def read_courses_short(
-    session: Session, game_id: int | None = None
+    session: Session, game_id: int | None = None, user_id: int | None = None
 ) -> List[CourseReadShort]:
+
     stmt = (
         select(Course, func.count(Track.track_number).label("holes"))
         .join(Track, Track.course_id == Course.id)
         .group_by(Course.id)
     )
+    if user_id != None:
+        sub_correlated = (
+            select(func.max(GameSession.started_at))
+            .join(
+                SessionParticipantsLink,
+                SessionParticipantsLink.game_session_id == GameSession.id,
+            )
+            .where(
+                SessionParticipantsLink.user_id == user_id,
+                Course.id == GameSession.course_id,
+            )
+            .correlate(Course)
+            .scalar_subquery()
+        )
+        stmt = stmt.order_by(sub_correlated.desc())
+
     if game_id:
         stmt = stmt.where(Course.game_id == game_id)
 
@@ -201,11 +219,7 @@ def read_course_with_user_stats(
     session: Session, course_id: int, user_id: int
 ) -> CourseWithStats | None:
 
-    stmt_course = (
-        select(Course)
-        .options(selectinload(Course.tracks))
-        .where(Course.id == course_id)
-    )
+    stmt_course = select(Course).where(Course.id == course_id)
     db_course = session.exec(stmt_course).first()
     if not db_course:
         raise HTTPException(404, f"Course id {course_id} not found")
@@ -273,6 +287,20 @@ def read_course_with_user_stats(
         func.coalesce(hypothetical_best_subq, 0).label("hypothetical_best"),
     )
     db_stats = session.exec(stmt_avg_play_cnt).first()
+
+    tracks_user_avg = session.exec(
+        select(Track, func.avg(Score.score).label("track_avg"))
+        .join(
+            Track,
+            and_(
+                Track.course_id == Score.course_id,
+                Track.track_number == Score.track_number,
+            ),
+        )
+        .where(Score.user_id == user_id, Score.course_id == course_id, Score.score > 0)
+        .group_by(Score.track_number)
+    )
+
     total_par = sum([track.par for track in db_course.tracks])
 
     recent_rounds_db = read_game_session_user(session, user_id, None, course_id, 5)
@@ -284,7 +312,10 @@ def read_course_with_user_stats(
 
     ret = CourseWithStats(
         **db_course.model_dump(),
-        tracks=db_course.tracks,
+        tracks=[
+            TrackReadUserScore(**t.model_dump(), user_avg=avg)
+            for t, avg in tracks_user_avg
+        ],
         total_par=total_par,
         games_played_cnt=db_stats.game_count,
         score_avg=db_stats.avg_score,
@@ -299,10 +330,11 @@ def read_course_with_user_stats(
 
 
 def read_course_history_user_stats(
-    session: Session, course_id: int, user_id: int
+    session: Session, course_id: int, user_id: int, limit: int = 50
 ) -> CourseWithStats | None:
     stmt_course = (
         select(Course, func.sum(Track.par).label("total_par"))
+        .options(selectinload(Course.tracks).load_only(Track.track_number))
         .join(Track, Course.id == Track.course_id)
         .where(Course.id == course_id)
     )
@@ -328,12 +360,14 @@ def read_course_history_user_stats(
         .having(func.count(Score.track_number) == course_track_count_subq)
         .group_by(GameSession.id)
         .order_by(GameSession.started_at.asc())
+        .limit(limit)
     )
     games = session.exec(stmt).all()
 
     return CourseStatHistory(
         **db_course[0].model_dump(),
         par=db_course[1],
+        tracks=[t.track_number for t in db_course[0].tracks],
         user_past_rounds=[
             GameSessionReadStat(**game.model_dump(), score=score)
             for game, score in games

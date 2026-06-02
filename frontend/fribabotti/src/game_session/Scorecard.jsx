@@ -1,4 +1,4 @@
-import { PrettyPar, prettyParFormat } from "#/components/PrettyPar";
+import { PrettyPar } from "#/components/PrettyPar";
 import { Box, Typography } from "@mui/material";
 import { Fragment } from "react/jsx-runtime";
 
@@ -13,14 +13,23 @@ const chunkArray = (arr, size) => {
     return chunks;
 };
 
-export function ScoreCard({ data }) {
-    const chunked = chunkArray(data?.user_score.scores, 8);
+export function ScoreCard({ data, outerBoxSx = {} }) {
+    const chunked = chunkArray(data?.scores, 8);
     // Todo: handle scores from many users
-    const user_scores = data?.user_score ? [data?.user_score] : [];
-    const trackTotalPar = data?.user_score?.par ?? 0;
+    const user_scores = data ? [data] : [];
+    const trackTotalPar = data?.par ?? 0;
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, ml: 0.5, mr: 0.5 }}>
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 0.5,
+                ml: 0.5,
+                mr: 0.5,
+                ...outerBoxSx,
+            }}
+        >
             {chunked.map((chunk, chunkIndex) => (
                 <Fragment key={chunkIndex}>
                     <Box
