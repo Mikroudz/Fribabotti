@@ -25,7 +25,22 @@ const config = defineConfig(({mode}) => {
                         rewrite: (path) => path.replace("http", "https"),
                     },
                 },
+            },
+build: {
+            rollupOptions: {
+                output: {
+                    // Force recharts into its own chunk to prevent tree-shaking mangling
+                    manualChunks: (id) => {
+                        if (id.includes('node_modules/recharts') || id.includes('node_modules/d3') || id.includes('node_modules/react-smooth')) {
+                            return 'vendor-recharts';
+                        }
+                    }
+                }
             }
+        },
+        optimizeDeps: {
+            include: ['recharts']
+        }
 }})
 
 export default config

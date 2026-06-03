@@ -289,7 +289,7 @@ def read_course_with_user_stats(
     db_stats = session.exec(stmt_avg_play_cnt).first()
 
     tracks_user_avg = session.exec(
-        select(Track, func.avg(Score.score).label("track_avg"))
+        select(Track, func.avg(Score.score - Track.par).label("track_avg"))
         .join(
             Track,
             and_(

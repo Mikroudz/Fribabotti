@@ -26,8 +26,9 @@ import { Route as RouteNewGame } from "#/routes/course.$courseId.newgame";
 import { formatSecondsToTime } from "#/utils/helpers";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import { useState } from "react";
-import { CartesianGrid, Legend, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts";
+
 import CloseIcon from "@mui/icons-material/Close";
+import { AverageChart } from "#/components/AvgScoreGraph";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -35,86 +36,6 @@ function SimpleInfoBox({ top, bottom }) {
             <Typography component="span">{top}</Typography>
             <Typography component="span">{bottom}</Typography>
         </Box>
-    );
-}
-
-function GameTooltip({ active, payload, label }) {
-    const firstPayload = payload?.[0];
-    const isVisible = active && firstPayload != null;
-
-    return (
-        <Box
-            sx={{
-                visibility: isVisible ? "visible" : "hidden",
-                bgcolor: "primary.main",
-                p: 1,
-                pointerEvents: "auto",
-                borderRadius: "6px",
-            }}
-        >
-            {isVisible && (
-                <>
-                    <Typography>Hole {payload?.[0]?.payload?.track_number}</Typography>
-                    <PrettyPar score={payload?.[0]?.payload?.user_avg} wrap={false}></PrettyPar>
-                </>
-            )}
-        </Box>
-    );
-}
-
-function AverageChart({ data }) {
-    const theme = useTheme();
-
-    return (
-        <LineChart
-            style={{
-                width: "350px",
-                height: "100%",
-                minWidth: "300px",
-                minHeight: "400px",
-            }}
-            responsive
-            data={data}
-            margin={{
-                top: 5,
-                right: 0,
-                left: 0,
-                bottom: 5,
-            }}
-        >
-            <CartesianGrid strokeDasharray="3 3" stroke="#8f8f8f" vertical={false} />
-            <XAxis
-                dataKey="track_number"
-                stroke="white"
-                type="category"
-                axisLine={false}
-                tickLine={false}
-                tickMargin={5}
-                minTickGap={5}
-            />
-            <YAxis
-                width="auto"
-                stroke="white"
-                type="number"
-                dataKey="user_avg"
-                axisLine={false}
-                tickLine={false}
-            />
-            <Legend />
-            <Tooltip content={GameTooltip} />
-
-            <Line
-                type="monotone"
-                dataKey="user_avg"
-                stroke={theme.palette.secondary.main}
-                name="Average Score"
-                strokeWidth={2}
-                dot={{
-                    fill: theme.palette.secondary.main,
-                }}
-                activeDot={{ r: 8, stroke: "white" }}
-            />
-        </LineChart>
     );
 }
 

@@ -3,7 +3,6 @@ import { InfoBox } from "#/routes/profile";
 import { getTrackHistoryStats } from "#/utils/api";
 import { Box, MenuItem, Select, Typography, useTheme } from "@mui/material";
 import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { useTags } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
     Label,
@@ -11,7 +10,6 @@ import {
     ReferenceDot,
     Scatter,
     ScatterChart,
-    Tooltip,
     useXAxisScale,
     useYAxisScale,
     XAxis,
