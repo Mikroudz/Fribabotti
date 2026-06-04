@@ -11,7 +11,6 @@ import {
     Grid,
     IconButton,
     Typography,
-    useTheme,
 } from "@mui/material";
 
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
@@ -25,10 +24,13 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Route as RouteNewGame } from "#/routes/course.$courseId.newgame";
 import { formatSecondsToTime } from "#/utils/helpers";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
-import { useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 
 import CloseIcon from "@mui/icons-material/Close";
 import { AverageChart } from "#/components/AvgScoreGraph";
+import MapIcon from "@mui/icons-material/Map";
+import { BasketMarker, Map, RecenterMap, StartMarker } from "#/game_session/MapView";
+import { Polyline } from "react-leaflet";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -67,12 +69,50 @@ function SimpleDataDialog({ open, onClose, title, children }) {
     );
 }
 
+function CourseMap({ data }) {
+    const markerPos = useMemo(() => {
+        return data
+            ?.map((t) => {
+                if (t.basket_lat && t.basket_lng && t.tee_lat && t.tee_lng) {
+                    return {
+                        track_number: t.track_number,
+                        tee: [t.tee_lat, t.tee_lng],
+                        basket: [t.basket_lat, t.basket_lng],
+                    };
+                }
+            })
+            .filter((val) => val);
+    }, [data]);
+
+    return (
+        <Box sx={{ width: "90vw", height: "600px" }}>
+            <Map>
+                {markerPos?.map((val) => (
+                    <Fragment key={val.track_number + val.tee[0]}>
+                        <StartMarker position={val.tee} number={val.track_number} />
+                        <BasketMarker position={val.basket} />
+                        <Polyline
+                            positions={[val.tee, val.basket]}
+                            pathOptions={{ color: "red", dashArray: "10, 10", dashOffset: "0" }}
+                        ></Polyline>
+                    </Fragment>
+                ))}
+                <RecenterMap markers={markerPos?.flatMap((val) => [val.tee, val.basket])} />
+            </Map>
+        </Box>
+    );
+}
+
+const AVERAGECHART = "AVERAGECHART";
+const HOLEMAP = "HOLEMAP";
+
 function CourseStatsGlance({ course }) {
     const navigate = useNavigate();
     const handleNavigate = () => {
         navigate({ to: GameSessionRoute.to, params: { gameSessionId: course?.best_round_id } });
     };
-    const [openAvgScoreDialog, setOpenAvgScoreDialog] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
+    const [dialogContent, setDialogContent] = useState("");
 
     return (
         <>
@@ -110,6 +150,17 @@ function CourseStatsGlance({ course }) {
                         bottom={course?.tracks?.reduce((acc, val) => acc + val.par, 0)}
                     />
                     <SimpleInfoBox top="Distance" bottom="2500m" />
+                    <Button
+                        variant="outlined"
+                        sx={{ borderColor: "secondary.500", color: "secondary.500", mt: 1, mb: 1 }}
+                        onClick={() => {
+                            setDialogContent(HOLEMAP);
+                            setOpenDialog(true);
+                        }}
+                        startIcon={<MapIcon />}
+                    >
+                        Map
+                    </Button>
                 </Box>
                 <Button
                     nativeButton={false}
@@ -127,11 +178,28 @@ function CourseStatsGlance({ course }) {
             </Typography>
             <Grid container spacing={1} sx={{ m: 1 }} columns={{ xs: 6, sm: 12 }}>
                 <StyledAnyContentBox component={Grid} size={3} sx={{ m: 0, p: 1 }}>
-                    <Box onClick={() => setOpenAvgScoreDialog(true)} sx={{ position: "relative" }}>
-                        <AnalyticsIcon
-                            fontSize="small"
-                            sx={{ position: "absolute", right: 0, top: 0, color: "text.secondary" }}
-                        ></AnalyticsIcon>
+                    <Box
+                        onClick={() => {
+                            setDialogContent(AVERAGECHART);
+                            setOpenDialog(true);
+                        }}
+                        sx={{ position: "relative" }}
+                    >
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                position: "absolute",
+                                right: 0,
+                                top: 0,
+                                color: "text.secondary",
+                                textAlign: "center",
+                            }}
+                        >
+                            More
+                            <OpenInNewIcon
+                                sx={{ color: "text.secondary", fontSize: "13px" }}
+                            ></OpenInNewIcon>
+                        </Typography>
                         <Typography sx={{ color: "text.secondary" }}>Avg Score</Typography>
                         <PrettyPar
                             variant="h4"
@@ -198,11 +266,14 @@ function CourseStatsGlance({ course }) {
                     </Typography>
                 </StyledAnyContentBox>
                 <SimpleDataDialog
-                    open={openAvgScoreDialog}
+                    open={openDialog}
                     title="Hole Averages"
-                    onClose={() => setOpenAvgScoreDialog(false)}
+                    onClose={() => setOpenDialog(false)}
                 >
-                    <AverageChart data={course?.tracks} />
+                    {dialogContent === AVERAGECHART && <AverageChart data={course?.tracks} />}
+                    {dialogContent === HOLEMAP && (
+                        <CourseMap key={openDialog ? "open" : "closed"} data={course?.tracks} />
+                    )}
                 </SimpleDataDialog>
             </Grid>
         </>

@@ -46,6 +46,10 @@ class TrackReadUserScore(SQLModel):
     par: int
     track_number: int
     user_avg: float | None = None
+    tee_lat: Optional[float] = None
+    tee_lng: Optional[float] = None
+    basket_lat: Optional[float] = None
+    basket_lng: Optional[float] = None
 
 
 class HoleReadLong(SQLModel):

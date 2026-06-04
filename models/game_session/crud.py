@@ -20,7 +20,6 @@ from models.track.model import Track, HoleReadLong
 from models.course.model import Course
 from models.score.model import Score, CourseScore
 
-from models.throw.model import Throw
 
 from models.user_group.model import UserGroup
 from models.links.session_participants_link import SessionParticipantsLink

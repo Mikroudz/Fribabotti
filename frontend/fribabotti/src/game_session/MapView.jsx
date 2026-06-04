@@ -39,13 +39,16 @@ const createNumberedIcon = (number, selected) => {
     });
 };
 
-function RecenterMap({ markers }) {
+export function RecenterMap({ markers }) {
     const map = useMap();
 
     useEffect(() => {
-        if (markers.length > 0) {
-            const bounds = L.latLngBounds(markers);
-            map.fitBounds(bounds, { padding: [50, 50] });
+        if (markers && markers.length > 0) {
+            const timer = setTimeout(() => {
+                const bounds = L.latLngBounds(markers);
+                map.fitBounds(bounds, { padding: [50, 50] });
+            }, 100);
+            return () => clearTimeout(timer);
         }
     }, [markers, map]);
 
@@ -448,19 +451,22 @@ function ThrowMarker({ thrownum, position, onClick, isSelected, isMoving, onDrag
     );
 }
 
-const createStartIcon = () => {
+const createStartIcon = (number = null) => {
     return L.divIcon({
         className: `custom-tee-icon`,
+        ...(number && { html: `<span>${number}</span>` }),
         iconSize: [20, 20],
         iconAnchor: [10, 10],
     });
 };
 
-function StartMarker({ position }) {
-    if (position) return <Marker position={position} icon={createStartIcon()}></Marker>;
+export function StartMarker({ position, number = null }) {
+    if (position) {
+        return <Marker position={position} icon={createStartIcon(number)}></Marker>;
+    }
 }
 
-function BasketMarker({ position }) {
+export function BasketMarker({ position }) {
     return (
         <>
             <Circle center={position} radius={10} />
@@ -469,7 +475,7 @@ function BasketMarker({ position }) {
     );
 }
 
-function Map({ sessionData }) {
+function SessionMap({ sessionData }) {
     const [selectedThrowNum, setSelectedThrowNum] = useState(1);
     const [isMoving, setMoving] = useState(false);
     const selectedHole = useSelectedHole();
@@ -597,35 +603,13 @@ function Map({ sessionData }) {
 
     return (
         <>
-            <MapContainer
-                zoom={19}
-                scrollWheelZoom={false}
-                center={[62.290715, 25.007085]}
-                style={{ height: "100%", width: "100%", position: "relative" }}
-            >
-                <LayersControl position="bottomright">
-                    <LayersControl.BaseLayer checked name="OpenStreetMap">
-                        <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                            referrerPolicy={"strict-origin-when-cross-origin"}
-                        />
-                    </LayersControl.BaseLayer>
-                    <LayersControl.BaseLayer name="Satellite">
-                        <TileLayer
-                            url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                            attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community"
-                        />
-                    </LayersControl.BaseLayer>
-                </LayersControl>
+            <Map>
                 <LayerGroup key={selectedHole.track_number}>
                     {throwMarkers}
                     {startEndmarkers}
                 </LayerGroup>
-
                 <RecenterMap markers={[...markerCoords, ...startEndPositions]} />
-                <LocateSelfButton />
-            </MapContainer>
+            </Map>
             <ThrowInfo
                 currentThrow={localScoreData?.throws?.find(
                     (val) => val.throw_number === selectedThrowNum,
@@ -651,12 +635,41 @@ function Map({ sessionData }) {
     );
 }
 
+export function Map({ children }) {
+    return (
+        <MapContainer
+            zoom={19}
+            scrollWheelZoom={false}
+            center={[62.290715, 25.007085]}
+            style={{ height: "100%", width: "100%", position: "relative" }}
+        >
+            <LayersControl position="bottomright">
+                <LayersControl.BaseLayer checked name="OpenStreetMap">
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        referrerPolicy={"strict-origin-when-cross-origin"}
+                    />
+                </LayersControl.BaseLayer>
+                <LayersControl.BaseLayer name="Satellite">
+                    <TileLayer
+                        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                        attribution="Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EBP, and the GIS User Community"
+                    />
+                </LayersControl.BaseLayer>
+            </LayersControl>
+            <LocateSelfButton />
+            {children}
+        </MapContainer>
+    );
+}
+
 export function MapView() {
     const { data: sessionData } = useGameSession();
 
     return (
         <Box sx={{ height: "100%", width: "100%", overflow: "hidden", position: "relative" }}>
-            <Map sessionData={sessionData} />
+            <SessionMap sessionData={sessionData} />
             <GameControls scoreData={sessionData?.user_score} />
             <SelectHole data={sessionData?.user_score} />
 

@@ -122,7 +122,7 @@ function GroupInfo() {
     const basepath = router.options.basepath || "/";
 
     const origin = typeof window !== "undefined" ? window.location.origin : "";
-    const appRootUrl = `${origin}${basepath.replace(new RegExp("/$"), "")}`;
+    const appRootUrl = `${origin}${basepath.replace(import.meta.env.VITE_BASE_PATH, "").replace(new RegExp("/$"), "")}`;
 
     const memberAvatars = group?.members?.reduce((acc, m) => {
         acc[m.id] = m.photo_url;

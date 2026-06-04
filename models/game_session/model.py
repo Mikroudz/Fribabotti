@@ -35,6 +35,11 @@ class GameSessionBase(SQLModel):
         tz = CURRENT_TIMEZONE if timezone == None else timezone
         return datetime_to_pretty(strip_timezone(self.ended_at), tz, pretty_print)
 
+    @field_validator("started_at", "ended_at", check_fields=False)
+    @classmethod
+    def remove_timezone(cls, value):
+        return strip_timezone(value)
+
 
 def utc_now_naive() -> datetime:
     return datetime.now(timezone.utc).replace(tzinfo=None)
@@ -42,15 +47,6 @@ def utc_now_naive() -> datetime:
 
 class GameSession(GameSessionBase, table=True):
     __tablename__ = "game_session"
-
-    @field_validator("started_at", "ended_at")
-    @classmethod
-    def remove_timezone(cls, value):
-        return strip_timezone(value)
-
-    @field_serializer("started_at", "ended_at")
-    def serialize_started_at(self, val: datetime, _info) -> datetime:
-        return strip_timezone(val)
 
     id: Optional[int] = Field(default=None, primary_key=True)
 
