@@ -2,17 +2,7 @@ import { StyledListItem } from "#/components/List";
 import { PrettyPar } from "#/components/PrettyPar";
 import { GAME_SESSION_KEY } from "#/hooks/GameSessionHooks";
 import { updateScore } from "#/utils/api";
-import {
-    Avatar,
-    Box,
-    Button,
-    IconButton,
-    List,
-    ListItemAvatar,
-    ListItemText,
-    styled,
-    Typography,
-} from "@mui/material";
+import { Avatar, Box, Button, List, ListItemAvatar, ListItemText, styled } from "@mui/material";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 
@@ -25,15 +15,16 @@ export const IncDecButton = styled(Button)(() => ({
     justifyContent: "center",
 }));
 
-function ScoreControl({ score, par, onScoreChangeDone }) {
+function ScoreControl({ score, par, onScoreChangeDone, currentTrack }) {
     const [localScore, setLocalScore] = useState(0);
     const localRef = useRef(0);
-    const isUserAction = useRef(false);
+    const hasChanged = useRef(false);
     const debounceTimer = useRef(null);
+    const oldTrack = useRef(null);
 
     const handleIncreDecrement = (toAdd) => {
         if (toAdd > 0 || localScore > 0) {
-            isUserAction.current = true;
+            hasChanged.current = true;
             localRef.current = localScore + toAdd;
             setLocalScore((prev) => prev + toAdd);
             if (debounceTimer.current) {
@@ -41,15 +32,22 @@ function ScoreControl({ score, par, onScoreChangeDone }) {
             }
 
             debounceTimer.current = setTimeout(() => {
-                onScoreChangeDone(localRef.current);
+                onScoreChangeDone(localRef.current, oldTrack.current);
             }, 1000);
         }
     };
 
     useEffect(() => {
+        // if track changes, check and submit immediately
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        if (hasChanged.current) {
+            onScoreChangeDone(localRef.current, oldTrack.current);
+        }
         localRef.current = score;
         setLocalScore(score);
-    }, [score]);
+        oldTrack.current = currentTrack;
+        hasChanged.current = false;
+    }, [currentTrack, score]);
 
     useEffect(() => {
         return () => {
@@ -99,12 +97,12 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
 
     if (!score) return null;
 
-    const handleScoreChange = (score) => {
+    const handleScoreChange = (score, track_num) => {
         // this is debounced
         mutate({
             data: {
                 user_id: userData.user_id,
-                track_number: currentTrack,
+                track_number: track_num,
                 score: score,
                 game_session_id: gameSessionId,
             },
@@ -119,6 +117,7 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
             key={userData.username}
             secondaryAction={
                 <ScoreControl
+                    currentTrack={currentTrack}
                     score={score.score}
                     par={score.par}
                     onScoreChangeDone={handleScoreChange}

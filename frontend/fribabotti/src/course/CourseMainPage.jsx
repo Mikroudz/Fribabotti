@@ -29,8 +29,9 @@ import { Fragment, useMemo, useState } from "react";
 import CloseIcon from "@mui/icons-material/Close";
 import { AverageChart } from "#/components/AvgScoreGraph";
 import MapIcon from "@mui/icons-material/Map";
-import { BasketMarker, Map, RecenterMap, StartMarker } from "#/game_session/MapView";
+import { BasketMarker, StartMarker } from "#/game_session/MapView";
 import { Polyline } from "react-leaflet";
+import { Map, RecenterMap } from "#/components/MapComponents";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -271,9 +272,7 @@ function CourseStatsGlance({ course }) {
                     onClose={() => setOpenDialog(false)}
                 >
                     {dialogContent === AVERAGECHART && <AverageChart data={course?.tracks} />}
-                    {dialogContent === HOLEMAP && (
-                        <CourseMap key={openDialog ? "open" : "closed"} data={course?.tracks} />
-                    )}
+                    {openDialog && dialogContent === HOLEMAP && <CourseMap data={course?.tracks} />}
                 </SimpleDataDialog>
             </Grid>
         </>
