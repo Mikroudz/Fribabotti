@@ -1,11 +1,12 @@
 from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from pydantic import computed_field
 from utils.formatting import par_score_format
-from sqlmodel import Field, SQLModel, Relationship, text
+from sqlmodel import Field, SQLModel, Relationship, DateTime
 from sqlalchemy import ForeignKeyConstraint, UniqueConstraint
 from models.throw.model import ThrowReadLong
 from datetime import datetime
 from models.track.model import HoleReadLong
+from utils.helpers import utc_now_naive
 
 if TYPE_CHECKING:
     from models.game_session.model import GameSession
@@ -53,10 +54,8 @@ class Score(ScoreBase, table=True):
     )
 
     created_at: Optional[datetime] = Field(
-        default=None,
-        sa_column_kwargs={
-            "server_default": text("CURRENT_TIMESTAMP"),
-        },
+        default_factory=utc_now_naive,
+        sa_type=DateTime(timezone=False),
     )
 
 

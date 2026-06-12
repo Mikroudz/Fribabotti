@@ -13,6 +13,7 @@ export const IncDecButton = styled(Button)(() => ({
     minWidth: "42px",
     textAlign: "center",
     justifyContent: "center",
+    touchAction: "manipulation",
 }));
 
 function ScoreControl({ score, par, onScoreChangeDone, currentTrack }) {
@@ -21,19 +22,24 @@ function ScoreControl({ score, par, onScoreChangeDone, currentTrack }) {
     const hasChanged = useRef(false);
     const debounceTimer = useRef(null);
     const oldTrack = useRef(null);
+    const isClicking = useRef(false); // ghost clicking fix
 
     const handleIncreDecrement = (toAdd) => {
-        if (toAdd > 0 || localScore > 0) {
+        if ((toAdd > 0 || localScore > 0) && !isClicking.current) {
+            isClicking.current = true;
             hasChanged.current = true;
             localRef.current = localScore + toAdd;
             setLocalScore((prev) => prev + toAdd);
+
             if (debounceTimer.current) {
                 clearTimeout(debounceTimer.current);
             }
-
             debounceTimer.current = setTimeout(() => {
                 onScoreChangeDone(localRef.current, oldTrack.current);
             }, 1000);
+            setTimeout(() => {
+                isClicking.current = false;
+            }, 100);
         }
     };
 

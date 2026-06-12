@@ -1,11 +1,10 @@
 from typing import Optional, List, TYPE_CHECKING
-from pydantic import BaseModel
-import sqlalchemy.types as types
-from datetime import datetime, UTC, timezone
-from pydantic import computed_field, field_validator, field_serializer
-from utils.formatting import datetime_to_pretty, convert_to_timezone
-from sqlmodel import Field, SQLModel, Relationship, text, DateTime
+from datetime import datetime, UTC
+from pydantic import field_validator
+from utils.formatting import datetime_to_pretty
+from sqlmodel import Field, SQLModel, Relationship, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
+from utils.helpers import utc_now_naive
 
 from ..score.model import CourseScore
 
@@ -39,10 +38,6 @@ class GameSessionBase(SQLModel):
     @classmethod
     def remove_timezone(cls, value):
         return strip_timezone(value)
-
-
-def utc_now_naive() -> datetime:
-    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class GameSession(GameSessionBase, table=True):

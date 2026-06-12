@@ -3,6 +3,9 @@ import { RouterProvider } from "@tanstack/react-router";
 import { getRouter } from "./router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { AppBarPortalProvider } from "./context/AppBarPortal";
+import { useEffect } from "react";
+import { tgInit } from "./auth/tgInit";
+import { isTelegramApp } from "./utils/telegramHelpers";
 
 const router = getRouter();
 

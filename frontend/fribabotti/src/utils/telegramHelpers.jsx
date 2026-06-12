@@ -1,7 +1,19 @@
-import { isTMA } from "@tma.js/bridge";
+import { request2 } from "@tma.js/sdk-react";
 
-export function isTelegramApp() {
-    return isTMA();
+let inTelegram = null;
+
+export async function isTelegramApp() {
+    if (inTelegram === null) {
+        try {
+            // Attempt to request the theme from the native Telegram wrapper
+            await request2("web_app_request_theme", "theme_changed", { timeout: 150 });
+            inTelegram = true;
+        } catch (error) {
+            inTelegram = false;
+        }
+    }
+
+    return inTelegram;
 }
 
 export const TELEGRAM_AUTH_TYPES = { webapp: "TGWEBAPP", auth_widget: "TGAUTH" };

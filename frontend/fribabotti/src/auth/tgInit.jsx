@@ -5,16 +5,19 @@ import {
     initData,
     setDebug,
     init as initSDK,
-    backButton,
 } from "@tma.js/sdk-react";
 
 /**
  * Initializes the application and configures its dependencies.
  */
 export function tgInit(debug = false) {
+    console.log("initing tg webapp");
+    try {
+        initSDK();
+    } catch (e) {
+        console.log(e);
+    }
     setDebug(debug);
-
-    initSDK();
 
     if (!miniApp.mount.isAvailable()) {
         return;
@@ -25,12 +28,16 @@ export function tgInit(debug = false) {
     void viewport.mount().catch((e) => {
         console.error("Something went wrong mounting the viewport", e);
     });
-    if (backButton.isSupported()) {
-        backButton.mount();
-    }
+    //if (backButton.isSupported()) {
+    //    backButton.mount();
+    //}
 
     // Define components-related CSS variables.
     viewport.bindCssVars();
     miniApp.bindCssVars();
     themeParams.bindCssVars();
+    if (miniApp.ready.isAvailable()) {
+        miniApp.ready();
+    }
+    console.log("webapp init done");
 }

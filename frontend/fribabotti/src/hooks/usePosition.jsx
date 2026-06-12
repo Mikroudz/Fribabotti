@@ -1,3 +1,5 @@
+import { isTelegramApp } from "#/utils/telegramHelpers";
+import { locationManager } from "@tma.js/sdk-react";
 import { useEffect, useState } from "react";
 
 const defaultSettings = {
@@ -72,24 +74,50 @@ let callback;
 let startTime;
 
 export const getPositionWithCallback = async (cb, userSettings = {}) => {
-    if (!navigator || !navigator.geolocation) {
-        console.log("no geolocation");
-        return null;
-    }
     const settings = {
         ...defaultSettings,
         ...userSettings,
     };
-    try {
-        const permission = await navigator.permissions.query({ name: "geolocation" });
-        console.log(permission);
-        if (permission.state !== "granted") {
+    if (await isTelegramApp()) {
+        try {
+            await locationManager.mount();
+        } catch (error) {
+            console.error("Locationmanager failed to mount", error);
+            return;
+        }
+
+        if (!locationManager.requestLocation.isAvailable()) {
+            console.log("Location features are not supported on this platform.");
+            return;
+        }
+
+        try {
+            // we need permission from tg to use web location as tg api is broken
+            // This triggers the native Telegram permission popup if not already answered
+            const location = await locationManager.requestLocation();
+            console.log("User Location:", location);
+            // Returns fields like latitude, longitude, accuracy, etc.
+        } catch (error) {
+            console.error("User denied location access or an error occurred", error);
+            return;
+        }
+    } else {
+        if (!navigator || !navigator.geolocation) {
+            console.log("no geolocation");
             return null;
         }
-    } catch (e) {
-        console.error(e);
-        return null;
+        try {
+            const permission = await navigator.permissions.query({ name: "geolocation" });
+            console.log(permission);
+            if (permission.state !== "granted") {
+                return null;
+            }
+        } catch (e) {
+            console.error(e);
+            return null;
+        }
     }
+
     callback = cb;
     startTime = Date.now();
     const checkAccuracy = (pos) => {

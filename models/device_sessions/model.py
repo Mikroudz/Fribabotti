@@ -2,7 +2,7 @@ from typing import Optional, List, TYPE_CHECKING, Dict, Any
 from datetime import datetime, UTC, date
 import uuid
 from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, DateTime
-from ..game_session.model import utc_now_naive
+from utils.helpers import utc_now_naive
 
 if TYPE_CHECKING:
     from ..user.model import User
