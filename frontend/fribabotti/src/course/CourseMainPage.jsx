@@ -33,6 +33,8 @@ import { BasketMarker, StartMarker } from "#/game_session/MapView";
 import { Polyline } from "react-leaflet";
 import { Map, RecenterMap } from "#/components/MapComponents";
 
+import { CourseWeather } from "./CourseWeather";
+
 function SimpleInfoBox({ top, bottom }) {
     return (
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
@@ -144,7 +146,7 @@ function CourseStatsGlance({ course }) {
                 </Box>
 
                 <Divider />
-                <Box sx={{ display: "flex", flexDirection: "row", gap: 2, mb: 2 }}>
+                <Box sx={{ display: "flex", flexDirection: "row", gap: 2, mb: 1 }}>
                     <SimpleInfoBox top="Holes" bottom={course?.tracks?.length} />
                     <SimpleInfoBox
                         top="Par"
@@ -163,16 +165,19 @@ function CourseStatsGlance({ course }) {
                         Map
                     </Button>
                 </Box>
-                <Button
-                    nativeButton={false}
-                    variant="contained"
-                    sx={{ bgcolor: "secondary.main", width: "100%" }}
-                    component={Link}
-                    to={RouteNewGame.to}
-                    params={course?.id}
-                >
-                    Start new round
-                </Button>
+                <Box sx={{ display: "flex", flexDirection: "row", gap: 2 }}>
+                    <CourseWeather course_id={course?.id} />
+                    <Button
+                        nativeButton={false}
+                        variant="contained"
+                        sx={{ bgcolor: "secondary.main", width: "auto" }}
+                        component={Link}
+                        to={RouteNewGame.to}
+                        params={course?.id}
+                    >
+                        Start new round
+                    </Button>
+                </Box>
             </StyledAnyContentBox>
             <Typography sx={{ pl: 1 }} component="span">
                 Course Statistics

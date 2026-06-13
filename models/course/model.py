@@ -56,3 +56,14 @@ class CourseReadShort(SQLModel):
     name: str | None = None
     id: int
     holes: int = 0
+
+
+class CourseWeather(SQLModel):
+    id: int = 0
+    timestamp: datetime = Field(..., description="Observation timestamp")
+    temperature_c: Optional[float] = Field(None, description="Temperature in Celsius")
+    wind_speed_ms: Optional[float] = Field(None, description="Wind speed in m/s")
+    wind_direction_deg: Optional[float] = Field(
+        None, description="Wind direction in degrees"
+    )
+    weather_code: int | None = None

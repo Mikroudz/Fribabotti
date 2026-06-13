@@ -172,6 +172,17 @@ def read_courses_short(
     ]
 
 
+def read_course_location(
+    session: Session, course_id: int
+) -> tuple[float, float] | None:
+    stmt = (
+        select(Track.tee_lat, Track.tee_lng)
+        .where(Track.course_id == course_id)
+        .order_by(Track.track_number.asc())
+    )
+    return session.exec(stmt).first()
+
+
 def read_course(session: Session, course_id: int) -> Course:
     db_course = session.get(Course, course_id)
 

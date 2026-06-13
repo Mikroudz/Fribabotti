@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, Body, Request
-from fastapi.security import APIKeyHeader
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session
-from typing import Annotated, Union, List
+from typing import List
 from database import get_session as get_session
+from fastapi_cache.decorator import cache
 
-from models.course.model import CourseReadShort, CourseCreate, CourseUpdate
+from models.course.model import (
+    CourseReadShort,
+    CourseCreate,
+    CourseUpdate,
+    CourseWeather,
+)
 from models.course.stat_model import CourseWithStats, CourseStatHistory
 from models.course.crud import (
     read_course_with_user_stats,
@@ -13,12 +18,14 @@ from models.course.crud import (
     delete_course,
     read_courses_short,
     read_course_history_user_stats,
+    read_course_location,
 )
 
 from models.game.crud import read_games
 
 from models.track.model import TrackWithHoleStatistic
 from models.throw.crud import get_hole_throws_history
+from utils.fetchweather import get_current_fmi_weather
 
 from .route_deps import token_required_user_id_in_response
 
@@ -46,6 +53,25 @@ async def course_read(
     course_id: int,
 ):
     return read_course_with_user_stats(session, course_id, request.state.user_id)
+
+
+@router.get("/{course_id}/weather", response_model=CourseWeather)
+@cache(expire=3600)
+async def course_weathr(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    course_id: int,
+):
+    loc = read_course_location(session, course_id)
+    if loc == None or loc[0] == None:
+        return CourseWeather(id=course_id, timestamp=0)
+    lat, lng = loc
+    weather = await get_current_fmi_weather(lat, lng)
+    if "error" in weather:
+        raise HTTPException(404, weather["error"])
+    setattr(weather, "id", course_id)
+    return weather
 
 
 @router.get("/{course_id}/history", response_model=CourseStatHistory)

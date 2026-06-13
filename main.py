@@ -13,6 +13,10 @@ import sys
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
+from contextlib import asynccontextmanager
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.inmemory import InMemoryBackend
+
 import uvicorn
 from fastapi import FastAPI
 
@@ -94,7 +98,14 @@ async def run_bot():
         print("Telegram bot shut down...")
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    FastAPICache.init(InMemoryBackend(), prefix="fastapi-cache")
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 app.include_router(device_routes.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(games.router, prefix="/api/v1")
@@ -129,7 +140,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 async def main():
-    create_db_and_tables()
     config = uvicorn.Config(
         app,
         host="0.0.0.0",

@@ -77,6 +77,11 @@ export async function getCourse({ queryKey }) {
     return baseFetch(`/courses/${course_id}`);
 }
 
+export async function getWeather({ queryKey }) {
+    const [_key, course_id] = queryKey;
+    return baseFetch(`/courses/${course_id}/weather`);
+}
+
 export async function getCourseHistoryStats({ queryKey }) {
     const [_key, course_id] = queryKey;
     return baseFetch(`/courses/${course_id}/history`);
