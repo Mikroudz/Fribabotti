@@ -31,7 +31,8 @@ export function StackedBarChart({ scores }) {
                 height: "24px",
                 width: "100%",
                 m: 0.5,
-                pl: 0.5,
+                ml: 0,
+                pl: 0,
                 pr: 0.5,
             }}
         >
