@@ -24,7 +24,7 @@ from models.game_session.model import (
     GameSessionUserStats,
 )
 
-from models.track.crud import recalculate_track_gps
+from models.track.crud import recalculate_track_gps, recalculate_track_lengths
 from .route_deps import token_required_user_id_in_response
 
 router = APIRouter(
@@ -135,5 +135,6 @@ async def game_session_end(
     if close:
         # calculate hole start and end from received data
         backgroud_tasks.add_task(recalculate_track_gps, session, game.course_id)
+        backgroud_tasks.add_task(recalculate_track_lengths, session, game.course_id)
 
     return game

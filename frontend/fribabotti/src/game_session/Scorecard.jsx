@@ -90,7 +90,7 @@ export function ScoreCard({ data, outerBoxSx = {} }) {
                                         {val.track_number}
                                     </Typography>
                                     <Typography component="span" sx={{ fontSize: "13px" }}>
-                                        0
+                                        {val?.distance?.toFixed(0)}
                                     </Typography>
                                     <Typography component="span" sx={{ fontWeight: "bold" }}>
                                         {val.par}

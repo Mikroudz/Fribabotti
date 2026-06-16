@@ -1,9 +1,8 @@
-from typing import Optional, List, TYPE_CHECKING, Dict, Any
-from datetime import datetime, UTC, date
+from typing import Optional, List, TYPE_CHECKING
 from sqlalchemy import PrimaryKeyConstraint, UniqueConstraint
 from models.throw.model import ThrowReadLong, ThrowLandingPos
 
-from sqlmodel import Field, SQLModel, Relationship, JSON, Column, func, text
+from sqlmodel import Field, SQLModel, Relationship
 
 if TYPE_CHECKING:
     from ..course.model import Course
@@ -17,6 +16,7 @@ class TrackBase(SQLModel):
     tee_lng: Optional[float] = None
     basket_lat: Optional[float] = None
     basket_lng: Optional[float] = None
+    distance: float | None = 0  # calculated from user data
 
 
 class Track(TrackBase, table=True):
@@ -50,6 +50,7 @@ class TrackReadUserScore(SQLModel):
     tee_lng: Optional[float] = None
     basket_lat: Optional[float] = None
     basket_lng: Optional[float] = None
+    distance: float | None = 0
 
 
 class HoleReadLong(SQLModel):
@@ -61,6 +62,7 @@ class HoleReadLong(SQLModel):
     tee_lng: Optional[float] = None
     basket_lat: Optional[float] = None
     basket_lng: Optional[float] = None
+    distance: float | None = 0
 
 
 class TrackCreate(SQLModel):

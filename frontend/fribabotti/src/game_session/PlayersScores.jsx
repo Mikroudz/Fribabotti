@@ -1,5 +1,5 @@
 import { StyledListItem } from "#/components/List";
-import { PrettyPar } from "#/components/PrettyPar";
+import { PrettyPar, prettyParFormat } from "#/components/PrettyPar";
 import { GAME_SESSION_KEY } from "#/hooks/GameSessionHooks";
 import { updateScore } from "#/utils/api";
 import { Avatar, Box, Button, List, ListItemAvatar, ListItemText, styled } from "@mui/material";
@@ -133,19 +133,7 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
             <ListItemAvatar>
                 <Avatar src={userData.photo_url} />
             </ListItemAvatar>
-            <ListItemText
-                secondary={
-                    <>
-                        Total{" "}
-                        <PrettyPar
-                            score={total_score}
-                            par={total_par}
-                            component="span"
-                            wrap={false}
-                        />
-                    </>
-                }
-            >
+            <ListItemText secondary={`Total ${prettyParFormat(total_score, total_par)}`}>
                 {userData.username}
             </ListItemText>
         </StyledListItem>

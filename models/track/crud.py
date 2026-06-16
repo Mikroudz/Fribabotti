@@ -1,7 +1,8 @@
 from typing import List
 from sqlmodel import Session, select, and_, func, text
 from pydantic import ValidationError
-
+from collections import defaultdict
+from utils.helpers import calc_short_distance
 from .model import Track
 from models.course.model import Course
 from models.throw.model import Throw
@@ -82,6 +83,63 @@ def delete_track(session: Session, track_number: int, course_id: int):
     if db_track:
         setattr(db_track, "deleted", True)
         session.commit()
+
+
+def recalculate_track_lengths(session: Session, course_id: int):
+    stmt = (
+        select(Score.track_number, Throw)
+        .join(Score, Score.id == Throw.score_id)
+        .where(Score.course_id == course_id, Throw.start_lat.is_not(None))
+        .order_by(
+            Score.track_number,
+            Throw.score_id,
+            Throw.throw_number,
+            Score.created_at.desc(),
+        )
+        # .limit(500)
+    )
+    results = session.exec(stmt).all()
+    scorecard_groups = defaultdict(list)
+    track_map = {}
+    for track_num, throw in results:
+        scorecard_groups[throw.score_id].append(throw)
+        track_map[throw.score_id] = track_num
+
+    track_totals = defaultdict(list)
+    for score_id, throws in scorecard_groups.items():
+        total_distance = 0.0
+
+        for i, throw in enumerate(throws):
+            start_coord = (throw.start_lat, throw.start_lng)
+
+            # If it's NOT the last throw, the segment goes to the next throw's start
+            if i < len(throws) - 1:
+                next_throw = throws[i + 1]
+                end_coord = (next_throw.start_lat, next_throw.start_lng)
+            # If it IS the last throw, the segment goes to the Basket (end_lat)
+            else:
+                if throw.end_lat is None:
+                    continue  # Skip if no basket location recorded
+                end_coord = (throw.end_lat, throw.end_lng)
+
+            segment_dist = calc_short_distance(start_coord, end_coord)
+            total_distance += segment_dist
+
+        if total_distance > 0:
+            track_num = track_map[score_id]
+            track_totals[track_num].append(total_distance)
+
+    # 3. Average the totals for each track
+    final_averages = {}
+    for track_num, distances in track_totals.items():
+        avg_dist = sum(distances) / len(distances)
+        final_averages[track_num] = avg_dist
+    stmt_update = select(Track).where(Track.course_id == course_id)
+    tracks = session.exec(stmt_update)
+    for track in tracks:
+        if track.track_number in final_averages:
+            setattr(track, "distance", final_averages[track.track_number])
+    session.commit()
 
 
 def recalculate_track_gps(session: Session, course_id: int):

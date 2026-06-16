@@ -116,6 +116,10 @@ function CourseStatsGlance({ course }) {
     };
     const [openDialog, setOpenDialog] = useState(false);
     const [dialogContent, setDialogContent] = useState("");
+    const { par, distance } = course?.tracks?.reduce(
+        (acc, val) => ({ par: acc.par + val.par, distance: acc.distance + val.distance }),
+        { par: 0, distance: 0 },
+    );
 
     return (
         <>
@@ -148,11 +152,8 @@ function CourseStatsGlance({ course }) {
                 <Divider />
                 <Box sx={{ display: "flex", flexDirection: "row", gap: 2, mb: 1 }}>
                     <SimpleInfoBox top="Holes" bottom={course?.tracks?.length} />
-                    <SimpleInfoBox
-                        top="Par"
-                        bottom={course?.tracks?.reduce((acc, val) => acc + val.par, 0)}
-                    />
-                    <SimpleInfoBox top="Distance" bottom="2500m" />
+                    <SimpleInfoBox top="Par" bottom={par} />
+                    <SimpleInfoBox top="Distance" bottom={`${distance?.toFixed(0)}M`} />
                     <Button
                         variant="outlined"
                         sx={{ borderColor: "secondary.500", color: "secondary.500", mt: 1, mb: 1 }}
@@ -201,7 +202,7 @@ function CourseStatsGlance({ course }) {
                                 textAlign: "center",
                             }}
                         >
-                            More
+                            Hole avg
                             <OpenInNewIcon
                                 sx={{ color: "text.secondary", fontSize: "13px" }}
                             ></OpenInNewIcon>

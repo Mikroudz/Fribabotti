@@ -1,5 +1,5 @@
 import { dateTimeNice, formatSecondsToTime } from "#/utils/helpers";
-import { Box, Button, Chip, lighten, Typography } from "@mui/material";
+import { Box, Button, Chip, Divider, lighten, Typography } from "@mui/material";
 import { StackedBarChart } from "./StackedBar";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 import { PrettyPar } from "#/components/PrettyPar";
@@ -66,6 +66,7 @@ export function GameTitleInformation({ data }) {
                     }}
                 ></Chip>
             </Box>
+
             <MuiLink
                 component={Link}
                 to={RouteCourse.to}
