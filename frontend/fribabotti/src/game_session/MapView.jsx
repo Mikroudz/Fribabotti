@@ -6,7 +6,7 @@ import L from "leaflet";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import DeleteIcon from "@mui/icons-material/Delete";
 import RoomIcon from "@mui/icons-material/Room";
-import { getShortDistance } from "#/utils/helpers";
+import { getShortDistance, getShortDistanceArr } from "#/utils/helpers";
 import { getPositionWithCallback } from "#/hooks/usePosition";
 import { GameScoreDrawer } from "./GameScoreDrawer";
 import {
@@ -19,6 +19,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createThrow } from "#/utils/api";
 import { useParams } from "@tanstack/react-router";
 import { Map, RecenterMap } from "#/components/MapComponents";
+import "./map.css";
 
 const createNumberedIcon = (number, selected) => {
     return L.divIcon({
@@ -188,7 +189,7 @@ function ThrowInfo({ currentThrow }) {
 
 const testPos = [65.045512, 25.427889];
 
-function useMutateThrow() {
+function useMutateThrow({ onSuccess = () => {}, onSettled = () => {} } = {}) {
     const queryClient = useQueryClient();
     const params = useParams({ strict: false });
     const { gameSessionId } = params;
@@ -196,6 +197,7 @@ function useMutateThrow() {
     const { mutate } = useMutation({
         mutationFn: createThrow,
         onSuccess: (data) => {
+            onSuccess(data);
             queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (oldSession) => {
                 return oldSession
                     ? {
@@ -212,6 +214,9 @@ function useMutateThrow() {
                     : {};
             });
         },
+        onSettled: () => {
+            onSettled();
+        },
     });
     return mutate;
 }
@@ -220,12 +225,17 @@ function GameControls({ scoreData }) {
     const queryClient = useQueryClient();
     const params = useParams({ strict: false });
     const { gameSessionId } = params;
-    const mutate = useMutateThrow();
+    const [isSavingThrow, setIsSavingThrow] = useState(false);
+
+    const mutate = useMutateThrow({
+        onSettled: () => {
+            setIsSavingThrow(false);
+        },
+    });
+
     const { moveToNextHole } = useHoleChanger();
 
     const handleNewThrow = (pos) => {
-        // TODO: prompt user to allow location if we dont get it
-
         const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE"]);
 
         const lat = import.meta.env.DEV ? testPos[0] - Math.random() * 0.005 : pos.coords.latitude;
@@ -265,6 +275,7 @@ function GameControls({ scoreData }) {
     };
 
     const handleThrowButton = async () => {
+        setIsSavingThrow(true);
         if (import.meta.env.DEV) {
             handleNewThrow();
         } else {
@@ -311,6 +322,7 @@ function GameControls({ scoreData }) {
                         fontSize: "16px",
                     }}
                     variant="contained"
+                    disabled={isSavingThrow}
                     onClick={handleThrowButton}
                 >
                     Record throw
@@ -507,11 +519,28 @@ function SessionMap({ sessionData }) {
                         )
                     );
                 })}
-                {/* TODO: add distance labels to each line*/}
                 <Polyline
                     positions={markerCoords}
                     pathOptions={{ color: "red", dashArray: "10, 10", dashOffset: "0" }}
                 ></Polyline>
+                {markerCoords.map((val, i) => {
+                    if (i + 1 < markerCoords.length) {
+                        const dist = getShortDistanceArr(val, markerCoords[i + 1], 0);
+                        if (parseFloat(dist) < 10) return null;
+
+                        const lat = (val[0] + markerCoords[i + 1][0]) / 2;
+                        const lng = (val[1] + markerCoords[i + 1][1]) / 2;
+                        const textLabel = L.divIcon({
+                            className: "distance-text-label",
+                            html: `<div>${dist}M</div>`,
+                            iconSize: [100, 20],
+                            iconAnchor: [50, 10],
+                        });
+
+                        return <Marker key={i} position={[lat, lng]} icon={textLabel} />;
+                    }
+                    return null;
+                })}
             </>
         );
     }, [markerCoords, selectedThrowNum, isMoving]);

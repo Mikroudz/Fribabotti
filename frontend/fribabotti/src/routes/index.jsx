@@ -1,6 +1,6 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { GameSessionList } from "../game_session/GameSessionList";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { Route as NewGameRoute } from "./gamesession_/new";
 
 import { useGameSessions } from "#/hooks/GameSessionHooks";
@@ -18,7 +18,7 @@ function Home() {
 
     return (
         <Box sx={{ m: 1 }}>
-            <UserGameOverview />
+            {/*<UserGameOverview />*/}
             <Typography>Ongoing Games</Typography>
             <GameSessionList gameSessions={gameSessions.filter((val) => val.ended_at === null)} />
             <Typography>Past Games</Typography>

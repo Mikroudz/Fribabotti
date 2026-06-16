@@ -25,6 +25,10 @@ export function getShortDistance(lat1, lon1, lat2, lon2, decimalplaces = 1) {
     return (Math.sqrt(x * x + y * y) * R).toFixed(decimalplaces);
 }
 
+export function getShortDistanceArr(val1, val2, decimalplaces = 1) {
+    return getShortDistance(val1[0], val1[1], val2[0], val2[1], decimalplaces);
+}
+
 export function formatSecondsToTime(totalSeconds) {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
