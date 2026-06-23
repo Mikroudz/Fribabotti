@@ -23,6 +23,7 @@ export function StackedBarChart({ scores }) {
         return null;
     }
     const [countedScores, countTotal] = groupScores(scores);
+    if (countTotal === 0) return null;
     return (
         <Box
             sx={{

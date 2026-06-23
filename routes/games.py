@@ -16,6 +16,7 @@ from models.game_session.crud import (
     end_game_session,
     delete_game_session,
     read_user_stats,
+    add_users_game_session,
 )
 from models.game_session.model import (
     GameSessionCreate,
@@ -89,6 +90,20 @@ async def game_session_create(
     )
     return read_game_session_long(
         session, user_id=request.state.user_id, game_session_id=created.id
+    )
+
+
+@router.post("/{gamesession_id}/add_users", response_model=GameSessionReadLong)
+async def game_session_add_users(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    users_to_add: List[int],
+    gamesession_id: int,
+):
+    add_users_game_session(session, users_to_add, request.state.user_id, gamesession_id)
+    return read_game_session_long(
+        session, user_id=request.state.user_id, game_session_id=gamesession_id
     )
 
 

@@ -3,7 +3,6 @@ import { SubmitButton } from "#/components/SubmitButton";
 import { Route as GroupRoute } from "#/routes/groups/$groupId.index";
 
 import { createGroup } from "#/utils/api";
-import { CheckBox } from "@mui/icons-material";
 import { Box, Checkbox, FormControlLabel, Stack, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
@@ -69,12 +68,7 @@ export function EditGroup({ group = null }) {
     return (
         <Box sx={{ p: 1 }}>
             <FormProvider {...methods}>
-                <Stack
-                    component="form"
-                    onSubmit={handleSubmit(onSubmit)}
-                    spacing={1}
-                    sx={{ mb: 3 }}
-                >
+                <Stack component="form" onSubmit={handleSubmit(onSubmit)} spacing={1} sx={{ mb: 3 }}>
                     <Box
                         sx={{
                             display: "flex",
@@ -121,9 +115,7 @@ export function EditGroup({ group = null }) {
                         )}
                     />
 
-                    <Box
-                        sx={{ position: "fixed", left: 0, bottom: 62, width: "100%", pl: 1, pr: 1 }}
-                    >
+                    <Box sx={{ position: "fixed", left: 0, bottom: 62, width: "100%", pl: 1, pr: 1 }}>
                         <SubmitButton
                             isSaved={isMutationPending}
                             isEditing={!group}

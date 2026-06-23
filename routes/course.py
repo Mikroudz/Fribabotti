@@ -46,7 +46,7 @@ def get_game_id(session: Session) -> int:
 
 
 @router.get("/{course_id}", response_model=CourseWithStats)
-async def course_read(
+async def course_read_single(
     *,
     request: Request,
     session: Session = Depends(get_session),

@@ -1,5 +1,6 @@
 from typing import List, Tuple
 from sqlmodel import Session, select, and_, asc, desc, func, case, cast, Integer
+from fastapi import HTTPException
 from sqlalchemy.orm import selectinload, with_loader_criteria
 from pydantic import ValidationError
 from datetime import datetime, timezone, timedelta
@@ -18,7 +19,7 @@ from models.user.crud import read_user
 from models.track.model import Track, HoleReadLong
 
 from models.course.model import Course
-from models.score.model import Score, CourseScore
+from models.score.model import Score, CourseScore, CourseScoreShort, ScoreReadNoThrows
 
 
 from models.user_group.model import UserGroup
@@ -171,36 +172,62 @@ def read_game_session_long(
     if res == None:
         return None
     res, playtime = res
-    # TODO: actually get scores for all users if requested idk
-    user = read_user(session, user_id)
 
-    scores = CourseScore(user_id=user_id, **user.model_dump())
+    users = session.exec(
+        select(User)
+        .join(SessionParticipantsLink, SessionParticipantsLink.user_id == User.id)
+        .where(SessionParticipantsLink.game_session_id == game_session_id)
+    ).all()
+
+    user_scores = CourseScore(
+        user_id=user_id,
+        **next((user for user in users if user.id == user_id)).model_dump()
+    )
+    other_scores = [
+        CourseScoreShort(**u.model_dump()) for u in users if u.id != user_id
+    ]
+
     track_total_par = 0
     score_total = 0
 
     for track in res.course.tracks:
         track_num = track.track_number
-        find_score = [score for score in res.scores if score.track_number == track_num]
-        throws = []
-        score = 0
+        find_score = {
+            score.user_id: score
+            for score in res.scores
+            if score.track_number == track_num
+        }
         track_total_par += track.par
-        if len(find_score) > 0:
-            score = find_score[0].score
-            score_total += score
-            for throw in find_score[0].throws:
-                throws.append(throw)
-        scores.scores.append(
-            HoleReadLong(**track.model_dump(), throws=throws, score=score)
+
+        for user in other_scores:
+            score = find_score[user.id].score if user.id in find_score else 0
+            score_obj = ScoreReadNoThrows(
+                track_number=track_num, par=track.par, score=score
+            )
+            user.total_score += score
+            user.par += track.par
+            user.scores.append(score_obj)
+
+        user_score = find_score[user_id].score if user_id in find_score else 0
+        score_total += user_score
+        user_scores.scores.append(
+            HoleReadLong(
+                **track.model_dump(),
+                throws=find_score[user_id].throws if user_id in find_score else [],
+                score=user_score
+            )
         )
-    scores.par = track_total_par
-    scores.total_score = score_total
+    user_scores.par = track_total_par
+    user_scores.total_score = score_total
+
     game = GameSessionReadLong(
         id=game_session_id,
+        other_scores=other_scores,
         course_id=res.course_id,
         course=res.course,
         user_group_id=res.user_group_id,
         user_group=res.user_group,
-        user_score=scores,
+        user_score=user_scores,
         started_at=res.started_at,
         ended_at=res.ended_at,
         playtime=playtime,
@@ -286,7 +313,7 @@ def read_game_session_user_groups(session: Session, user_id: int) -> List[GameSe
     return session.exec(stmt).all()
 
 
-def read_game_session_course(session: Session, session_id: int) -> Course:
+def read_game_session_course(session: Session, session_id: int) -> Course | None:
     stmt = (
         select(Course)
         .options(
@@ -371,6 +398,30 @@ def join_game_session(session: Session, user_id: int, session_id: int) -> None:
         )
         session.add(participant)
         session.commit()
+
+
+def add_users_game_session(
+    session: Session, users_to_add: List[int], user_id: int, session_id: int
+):
+    db_users_in_game = session.exec(
+        select(SessionParticipantsLink).where(
+            SessionParticipantsLink.game_session_id == int(session_id),
+        )
+    ).all()
+    users_in_game = {u.user_id: u for u in db_users_in_game}
+
+    if user_id not in users_in_game:
+        HTTPException(404, "User not in gamesession")
+
+    db_users = session.exec(select(User).where(User.id.in_(users_to_add))).all()
+
+    user_map = {user.id: user for user in db_users if user.id}
+    out = []
+    for id in user_map.keys():
+        if id not in users_in_game:
+            out.append(SessionParticipantsLink(user_id=id, game_session_id=session_id))
+    session.add_all(out)
+    session.commit()
 
 
 def read_user_session_time(

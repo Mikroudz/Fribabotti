@@ -60,19 +60,35 @@ class Score(ScoreBase, table=True):
 
 
 class ScoreRead(SQLModel):
+    user_id: int
     track_number: int
     par: int
     score: int | None = None
     throws: List[ThrowReadLong] = []
 
 
+class ScoreReadNoThrows(SQLModel):
+    track_number: int
+    par: int
+    score: int | None = None
+
+
 class CourseScore(SQLModel):
-    user_id: int
+    id: int
     username: str = ""
     photo_url: str | None = None
     total_score: int = 0
     par: int = 0
     scores: List[HoleReadLong] = []
+
+
+class CourseScoreShort(SQLModel):
+    id: int
+    username: str = ""
+    photo_url: str | None = None
+    total_score: int = 0
+    par: int = 0
+    scores: List[ScoreReadNoThrows] = []
 
 
 class UpdateScore(SQLModel):

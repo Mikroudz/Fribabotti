@@ -301,15 +301,17 @@ def read_course_with_user_stats(
 
     tracks_user_avg = session.exec(
         select(Track, func.avg(Score.score - Track.par).label("track_avg"))
-        .join(
-            Track,
+        .outerjoin(
+            Score,
             and_(
                 Track.course_id == Score.course_id,
                 Track.track_number == Score.track_number,
+                Score.user_id == user_id,
+                Score.score > 0,
             ),
         )
-        .where(Score.user_id == user_id, Score.course_id == course_id, Score.score > 0)
-        .group_by(Score.track_number)
+        .where(Track.course_id == course_id)
+        .group_by(Track.track_number)
     )
 
     total_par = sum([track.par for track in db_course.tracks])

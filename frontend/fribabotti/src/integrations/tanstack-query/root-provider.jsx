@@ -2,7 +2,7 @@ import { MutationCache, QueryCache, QueryClient, skipToken } from "@tanstack/rea
 
 export const checkThrowQuery = (error) => {
     const { status } = error;
-    console.log("checkthrow", status);
+    //console.log("checkthrow", status);
     if (status && [401, 403, 413, 415].includes(status)) {
         return false;
     }
@@ -37,9 +37,7 @@ const createQueryClient = (getAuthErrorFn, options = {}) => {
                     //console.log("restarting queries");
                     await queryClient.refetchQueries(query.queryKey);
                     // For "users" we need to check if query can be removed because will cause infinite queries in auth window.
-                } else if (
-                    !(Array.isArray(query.queryKey) && query.queryKey.includes("CURRENT_USER"))
-                ) {
+                } else if (!(Array.isArray(query.queryKey) && query.queryKey.includes("CURRENT_USER"))) {
                     //console.log("removing failed query", query.queryKey);
                     queryClient.removeQueries({ queryKey: query.queryKey });
                 }

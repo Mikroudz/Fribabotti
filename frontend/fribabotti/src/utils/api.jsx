@@ -72,6 +72,11 @@ export async function endGameSession({ data, session_id }) {
     return baseFetch(`/game_session/${session_id}/end?close=${close}`, { method: "PATCH" });
 }
 
+export async function addUsersGamesession({ game_id, data, method = "POST" }) {
+    const url = `/game_session/${game_id}/add_users`;
+    return baseFetch(url, { method: method, body: JSON.stringify(data) });
+}
+
 export async function getCourse({ queryKey }) {
     const [_key, course_id] = queryKey;
     return baseFetch(`/courses/${course_id}`);
@@ -136,5 +141,10 @@ export async function joinGroup(invite) {
 
 export async function createGroup({ data, method = "POST" }) {
     const url = method === "POST" ? "/groups" : `/groups/${data.id}`;
+    return baseFetch(url, { method: method, body: JSON.stringify(data) });
+}
+
+export async function createGuestUser({ data, method = "POST" }) {
+    const url = method === "POST" ? "/auth/user/guest" : "/auth/user/guest";
     return baseFetch(url, { method: method, body: JSON.stringify(data) });
 }

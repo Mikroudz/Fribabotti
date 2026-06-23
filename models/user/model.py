@@ -1,6 +1,6 @@
 from typing import Optional, List, TYPE_CHECKING, Literal
 from datetime import datetime
-from pydantic import computed_field, model_validator
+from pydantic import computed_field
 from sqlmodel import Field, SQLModel, Relationship
 
 from ..links.user_group_members_link import UserGroupMembersLink
@@ -20,10 +20,11 @@ class UserBase(SQLModel):
     photo_url: Optional[str | None] = None
     auth_date: datetime | None = None
     hash: str | None = ""
+    is_guest: bool = False
 
     @computed_field
     @property
-    def name(self) -> int:
+    def name(self) -> str:
         if self.username == "":
             return self.first_name + self.last_name
         return self.username
@@ -44,6 +45,14 @@ class User(UserBase, table=True):
     scores: List["Score"] = Relationship(back_populates="user")
 
     device_sessions: List["DeviceSession"] = Relationship(back_populates="user")
+    managed_by_user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+
+    guests: List["User"] = Relationship(
+        sa_relationship_kwargs={
+            "primaryjoin": "User.id==User.managed_by_user_id",
+            "remote_side": "User.id",
+        }
+    )
 
 
 class UserRead(UserBase):
@@ -75,12 +84,18 @@ class UserCreate(UserBaseOptionalUsername):
     id: Optional[int] | None
 
 
+class UserCreateGuest(SQLModel):
+    username: str
+    # for now we require group. Later might not need
+    user_group_id: int
+
+
 class UserCreateTgAuth(UserBaseOptionalUsername):
     type: Literal["TGAUTH"]
 
     @computed_field
     @property
-    def name(self) -> str:
+    def name(self) -> None:
         return None
 
     id: Optional[int] | None

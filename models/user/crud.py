@@ -1,13 +1,13 @@
-from sqlmodel import (
-    Session,
-)
+from sqlmodel import Session, select
 from pydantic import ValidationError
 from fastapi import HTTPException
 
 from urllib.parse import parse_qsl
 
-from .model import User, UserCreateTgAuth
+from .model import User, UserCreateTgAuth, UserCreateGuest
+from models.user_group.model import UserGroup
 from utils.auth import verify_telegram_hash, verify_telegram_hash_webapp
+from utils.helpers import get_first_available_id
 
 from models.auth.model import TgWebAppAuthData
 
@@ -29,6 +29,40 @@ def create_user(session: Session, new_user) -> User | None:
         session.refresh(db_user)
 
     return db_user
+
+
+def create_guest_user(
+    session: Session, guest_data: UserCreateGuest, creator_user_id: int
+) -> User:
+    db_creator = session.get(User, creator_user_id)
+    if not db_creator:
+        HTTPException(404, "Invalid user")
+    db_group = session.get(UserGroup, guest_data.user_group_id)
+    if not db_group:
+        HTTPException(404, "Invalid group")
+    # we should put guest user outside telegram id range
+    guest = User(
+        **guest_data.model_dump(exclude="user_group_id"),
+        is_guest=True,
+        managed_by_user_id=creator_user_id,
+        user_groups=[db_group],
+        id=get_first_available_id(session, User)
+    )
+    session.add(guest)
+    session.commit()
+    session.refresh(guest)
+    return guest
+
+
+def delete_guest_user(session: Session, deleter_id: int, guest_id: int):
+    guest_db = session.exec(
+        select(User).where(User.id == guest_id, User.managed_by_user_id == deleter_id)
+    ).first()
+    if not guest_id:
+        HTTPException(404, "User does not exist or no permissions to delete")
+    session.delete(guest_db)
+    session.commit()
+    return {"status": "ok"}
 
 
 def telegram_login(session: Session, data: TgWebAppAuthData | UserCreateTgAuth) -> User:

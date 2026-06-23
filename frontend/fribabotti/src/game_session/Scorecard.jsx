@@ -14,10 +14,11 @@ const chunkArray = (arr, size) => {
 };
 
 export function ScoreCard({ data, outerBoxSx = {} }) {
-    const chunked = chunkArray(data?.scores, 8);
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const chunked = chunkArray(data?.[0]?.scores, 8);
     // Todo: handle scores from many users
-    const user_scores = data ? [data] : [];
-    const trackTotalPar = data?.par ?? 0;
+    const user_scores = data || [];
+    const trackTotalPar = data?.[0]?.par ?? 0;
 
     return (
         <Box
@@ -106,10 +107,7 @@ export function ScoreCard({ data, outerBoxSx = {} }) {
                                         alignItems: "center",
                                     }}
                                 >
-                                    <Typography
-                                        component="span"
-                                        sx={{ fontSize: "13px", flexGrow: 1 }}
-                                    >
+                                    <Typography component="span" sx={{ fontSize: "13px", flexGrow: 1 }}>
                                         total
                                     </Typography>
                                     <Typography
@@ -178,7 +176,7 @@ export function ScoreCard({ data, outerBoxSx = {} }) {
                                     <Box
                                         sx={{
                                             display: "flex",
-                                            flexDirection: "column",
+                                            flexDirection: "row",
                                             alignItems: "center",
                                         }}
                                     >

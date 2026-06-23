@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
     Button,
     Dialog,
@@ -6,7 +5,9 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    IconButton,
 } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function DeleteConfirmation({ open, onClose, title, contentText, onDelete }) {
     const handleConfirmDelete = () => {
@@ -30,9 +31,7 @@ export default function DeleteConfirmation({ open, onClose, title, contentText, 
             >
                 <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
                 <DialogContent>
-                    <DialogContentText id="alert-dialog-description">
-                        {contentText}
-                    </DialogContentText>
+                    <DialogContentText id="alert-dialog-description">{contentText}</DialogContentText>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCancel} color="primary">
@@ -44,5 +43,33 @@ export default function DeleteConfirmation({ open, onClose, title, contentText, 
                 </DialogActions>
             </Dialog>
         </>
+    );
+}
+
+export function SimpleDataDialog({ open, onClose, title, children }) {
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+            maxWidth="md"
+            slotProps={{ paper: { sx: { ml: 0.5, mr: 0.5 } } }}
+        >
+            <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
+            <IconButton
+                aria-label="close"
+                onClick={onClose}
+                sx={(theme) => ({
+                    position: "absolute",
+                    right: 8,
+                    top: 8,
+                    color: theme.palette.grey[500],
+                })}
+            >
+                <CloseIcon />
+            </IconButton>
+            <DialogContent sx={{ p: 1 }}>{children}</DialogContent>
+        </Dialog>
     );
 }

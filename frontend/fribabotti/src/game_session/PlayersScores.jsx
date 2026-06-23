@@ -82,21 +82,37 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
     const { mutate } = useMutation({
         mutationFn: updateScore,
         onSuccess: (data) => {
-            console.log(data);
-            queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (oldSession) => {
-                return oldSession
-                    ? {
-                          ...oldSession,
-                          user_score: {
-                              ...oldSession?.user_score,
-                              scores: oldSession?.user_score?.scores?.map((score) =>
-                                  score.track_number === data.track_number
-                                      ? { ...score, ...data }
-                                      : score,
-                              ),
-                          },
-                      }
-                    : {};
+            queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (prev) => {
+                const user_id = data.user_id;
+
+                if (!prev) return {};
+                if (prev?.user_score?.id === user_id) {
+                    return {
+                        ...prev,
+                        user_score: {
+                            ...prev?.user_score,
+                            scores: prev?.user_score?.scores?.map((score) =>
+                                score.track_number === data.track_number ? { ...score, ...data } : score,
+                            ),
+                        },
+                    };
+                }
+
+                const ret = {
+                    ...prev,
+                    other_scores: prev?.other_scores?.map((other_score) => {
+                        if (other_score.id === user_id) {
+                            return {
+                                ...other_score,
+                                scores: other_score.scores.map((score) =>
+                                    score.track_number === data.track_number ? { ...score, ...data } : score,
+                                ),
+                            };
+                        }
+                        return other_score;
+                    }),
+                };
+                return ret;
             });
         },
     });
@@ -107,7 +123,7 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
         // this is debounced
         mutate({
             data: {
-                user_id: userData.user_id,
+                user_id: userData.id,
                 track_number: track_num,
                 score: score,
                 game_session_id: gameSessionId,
@@ -165,7 +181,7 @@ export function PlayersHoleScores({ gameSessionData, currentTrack }) {
                 currentTrack={currentTrack}
                 gameSessionId={gameSessionData?.id}
             />
-            {[].map((userData, i) => (
+            {gameSessionData?.other_scores.map((userData, i) => (
                 <ScoreItem
                     key={i}
                     userData={userData}

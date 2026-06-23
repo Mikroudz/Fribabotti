@@ -6,7 +6,7 @@ from sqlmodel import Field, SQLModel, Relationship, DateTime
 from ..links.session_participants_link import SessionParticipantsLink
 from utils.helpers import utc_now_naive
 
-from ..score.model import CourseScore
+from ..score.model import CourseScore, CourseScoreShort
 
 if TYPE_CHECKING:
     from ..score.model import Score
@@ -119,13 +119,13 @@ class GameSessionReadLong(GameSessionBase):
     id: int
     course_id: int
     course: "CourseRead"
-    user_group_id: int
-    user_group: "UserGroupReadShort"
-    user_score: CourseScore
     started_at: datetime
     ended_at: datetime | None = None
     playtime: int = 0
-    # should we return scores for all users or only current here?
+    user_group_id: int
+    user_group: "UserGroupReadShort"
+    user_score: CourseScore
+    other_scores: List[CourseScoreShort] = []
 
 
 class GameSessionShort(SQLModel):

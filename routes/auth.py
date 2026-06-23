@@ -3,10 +3,14 @@ from sqlmodel import Session
 from database import get_session
 from fastapi.security import HTTPAuthorizationCredentials
 
-from .route_deps import refresh_token_required, access_token_required
+from .route_deps import (
+    refresh_token_required,
+    access_token_required,
+    token_required_user_id_in_response,
+)
 
 from typing import Annotated, Union
-from models.user.model import UserRead, UserCreateTgAuth
+from models.user.model import UserRead, UserCreateTgAuth, UserCreateGuest
 
 from models.device_sessions.model import RegisterDeviceData, ReadDeviceSession
 from models.device_sessions.crud import (
@@ -19,7 +23,7 @@ from models.auth.crud import (
     refresh_session,
 )
 
-from models.user.crud import telegram_login
+from models.user.crud import telegram_login, create_guest_user, delete_guest_user
 
 
 from models.auth.model import TgWebAppAuthData
@@ -117,3 +121,32 @@ async def remove_session(
     response.delete_cookie(key="refresh_token")
 
     return {"status": "ok"}
+
+
+@router.post(
+    "/user/guest",
+    dependencies=[Depends(token_required_user_id_in_response)],
+    response_model=UserRead,
+)
+async def create_guest(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    data: UserCreateGuest,
+):
+
+    return create_guest_user(session, data, request.state.user_id)
+
+
+@router.delete(
+    "/user/guest/{guest_id}",
+    dependencies=[Depends(token_required_user_id_in_response)],
+    response_model=UserRead,
+)
+async def delete_guest(
+    *,
+    request: Request,
+    session: Session = Depends(get_session),
+    guest_id: int,
+):
+    return delete_guest_user(session, request.state.user_id, guest_id)

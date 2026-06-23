@@ -85,14 +85,14 @@ async def group_edit(
 
 
 @router.get("/join/{invite}", response_model=UserGroupReadShort)
-async def get_user_group(
+async def read_group_invite(
     *, request: Request, session: Session = Depends(get_session), invite: str
 ):
     return read_group_invite(session, invite)
 
 
 @router.post("/join/{invite}", response_model=UserGroupReadShort)
-async def get_user_group(
+async def join_user_group_invite(
     *, request: Request, session: Session = Depends(get_session), invite: str
 ):
     res = invite_join_group(session, invite, request.state.user_id)

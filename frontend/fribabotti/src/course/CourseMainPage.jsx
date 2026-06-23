@@ -1,17 +1,7 @@
 import { PrettyPar } from "#/components/PrettyPar";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 import { GameSessionListWithoutName } from "#/game_session/GameSessionList";
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Grid,
-    IconButton,
-    Typography,
-} from "@mui/material";
+import { Box, Button, Divider, Grid, IconButton, Typography } from "@mui/material";
 
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -26,7 +16,6 @@ import { formatSecondsToTime } from "#/utils/helpers";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import { Fragment, useMemo, useState } from "react";
 
-import CloseIcon from "@mui/icons-material/Close";
 import { AverageChart } from "#/components/AvgScoreGraph";
 import MapIcon from "@mui/icons-material/Map";
 import { BasketMarker, StartMarker } from "#/game_session/MapView";
@@ -34,6 +23,7 @@ import { Polyline } from "react-leaflet";
 import { Map, RecenterMap } from "#/components/MapComponents";
 
 import { CourseWeather } from "./CourseWeather";
+import { SimpleDataDialog } from "#/components/SimpleDialog";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -41,34 +31,6 @@ function SimpleInfoBox({ top, bottom }) {
             <Typography component="span">{top}</Typography>
             <Typography component="span">{bottom}</Typography>
         </Box>
-    );
-}
-
-function SimpleDataDialog({ open, onClose, title, children }) {
-    return (
-        <Dialog
-            open={open}
-            onClose={onClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-            maxWidth="md"
-            slotProps={{ paper: { sx: { ml: 0.5, mr: 0.5 } } }}
-        >
-            <DialogTitle id="alert-dialog-title">{title}</DialogTitle>
-            <IconButton
-                aria-label="close"
-                onClick={onClose}
-                sx={(theme) => ({
-                    position: "absolute",
-                    right: 8,
-                    top: 8,
-                    color: theme.palette.grey[500],
-                })}
-            >
-                <CloseIcon />
-            </IconButton>
-            <DialogContent sx={{ p: 1 }}>{children}</DialogContent>
-        </Dialog>
     );
 }
 
@@ -203,9 +165,7 @@ function CourseStatsGlance({ course }) {
                             }}
                         >
                             Hole avg
-                            <OpenInNewIcon
-                                sx={{ color: "text.secondary", fontSize: "13px" }}
-                            ></OpenInNewIcon>
+                            <OpenInNewIcon sx={{ color: "text.secondary", fontSize: "13px" }}></OpenInNewIcon>
                         </Typography>
                         <Typography sx={{ color: "text.secondary" }}>Avg Score</Typography>
                         <PrettyPar
@@ -251,9 +211,7 @@ function CourseStatsGlance({ course }) {
                 </StyledAnyContentBox>
                 <StyledAnyContentBox size={{ xs: 3, sm: 3 }} component={Grid} sx={{ m: 0, p: 1 }}>
                     <Box
-                        onClick={() =>
-                            navigate({ to: RouteGraph.to, params: { courseId: course?.id } })
-                        }
+                        onClick={() => navigate({ to: RouteGraph.to, params: { courseId: course?.id } })}
                         sx={{ position: "relative" }}
                     >
                         <AnalyticsIcon

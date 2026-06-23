@@ -1,6 +1,19 @@
 import { GameTitleInformation } from "#/game_session/GameTitle";
 import { ScoreCard } from "#/game_session/Scorecard";
-import { Box, Button, IconButton, ListItemIcon, ListItemText, Menu, MenuItem } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    IconButton,
+    List,
+    ListItemAvatar,
+    ListItemButton,
+    ListItemIcon,
+    ListItemSecondaryAction,
+    ListItemText,
+    Menu,
+    MenuItem,
+} from "@mui/material";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Route as MapRoute } from "./_sessionlayout.map";
 import { useGameSession } from "#/hooks/GameSessionHooks";
@@ -9,15 +22,69 @@ import { useState } from "react";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useMutation } from "@tanstack/react-query";
-import { createGameSession } from "#/utils/api";
-import DeleteConfirmation from "#/components/SimpleDialog";
+import { addUsersGamesession, createGameSession } from "#/utils/api";
+import DeleteConfirmation, { SimpleDataDialog } from "#/components/SimpleDialog";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
+import { useUserGroup } from "#/hooks/ProfileHooks";
+import ListSkeletonLoader from "#/components/Loaders";
+import { StyledListItem } from "#/components/List";
+import { CheckBox } from "@mui/icons-material";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 
 export const Route = createFileRoute("/gamesession_/$gameSessionId/gamesession")({
     component: RouteComponent,
 });
 
+function AddPlayersList({ data }) {
+    const { data: group, isPending } = useUserGroup(data?.user_group_id);
+    const [checkedIds, setCheckedIds] = useState([]);
+    const { mutate } = useMutation({ mutationFn: addUsersGamesession, onSuccess: () => {} });
+
+    if (isPending) return <ListSkeletonLoader />;
+    const others = data?.other_scores?.map((val) => val.user_id) || [];
+    const users_in_game = [data?.user_score?.user_id, ...others];
+    const handleChecked = (id) => {
+        if (checkedIds.findIndex((val) => val === id) === -1) {
+            setCheckedIds((prev) => [...prev, id]);
+        } else {
+            setCheckedIds((prev) => prev.filter((val) => val !== id));
+        }
+    };
+
+    // TODO: users can be removed from game
+    return (
+        <>
+            <Button onClick={() => mutate({ data: checkedIds, game_id: data.id })} variant="contained">
+                Save
+            </Button>
+            <List sx={{ width: "350px" }}>
+                {group?.members
+                    ?.filter((u) => !users_in_game.includes(u.id))
+                    .map((user) => (
+                        <StyledListItem sx={{ p: 0 }} key={user.id}>
+                            <ListItemButton sx={{ m: 0, p: 1 }} onClick={() => handleChecked(user.id)}>
+                                <ListItemAvatar>
+                                    <Avatar src={user.photo_url} />
+                                </ListItemAvatar>
+                                <ListItemText primary={user.name}></ListItemText>
+                                <ListItemSecondaryAction>
+                                    {checkedIds.includes(user.id) ? (
+                                        <CheckBox />
+                                    ) : (
+                                        <CheckBoxOutlineBlankIcon />
+                                    )}
+                                </ListItemSecondaryAction>
+                            </ListItemButton>
+                        </StyledListItem>
+                    ))}
+            </List>
+        </>
+    );
+}
+
 function AppBarMenu({ data }) {
     const [anchorEl, setAnchorEl] = useState(null);
+    const [openDialog, setOpenDialog] = useState(false);
     const navigate = useNavigate();
     const [openDeleteGameDialog, setOpenDeleteGameDialog] = useState(false);
     const { mutate } = useMutation({
@@ -52,6 +119,12 @@ function AppBarMenu({ data }) {
                     </ListItemIcon>
                     <ListItemText>Delete Session</ListItemText>
                 </MenuItem>
+                <MenuItem onClick={() => setOpenDialog(true)}>
+                    <ListItemIcon sx={{ color: "text.primary" }}>
+                        <GroupAddIcon fontSize="small" />
+                    </ListItemIcon>
+                    <ListItemText>Add Players</ListItemText>
+                </MenuItem>
             </Menu>
             <DeleteConfirmation
                 open={openDeleteGameDialog}
@@ -60,6 +133,9 @@ function AppBarMenu({ data }) {
                 contentText={"Do you want to delete this gamesession permanently?"}
                 onDelete={handleDeleteGame}
             />
+            <SimpleDataDialog open={openDialog} title="Add Players" onClose={() => setOpenDialog(false)}>
+                <AddPlayersList data={data} />
+            </SimpleDataDialog>
         </AppBarAction>
     );
 }
@@ -67,6 +143,8 @@ function AppBarMenu({ data }) {
 function RouteComponent() {
     const { gameSessionId } = Route.useParams();
     const { data, status } = useGameSession(gameSessionId);
+
+    const scores = data && [data?.user_score, ...data?.other_scores];
 
     return (
         <Box sx={{ p: 1 }}>
@@ -81,7 +159,7 @@ function RouteComponent() {
                 Map/Play
             </Button>
 
-            <ScoreCard data={data?.user_score} />
+            <ScoreCard data={scores} />
 
             <AppBarMenu data={data} />
         </Box>

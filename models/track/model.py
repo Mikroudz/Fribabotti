@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class TrackBase(SQLModel):
-    par: int = None
+    par: int | None = None
     deleted: bool = False
     tee_lat: Optional[float] = None
     tee_lng: Optional[float] = None

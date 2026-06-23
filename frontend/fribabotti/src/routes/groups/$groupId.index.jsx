@@ -6,6 +6,8 @@ import {
     AccordionSummary,
     Avatar,
     AvatarGroup,
+    Box,
+    Button,
     IconButton,
     List,
     ListItemAvatar,
@@ -28,6 +30,7 @@ import {
 import { Route as GameRoute } from "../gamesession_/$gameSessionId/gamesession";
 import { Route as InviteRoute } from "./join.$inviteCode";
 import { Route as EditGroupRoute } from "./$groupId.edit";
+import { Route as AddUserRoute } from "./$groupId.add_member";
 
 import { dateTimeNice } from "#/utils/helpers";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
@@ -79,11 +82,7 @@ function AppBarMenu({ group_id }) {
                 <MoreVertIcon sx={{ color: "text.primary" }} />
             </IconButton>
             <Menu open={!!anchorEl} onClose={() => setAnchorEl(null)} anchorEl={anchorEl}>
-                <MenuItem
-                    onClick={() =>
-                        navigate({ to: EditGroupRoute.to, params: { groupId: group_id } })
-                    }
-                >
+                <MenuItem onClick={() => navigate({ to: EditGroupRoute.to, params: { groupId: group_id } })}>
                     <ListItemIcon sx={{ color: "text.primary" }}>
                         <EditIcon fontSize="small" />
                     </ListItemIcon>
@@ -150,7 +149,31 @@ function GroupInfo() {
                     </AccordionDetails>
                 </Accordion>
             </StyledAnyContentBox>
-            <Typography>Group Members {group?.members?.length}</Typography>
+
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignContent: "center",
+                    alignItems: "center",
+                    width: "100%",
+                }}
+            >
+                <Typography>Group Members {group?.members?.length}</Typography>
+                <Button
+                    component={Link}
+                    variant="outlined"
+                    sx={{
+                        borderColor: "primary.600",
+                        color: "primary.600",
+                        ml: "auto",
+                    }}
+                    to={AddUserRoute.to}
+                    params={{ groupId: group?.id }}
+                >
+                    + Add Member
+                </Button>
+            </Box>
             <List>
                 {group?.members?.map((user) => (
                     <StyledListItem sx={{ p: 1 }} key={user.id}>
