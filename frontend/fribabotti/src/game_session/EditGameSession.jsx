@@ -6,7 +6,7 @@ import { Autocomplete, Box, Stack, TextField, Typography } from "@mui/material";
 import { useMutation } from "@tanstack/react-query";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { useForm, FormProvider, Controller } from "react-hook-form";
+import { useForm, FormProvider, Controller, useFormContext } from "react-hook-form";
 import { useCourses } from "#/hooks/GameSessionHooks";
 import { useUserGroups } from "#/hooks/ProfileHooks";
 
@@ -17,9 +17,19 @@ const FORM_DEFAULTS = {
     participants: [],
 };
 
-function SelectCourse() {
+function SelectCourse({ initialData }) {
     const { data: courses } = useCourses();
     const selectValues = courses.map((course) => ({ label: course.name, id: course.id }));
+    const { setValue } = useFormContext();
+
+    useEffect(() => {
+        if (selectValues && initialData && Object.hasOwn(initialData, "course_id")) {
+            const idx = selectValues.findIndex((val) => val.id === initialData.course_id);
+            if (idx !== -1) {
+                setValue("course_id", selectValues[idx]);
+            }
+        }
+    }, [selectValues]);
     return (
         <Controller
             name="course_id"
@@ -150,12 +160,7 @@ export function EditGameSession({ gameSession }) {
     return (
         <Box sx={{ p: 1 }}>
             <FormProvider {...methods}>
-                <Stack
-                    component="form"
-                    onSubmit={handleSubmit(onSubmit)}
-                    spacing={1}
-                    sx={{ mb: 3 }}
-                >
+                <Stack component="form" onSubmit={handleSubmit(onSubmit)} spacing={1} sx={{ mb: 3 }}>
                     <Box
                         sx={{
                             display: "flex",
@@ -169,12 +174,10 @@ export function EditGameSession({ gameSession }) {
                         </Typography>
                     </Box>
                     <input type="hidden" {...register("id")} />
-                    <SelectCourse />
+                    <SelectCourse initialData={gameSession} />
                     <SelectGroup />
 
-                    <Box
-                        sx={{ position: "fixed", left: 0, bottom: 62, width: "100%", pl: 1, pr: 1 }}
-                    >
+                    <Box sx={{ position: "fixed", left: 0, bottom: 62, width: "100%", pl: 1, pr: 1 }}>
                         <SubmitButton
                             isSaved={isMutationPending}
                             isEditing={!gameSession}

@@ -180,7 +180,6 @@ def read_game_session_long(
     ).all()
 
     user_scores = CourseScore(
-        user_id=user_id,
         **next((user for user in users if user.id == user_id)).model_dump()
     )
     other_scores = [

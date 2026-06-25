@@ -312,7 +312,7 @@ def read_course_with_user_stats(
         )
         .where(Track.course_id == course_id)
         .group_by(Track.track_number)
-    )
+    ).all()
 
     total_par = sum([track.par for track in db_course.tracks])
 

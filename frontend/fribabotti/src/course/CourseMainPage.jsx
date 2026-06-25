@@ -11,7 +11,7 @@ import { Route as RouteCourse } from "#/routes/course.$courseId.index";
 import { Route as RouteGraph } from "#/routes/course.$courseId.graphs";
 
 import EditIcon from "@mui/icons-material/Edit";
-import { Route as RouteNewGame } from "#/routes/course.$courseId.newgame";
+import { Route as RouteNewGame } from "#/routes/gamesession_/new";
 import { formatSecondsToTime } from "#/utils/helpers";
 import AnalyticsIcon from "@mui/icons-material/Analytics";
 import { Fragment, useMemo, useState } from "react";
@@ -24,6 +24,8 @@ import { Map, RecenterMap } from "#/components/MapComponents";
 
 import { CourseWeather } from "./CourseWeather";
 import { SimpleDataDialog } from "#/components/SimpleDialog";
+
+import LocationOnIcon from "@mui/icons-material/LocationOn";
 
 function SimpleInfoBox({ top, bottom }) {
     return (
@@ -97,6 +99,7 @@ function CourseStatsGlance({ course }) {
                     <Typography component="span" variant="h5">
                         {course?.name}
                     </Typography>
+
                     <IconButton
                         sx={{ pt: 0, pr: 0 }}
                         onClick={async () =>
@@ -110,6 +113,9 @@ function CourseStatsGlance({ course }) {
                         <EditIcon sx={{ color: "white" }} />
                     </IconButton>
                 </Box>
+                <Typography variant="body2" sx={{ color: "text.secondary" }}>
+                    <LocationOnIcon fontSize="8px" /> {course?.location}
+                </Typography>
 
                 <Divider />
                 <Box sx={{ display: "flex", flexDirection: "row", gap: 2, mb: 1 }}>
@@ -136,7 +142,9 @@ function CourseStatsGlance({ course }) {
                         sx={{ bgcolor: "secondary.main", width: "auto" }}
                         component={Link}
                         to={RouteNewGame.to}
-                        params={course?.id}
+                        search={{
+                            course_id: course?.id,
+                        }}
                     >
                         Start new round
                     </Button>
