@@ -65,9 +65,10 @@ export const useGameSession = (game_session_id = null, notifyOnChangeProps) => {
     const params = useParams({ strict: false });
     const { gameSessionId } = params;
     const queryClient = useQueryClient();
+    const session_id = game_session_id !== null ? game_session_id : parseInt(gameSessionId);
 
     const { data, ...rest } = useQuery({
-        queryKey: ["gamesession", game_session_id !== null ? game_session_id : gameSessionId],
+        queryKey: ["gamesession", session_id],
         queryFn: getGameSession,
         notifyOnChangeProps,
     });
@@ -77,7 +78,7 @@ export const useGameSession = (game_session_id = null, notifyOnChangeProps) => {
         // TODO: we really need to set max track count when moving to session path, not every time gamesession data changes, but this is simple solution for now
         const holeCount = data?.user_score?.scores ? data?.user_score?.scores?.length : null;
 
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => ({
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE", session_id], (prev) => ({
             ...prev,
             hole_count: holeCount,
         }));
@@ -86,9 +87,9 @@ export const useGameSession = (game_session_id = null, notifyOnChangeProps) => {
     return { data, ...rest };
 };
 
-export const useSelectedHole = () => {
+export const useSelectedHole = (session_id) => {
     const { data } = useQuery({
-        queryKey: ["CURRENT_SELECTED_HOLE"],
+        queryKey: ["CURRENT_SELECTED_HOLE", parseInt(session_id)],
         enabled: false,
         staleTime: Infinity,
         gcTime: Infinity,
@@ -105,10 +106,10 @@ export const useHoleChanger = () => {
     const { gameSessionId } = params;
 
     const moveToNextHole = useCallback(() => {
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => {
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE", parseInt(gameSessionId)], (prev) => {
             const { user_score: scoreData } = queryClient.getQueryData([
                 "gamesession",
-                gameSessionId,
+                parseInt(gameSessionId),
             ]);
 
             let next_track_num = 1;
@@ -127,10 +128,10 @@ export const useHoleChanger = () => {
     }, [gameSessionId, queryClient]);
 
     const moveToPreviousHole = useCallback(() => {
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => {
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE", parseInt(gameSessionId)], (prev) => {
             const { user_score: scoreData } = queryClient.getQueryData([
                 "gamesession",
-                gameSessionId,
+                parseInt(gameSessionId),
             ]);
 
             let next_track_num = 1;

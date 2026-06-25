@@ -9,12 +9,7 @@ import RoomIcon from "@mui/icons-material/Room";
 import { getShortDistance, getShortDistanceArr } from "#/utils/helpers";
 import { getPositionWithCallback } from "#/hooks/usePosition";
 import { GameScoreDrawer } from "./GameScoreDrawer";
-import {
-    GAME_SESSION_KEY,
-    useGameSession,
-    useHoleChanger,
-    useSelectedHole,
-} from "#/hooks/GameSessionHooks";
+import { GAME_SESSION_KEY, useGameSession, useHoleChanger, useSelectedHole } from "#/hooks/GameSessionHooks";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createThrow } from "#/utils/api";
 import { useParams } from "@tanstack/react-router";
@@ -38,10 +33,10 @@ const StyledContentBox = styled(Box)(({ theme }) => ({
     padding: theme.spacing(1),
 }));
 
-function SelectHole({ data }) {
+function SelectHole({ data, session_id }) {
     const [selectOpen, setSelectOpen] = useState(false);
     const queryClient = useQueryClient();
-    const { track_number } = useSelectedHole();
+    const { track_number } = useSelectedHole(session_id);
 
     const handleClose = () => {
         setSelectOpen(false);
@@ -74,15 +69,14 @@ function SelectHole({ data }) {
     }, [data]);
 
     const handleSelectHole = (e) => {
-        queryClient.setQueryData(["CURRENT_SELECTED_HOLE"], (prev) => ({
+        queryClient.setQueryData(["CURRENT_SELECTED_HOLE", session_id], (prev) => ({
             ...prev,
             track_number: e.target.value,
         }));
     };
 
     const hole_idx = data?.scores?.findIndex((val) => val.track_number === track_number);
-    const current_hole_par =
-        hole_idx !== undefined && hole_idx !== -1 ? data.scores[hole_idx].par : 0;
+    const current_hole_par = hole_idx !== undefined && hole_idx !== -1 ? data.scores[hole_idx].par : 0;
     const current_hole_dist =
         hole_idx !== undefined && hole_idx !== -1
             ? getShortDistance(
@@ -168,9 +162,7 @@ function ThrowInfo({ currentThrow }) {
     const distance = calculateThrowDistance(currentThrow);
 
     return (
-        <StyledContentBox
-            sx={{ position: "absolute", top: 0, right: 0, zIndex: 1000, mr: 1, mt: 1 }}
-        >
+        <StyledContentBox sx={{ position: "absolute", top: 0, right: 0, zIndex: 1000, mr: 1, mt: 1 }}>
             <Typography component="span">Throw {currentThrow?.throw_number}</Typography>
             <Box sx={{ display: "flex", flexDirection: "column" }}>
                 <Typography component="span" color="secondary" sx={{ fontSize: "13px" }}>
@@ -198,16 +190,14 @@ function useMutateThrow({ onSuccess = () => {}, onSettled = () => {} } = {}) {
         mutationFn: createThrow,
         onSuccess: (data) => {
             onSuccess(data);
-            queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (oldSession) => {
+            queryClient.setQueryData([GAME_SESSION_KEY, parseInt(gameSessionId)], (oldSession) => {
                 return oldSession
                     ? {
                           ...oldSession,
                           user_score: {
                               ...oldSession?.user_score,
                               scores: oldSession?.user_score?.scores?.map((score) =>
-                                  score.track_number === data.track_number
-                                      ? { ...score, ...data }
-                                      : score,
+                                  score.track_number === data.track_number ? { ...score, ...data } : score,
                               ),
                           },
                       }
@@ -236,7 +226,7 @@ function GameControls({ scoreData }) {
     const { moveToNextHole } = useHoleChanger();
 
     const handleNewThrow = (pos) => {
-        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE"]);
+        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE", parseInt(gameSessionId)]);
 
         const lat = import.meta.env.DEV ? testPos[0] - Math.random() * 0.005 : pos.coords.latitude;
         const lng = import.meta.env.DEV ? testPos[1] - Math.random() * 0.005 : pos.coords.longitude;
@@ -253,17 +243,13 @@ function GameControls({ scoreData }) {
 
     const handleDeleteThrow = () => {
         // deletes last throw. Should we actually delete selected throw?
-        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE"]);
-        const holeScore = scoreData?.scores.find(
-            (val) => val.track_number === selectedTrack.track_number,
-        );
+        const selectedTrack = queryClient.getQueryData(["CURRENT_SELECTED_HOLE", parseInt(gameSessionId)]);
+        const holeScore = scoreData?.scores.find((val) => val.track_number === selectedTrack.track_number);
         if (!holeScore) {
             return;
         }
 
-        const throw_id = holeScore?.throws
-            .sort((a, b) => a.throw_number - b.throw_number)
-            .at(-1)?.id;
+        const throw_id = holeScore?.throws.sort((a, b) => a.throw_number - b.throw_number).at(-1)?.id;
         if (throw_id) {
             mutate({
                 data: {
@@ -404,7 +390,7 @@ export function BasketMarker({ position }) {
 function SessionMap({ sessionData }) {
     const [selectedThrowNum, setSelectedThrowNum] = useState(1);
     const [isMoving, setMoving] = useState(false);
-    const selectedHole = useSelectedHole();
+    const selectedHole = useSelectedHole(sessionData?.id);
     const mutate = useMutateThrow();
     // temporary hold in state
     const [localScoreData, setLocalScoreData] = useState(null);
@@ -555,9 +541,7 @@ function SessionMap({ sessionData }) {
                 <RecenterMap markers={[...markerCoords, ...startEndPositions]} />
             </Map>
             <ThrowInfo
-                currentThrow={localScoreData?.throws?.find(
-                    (val) => val.throw_number === selectedThrowNum,
-                )}
+                currentThrow={localScoreData?.throws?.find((val) => val.throw_number === selectedThrowNum)}
             />
             <Button
                 sx={{
@@ -586,7 +570,7 @@ export function MapView() {
         <Box sx={{ height: "100%", width: "100%", overflow: "hidden", position: "relative" }}>
             <SessionMap sessionData={sessionData} />
             <GameControls scoreData={sessionData?.user_score} />
-            <SelectHole data={sessionData?.user_score} />
+            <SelectHole data={sessionData?.user_score} session_id={sessionData?.id} />
 
             <GameScoreDrawer />
         </Box>

@@ -15,7 +15,7 @@ function EndOpenGameSession({ gameSessionId, isGameOpen }) {
     const { mutate } = useMutation({
         mutationFn: endGameSession,
         onSuccess: (data) => {
-            queryClient.setQueryData(["gamesession", String(data.id)], data);
+            queryClient.setQueryData(["gamesession", parseInt(data.id)], data);
         },
     });
 

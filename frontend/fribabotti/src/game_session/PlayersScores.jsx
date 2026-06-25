@@ -82,7 +82,7 @@ function ScoreItem({ userData, currentTrack, gameSessionId }) {
     const { mutate } = useMutation({
         mutationFn: updateScore,
         onSuccess: (data) => {
-            queryClient.setQueryData([GAME_SESSION_KEY, String(gameSessionId)], (prev) => {
+            queryClient.setQueryData([GAME_SESSION_KEY, parseInt(gameSessionId)], (prev) => {
                 const user_id = data.user_id;
 
                 if (!prev) return {};

@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 
 export function GameScoreDrawer() {
     const { data: gameSessionData } = useGameSession();
-    const selectedHole = useSelectedHole();
+    const selectedHole = useSelectedHole(gameSessionData?.id);
     const currentHoleScore = useGameState();
     const { moveToNextHole, moveToPreviousHole } = useHoleChanger();
 
@@ -76,10 +76,7 @@ export function GameScoreDrawer() {
                         label={`Total ${prettyParFormat(total_score, total_par)}`}
                         sx={{ bgcolor: "primary.500" }}
                     ></Chip>
-                    <Chip
-                        label={`Hole ${selectedHole?.track_number}`}
-                        sx={{ bgcolor: "primary.500" }}
-                    ></Chip>
+                    <Chip label={`Hole ${selectedHole?.track_number}`} sx={{ bgcolor: "primary.500" }}></Chip>
                 </Box>
                 <Box sx={{ position: "absolute", right: 0, m: 0.5, display: "flex", gap: 1 }}>
                     <Chip
@@ -88,9 +85,7 @@ export function GameScoreDrawer() {
                     ></Chip>
                 </Box>
 
-                <Box
-                    sx={{ mt: 2, width: 30, height: 6, bgcolor: "primary.200", borderRadius: 3 }}
-                />
+                <Box sx={{ mt: 2, width: 30, height: 6, bgcolor: "primary.200", borderRadius: 3 }} />
             </Box>
             <Box
                 sx={{
@@ -132,11 +127,7 @@ export function GameScoreDrawer() {
                         <ChevronLeft fontSize="large" />
                     </IconButton>
                     <Box sx={{ textAlign: "center", minWidth: "80px" }}>
-                        <Typography
-                            variant="caption"
-                            color="white"
-                            sx={{ display: "block", opacity: 0.7 }}
-                        >
+                        <Typography variant="caption" color="white" sx={{ display: "block", opacity: 0.7 }}>
                             HOLE
                         </Typography>
                         <Typography

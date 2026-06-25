@@ -142,7 +142,7 @@ function AppBarMenu({ data }) {
 
 function RouteComponent() {
     const { gameSessionId } = Route.useParams();
-    const { data, status } = useGameSession(gameSessionId);
+    const { data, status } = useGameSession();
 
     const scores = data && [data?.user_score, ...data?.other_scores];
 
