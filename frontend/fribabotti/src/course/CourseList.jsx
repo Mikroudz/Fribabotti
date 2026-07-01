@@ -3,6 +3,9 @@ import { useCourses } from "../hooks/GameSessionHooks";
 import { StyledListItem, StyledListItemButton } from "#/components/List";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Route as CourseRoute } from "#/routes/course.$courseId.index";
+import { Map, RecenterMap } from "#/components/MapComponents";
+import { useMemo } from "react";
+import { Marker } from "react-leaflet";
 
 export function CourseList() {
     const { data: courses, status } = useCourses();
@@ -24,5 +27,22 @@ export function CourseList() {
                 </StyledListItem>
             ))}
         </List>
+    );
+}
+
+export function CourseListMap() {
+    const { data: courses, status } = useCourses();
+
+    const markers = useMemo(() => {
+        return courses?.map((course) => (
+            <Marker key={`${course.lat}-${course.lng}`} position={[course.lat, course.lng]}></Marker>
+        ));
+    }, [courses]);
+
+    return (
+        <Map>
+            {markers}
+            <RecenterMap markers={markers} />
+        </Map>
     );
 }

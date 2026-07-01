@@ -142,9 +142,17 @@ def read_courses_short(
     session: Session, game_id: int | None = None, user_id: int | None = None
 ) -> List[CourseReadShort]:
 
+    sub_stmt = select(Track).order_by(Track.track_number.asc()).limit(1).subquery()
+
     stmt = (
-        select(Course, func.count(Track.track_number).label("holes"))
+        select(
+            Course,
+            func.count(Track.track_number).label("holes"),
+            sub_stmt.c.tee_lat.label("lat"),
+            sub_stmt.c.tee_lng.label("lng"),
+        )
         .join(Track, Track.course_id == Course.id)
+        .join(sub_stmt, sub_stmt.c.course_id == Course.id)
         .group_by(Course.id)
     )
     if user_id != None:
@@ -168,7 +176,8 @@ def read_courses_short(
 
     courses = session.exec(stmt).all()
     return [
-        CourseReadShort(**course.model_dump(), holes=holes) for course, holes in courses
+        CourseReadShort(**course.model_dump(), holes=holes, lat=lat, lng=lng)
+        for course, holes, lat, lng in courses
     ]
 
 

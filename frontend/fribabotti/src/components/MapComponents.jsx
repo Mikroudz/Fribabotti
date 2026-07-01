@@ -14,7 +14,7 @@ export function RecenterMap({ markers }) {
     const currentBounds = useRef(null);
 
     useEffect(() => {
-        if (markers && markers.length > 0) {
+        if (markers && markers.length > 1) {
             map.invalidateSize();
             currentBounds.current = L.latLngBounds(markers);
             map.fitBounds(currentBounds.current, { padding: [50, 50] });
@@ -65,10 +65,7 @@ function LocateSelfButton() {
     return (
         <>
             {/* Custom Button Placed in a Leaflet Control Container Slot */}
-            <Box
-                className="leaflet-right"
-                sx={{ pointerEvents: "auto", bottom: 160, position: "absolute" }}
-            >
+            <Box className="leaflet-right" sx={{ pointerEvents: "auto", bottom: 160, position: "absolute" }}>
                 <Box className="leaflet-control leaflet-bar">
                     <IconButton
                         onClick={handleLocate}

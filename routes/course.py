@@ -75,7 +75,7 @@ async def course_weathr(
 
 
 @router.get("/{course_id}/history", response_model=CourseStatHistory)
-async def course_read(
+async def course_read_history(
     *,
     request: Request,
     session: Session = Depends(get_session),
@@ -137,7 +137,7 @@ async def course_update(
 
 
 @router.delete("/{course_id}")
-async def course_update(
+async def course_delete(
     *,
     request: Request,
     session: Session = Depends(get_session),
