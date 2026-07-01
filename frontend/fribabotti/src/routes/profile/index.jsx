@@ -3,7 +3,7 @@ import { StyledListItem, StyledListItemButton } from "#/components/List";
 import { StyledAnyContentBox } from "#/components/StyledContentBoxes";
 import { GroupList } from "#/Groups/GroupList";
 import { getDeviceSessions } from "#/utils/api";
-import { dateTimeNice } from "#/utils/helpers";
+import { dateTimeNice, formatSecondsToTime } from "#/utils/helpers";
 import { Avatar, Box, lighten, List, ListItemText, Typography } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
@@ -57,9 +57,11 @@ function ProfileInfo() {
                     {user?.name}
                 </Typography>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "row", mt: 1 }}>
-                <InfoBox title="Playtime" value="100h 30m" />
-                <InfoBox title="Playtime" value="100h 30m" />
+            <Box sx={{ display: "flex", flexDirection: "row", mt: 1, flexWrap: "wrap" }}>
+                <InfoBox title="Playtime" value={formatSecondsToTime(user?.stats?.total_playtime)} />
+                <InfoBox title="Games past month" value={user?.stats?.games_last_month} />
+                <InfoBox title="Games 3 months" value={user?.stats?.games_3_months} />
+                <InfoBox title="Games this year" value={user?.stats?.games_ytd} />
             </Box>
         </StyledAnyContentBox>
     );
@@ -83,10 +85,7 @@ function ProfileDevices() {
                         key={val.created_at}
                         sx={{ alignItems: "center", bgcolor: "background.default", mb: 1, pb: 0 }}
                     >
-                        <ListItemText
-                            secondary={dateTimeNice(val?.created_at)}
-                            primary={"Device"}
-                        />
+                        <ListItemText secondary={dateTimeNice(val?.created_at)} primary={"Device"} />
                     </StyledListItem>
                 ))}
             </List>

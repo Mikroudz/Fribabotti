@@ -59,8 +59,16 @@ class UserRead(UserBase):
     id: int
 
 
+class UserStats(SQLModel):
+    total_playtime: int = 0
+    games_last_month: int = 0
+    games_3_months: int = 0
+    games_ytd: int = 0
+
+
 class UserReadLong(UserBase):
     id: int
+    stats: UserStats
 
 
 class UserCreateNestedUser(SQLModel):

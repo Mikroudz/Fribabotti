@@ -10,7 +10,7 @@ export const useUser = () => {
     const { data: user } = useQuery({
         queryKey: [USER_QUERY_KEY],
         queryFn: getUser,
-        refetchOnMount: false,
+        refetchOnMount: true,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         initialData: readUser,

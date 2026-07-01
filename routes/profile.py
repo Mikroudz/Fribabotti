@@ -4,7 +4,7 @@ from typing import Annotated, Union, List
 from database import get_session
 
 
-from models.user.crud import read_user
+from models.user.crud import read_user_with_stats
 from models.device_sessions.crud import read_device_sessions_user
 from models.device_sessions.model import FrontReadDeviceSession
 
@@ -26,7 +26,7 @@ async def user_read(
     request: Request,
     session: Session = Depends(get_session),
 ):
-    return read_user(session, request.state.user_id)
+    return read_user_with_stats(session, request.state.user_id)
 
 
 @router.get("/devices", response_model=list[FrontReadDeviceSession])
