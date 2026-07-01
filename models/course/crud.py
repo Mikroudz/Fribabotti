@@ -142,8 +142,21 @@ def read_courses_short(
     session: Session, game_id: int | None = None, user_id: int | None = None
 ) -> List[CourseReadShort]:
 
-    sub_stmt = select(Track).order_by(Track.track_number.asc()).limit(1).subquery()
+    min_track_subq = (
+        select(Track.course_id, func.min(Track.track_number).label("min_num"))
+        .group_by(Track.course_id)
+        .subquery()
+    )
 
+    sub_stmt = (
+        select(Track.course_id, Track.tee_lat, Track.tee_lng)
+        .join(
+            min_track_subq,
+            (Track.course_id == min_track_subq.c.course_id)
+            & (Track.track_number == min_track_subq.c.min_num),
+        )
+        .subquery()
+    )
     stmt = (
         select(
             Course,
@@ -151,8 +164,8 @@ def read_courses_short(
             sub_stmt.c.tee_lat.label("lat"),
             sub_stmt.c.tee_lng.label("lng"),
         )
-        .join(Track, Track.course_id == Course.id)
-        .join(sub_stmt, sub_stmt.c.course_id == Course.id)
+        .outerjoin(Track, Track.course_id == Course.id)
+        .outerjoin(sub_stmt, sub_stmt.c.course_id == Course.id)
         .group_by(Course.id)
     )
     if user_id != None:

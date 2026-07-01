@@ -34,9 +34,11 @@ export function CourseListMap() {
     const { data: courses, status } = useCourses();
 
     const markers = useMemo(() => {
-        return courses?.map((course) => (
-            <Marker key={`${course.lat}-${course.lng}`} position={[course.lat, course.lng]}></Marker>
-        ));
+        return courses
+            ?.filter((val) => val.lat && val.lng)
+            .map((course) => (
+                <Marker key={`${course.lat}-${course.lng}`} position={[course.lat, course.lng]}></Marker>
+            ));
     }, [courses]);
 
     return (
