@@ -53,9 +53,12 @@ class CourseRead(CourseBase):
 
 
 class CourseReadShort(SQLModel):
-    name: str | None = None
     id: int
+    name: str | None = None
     holes: int = 0
+
+
+class CourseReadShortLocation(CourseReadShort):
     lat: float | None = None
     lng: float | None = None
 

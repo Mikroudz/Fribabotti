@@ -18,7 +18,7 @@ from models.user.model import User
 from models.user.crud import read_user
 from models.track.model import Track, HoleReadLong
 
-from models.course.model import Course
+from models.course.model import Course, CourseReadShort
 from models.score.model import Score, CourseScore, CourseScoreShort, ScoreReadNoThrows
 
 
@@ -79,6 +79,7 @@ def read_game_session_user(
             Score.game_session_id,
             func.sum(Score.score).label("score"),
             func.sum(Track.par).label("par"),
+            func.count(Track.track_number).label("holes"),
         )
         .join(
             Track,
@@ -96,6 +97,7 @@ def read_game_session_user(
             GameSession,
             func.coalesce(subq.c.score, 0).label("score"),
             func.coalesce(subq.c.par, 0).label("par"),
+            subq.c.holes.label("holes"),
         )
         .options(selectinload(GameSession.course))
         .join(
@@ -123,9 +125,12 @@ def read_game_session_user(
     ret = session.exec(stmt).all()
     return [
         GameSessionReadShort(
-            **game.model_dump(), user_score=score, par=par, course=game.course
+            **game.model_dump(),
+            user_score=score,
+            par=par,
+            course=CourseReadShort(**game.course.model_dump(), holes=holes)
         )
-        for game, score, par in ret
+        for game, score, par, holes in ret
     ]
 
 

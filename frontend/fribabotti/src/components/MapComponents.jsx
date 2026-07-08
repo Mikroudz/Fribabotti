@@ -14,7 +14,7 @@ export function RecenterMap({ markers }) {
     const currentBounds = useRef(null);
 
     useEffect(() => {
-        if (markers && markers.length > 1) {
+        if (markers && markers.length > 0) {
             map.invalidateSize();
             currentBounds.current = L.latLngBounds(markers);
             map.fitBounds(currentBounds.current, { padding: [50, 50] });

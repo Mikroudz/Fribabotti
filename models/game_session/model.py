@@ -7,6 +7,7 @@ from ..links.session_participants_link import SessionParticipantsLink
 from utils.helpers import utc_now_naive
 
 from ..score.model import CourseScore, CourseScoreShort
+from ..course.model import CourseReadShort
 
 if TYPE_CHECKING:
     from ..score.model import Score
@@ -87,7 +88,7 @@ class GameSessionReadDevice(SQLModel):
 class GameSessionReadShort(GameSessionBase):
     id: int
     course_id: int
-    course: "CourseRead"
+    course: CourseReadShort
     started_at: datetime
     ended_at: datetime | None = None
     par: int = 0

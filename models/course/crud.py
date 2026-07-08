@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import selectinload
 from pydantic import ValidationError
 
-from .model import Course, CourseUpdate, CourseCreate, CourseReadShort
+from .model import Course, CourseUpdate, CourseCreate, CourseReadShortLocation
 from .stat_model import CourseWithStats, CourseStatHistory
 from models.links.session_participants_link import SessionParticipantsLink
 
@@ -140,7 +140,7 @@ def read_courses(
 
 def read_courses_short(
     session: Session, game_id: int | None = None, user_id: int | None = None
-) -> List[CourseReadShort]:
+) -> List[CourseReadShortLocation]:
 
     min_track_subq = (
         select(Track.course_id, func.min(Track.track_number).label("min_num"))
@@ -189,7 +189,7 @@ def read_courses_short(
 
     courses = session.exec(stmt).all()
     return [
-        CourseReadShort(**course.model_dump(), holes=holes, lat=lat, lng=lng)
+        CourseReadShortLocation(**course.model_dump(), holes=holes, lat=lat, lng=lng)
         for course, holes, lat, lng in courses
     ]
 
@@ -213,7 +213,7 @@ def read_course(session: Session, course_id: int) -> Course:
 
 def read_courses_short_stats(
     session: Session, user_id: int, game_id: int | None = None
-) -> List[CourseReadShort]:
+) -> List[CourseReadShortLocation]:
 
     course_stats = (
         select(
@@ -243,7 +243,7 @@ def read_courses_short_stats(
 
     courses = session.exec(stmt).all()
     return [
-        CourseReadShort(**course.model_dump(), par=par, total_score=total_score)
+        CourseReadShortLocation(**course.model_dump(), par=par, total_score=total_score)
         for course, total_score, par in courses
     ]
 

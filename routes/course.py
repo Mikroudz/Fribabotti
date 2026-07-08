@@ -5,7 +5,7 @@ from database import get_session as get_session
 from fastapi_cache.decorator import cache
 
 from models.course.model import (
-    CourseReadShort,
+    CourseReadShortLocation,
     CourseCreate,
     CourseUpdate,
     CourseWeather,
@@ -105,7 +105,7 @@ async def course_read(
     )
 
 
-@router.get("", response_model=List[CourseReadShort])
+@router.get("", response_model=List[CourseReadShortLocation])
 async def courses_read(*, request: Request, session: Session = Depends(get_session)):
 
     return read_courses_short(
