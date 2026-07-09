@@ -14,7 +14,11 @@ export function GameSessionList({ gameSessions }) {
                     secondaryAction={
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
                             <PrettyPar score={val.user_score} par={val.par} />
-                            <Typography component="span" variant="caption" sx={{ color: "text.secondary" }}>
+                            <Typography
+                                component="span"
+                                variant="caption"
+                                sx={{ color: "text.secondary" }}
+                            >
                                 vs par
                             </Typography>
                         </Box>
@@ -28,7 +32,14 @@ export function GameSessionList({ gameSessions }) {
                         from=""
                         sx={{ display: "flex", flexDirection: "column", alignItems: "start" }}
                     >
-                        <Box sx={{ display: "flex", flexDirection: "row", gap: 1, alignItems: "flex-start" }}>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "row",
+                                gap: 1,
+                                alignItems: "flex-start",
+                            }}
+                        >
                             <Typography
                                 component="span"
                                 sx={{
@@ -41,13 +52,13 @@ export function GameSessionList({ gameSessions }) {
                                     aspectRatio: "1/1",
                                     borderRadius: "7px",
                                     p: 1,
-                                    mt: 1,
+                                    mt: 0.5,
                                 }}
                             >
                                 <AcUnitIcon />
                             </Typography>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography component="span" variant="h6">
+                                <Typography component="span" sx={{ fontSize: "16px" }}>
                                     {val?.course?.name}
                                 </Typography>
                                 <Typography
